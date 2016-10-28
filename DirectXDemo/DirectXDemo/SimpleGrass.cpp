@@ -10,7 +10,7 @@ SimpleGrass::SimpleGrass() :	m_vs(nullptr),
 								m_hs(nullptr),
 								m_ds(nullptr),
 								m_ps(nullptr),
-								m_CB_density(nullptr),
+								m_CB_geometry(nullptr),
 								m_CB_world(nullptr),
 								m_inputLayout(nullptr),
 								m_vertexBuffer(nullptr)
@@ -189,7 +189,7 @@ bool SimpleGrass::load(ID3D11Device* _device)
 
 	//CBUFFER
 	//DS
-	if (!DXHelper::createBasicConstBuffer(&m_CB_density,
+	if (!DXHelper::createBasicConstBuffer(&m_CB_geometry,
 		_device, sizeof(float) * 4,
 		L"Couldn't create the hull shader const buffer."))
 	{
@@ -204,7 +204,10 @@ bool SimpleGrass::load(ID3D11Device* _device)
 		return false;
 	}
 
-	m_pos = { 0.f,0.f,0.f };
+
+	//default grass width
+	m_halfGrassWidth = 0.04f;
+
 	return true;
 }
 
@@ -213,7 +216,7 @@ void SimpleGrass::unload()
 	if (m_vertexBuffer) m_vertexBuffer->Release();
 	if (m_inputLayout) m_inputLayout->Release();
 	if (m_CB_world) m_CB_world->Release();
-	if (m_CB_density) m_CB_density->Release();
+	if (m_CB_geometry) m_CB_geometry->Release();
 	if (m_ps) m_ps->Release();
 	if (m_ds) m_ds->Release();
 	if (m_hs) m_hs->Release();
@@ -262,13 +265,14 @@ void SimpleGrass::draw(ID3D11DeviceContext* _dc)
 	*dataPtr = XMMatrixTranspose(XMLoadFloat4x4(&m_worldViewProj));
 	_dc->Unmap(m_CB_world, 0);
 
-	CBSimpleGrass_DS buffer = {m_curDensity, 0,0,0};
-	_dc->Map(m_CB_density, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	memcpy(mappedResource.pData, &buffer, sizeof(CBSimpleGrass_DS));
-	_dc->Unmap(m_CB_density, 0);
+	CBGrassGeometry buffer = {m_curDensity, m_halfGrassWidth, 0, 0};
+	_dc->Map(m_CB_geometry, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, &buffer, sizeof(CBGrassGeometry));
+	_dc->Unmap(m_CB_geometry, 0);
 
-	_dc->VSSetConstantBuffers(2, 1, &m_CB_world);
-	_dc->HSSetConstantBuffers(0, 1, &m_CB_density);
+	_dc->HSSetConstantBuffers(0, 1, &m_CB_geometry); 
+	_dc->GSSetConstantBuffers(0, 1, &m_CB_geometry);
+	_dc->VSSetConstantBuffers(1, 1, &m_CB_world);
 
 	_dc->Draw(4, 0);
 }

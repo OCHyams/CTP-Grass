@@ -16,6 +16,17 @@ bool BasicDemo::load()
 	GameObject* grass = new SimpleGrass();
 	m_objects.push_back(grass);
 	CHECK_FAIL(grass->load(m_d3dDevice));
+	grass->setPos(XMFLOAT3(0.1,0.f,0.f));
+
+	grass = new SimpleGrass();
+	m_objects.push_back(grass);
+	CHECK_FAIL(grass->load(m_d3dDevice));
+	grass->setPos(XMFLOAT3(0.f, 0.f, 0.f));
+
+	grass = new SimpleGrass();
+	m_objects.push_back(grass);
+	CHECK_FAIL(grass->load(m_d3dDevice));
+	grass->setPos(XMFLOAT3(-0.1f, 0.f, 0.f));
 
 	GameObject* cam = new Camera();
 	cam->setPos({ 0.0f, 0.6f, 0.5f });

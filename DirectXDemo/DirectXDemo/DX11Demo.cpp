@@ -14,7 +14,7 @@ DX11Demo::DX11Demo() :	m_driverType(D3D_DRIVER_TYPE_NULL),
 
 DX11Demo::~DX11Demo()
 {
-	shutdown();
+	
 }
 
 void DX11Demo::shutdown()
@@ -23,6 +23,7 @@ void DX11Demo::shutdown()
 
 	if (m_input)
 	{
+
 		OCH::ServiceLocator<Input>::remove(m_input);
 		delete m_input;
 	}

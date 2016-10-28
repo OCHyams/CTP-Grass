@@ -1,25 +1,26 @@
 //CONSTANT BUFFERS-----------------------------------------------------------------
 cbuffer CONSTS : register(b0)
 {
-	float tessDensity[4];
+	float tessDensity;
+	float halfGrassWidth;
+	float2 PADDING;
 };
+//
+//cbuffer GS_CONSTS : register(b1)
+//{
+//	float halfBaseWidth;
+//	float padding[3];
+//}
 
-cbuffer GS_CONSTS : register(b1)
-{
-	float halfBaseWidth;
-	float padding[3];
-}
-
-cbuffer CBWorld : register (b2)
+cbuffer CBWorldViewProj : register (b1)
 {
 	matrix world_view_proj;
-	//matrix world;
-}
-cbuffer CBViewProj : register (b3)
-{
-	matrix viewProj;
 }
 
+cbuffer CBGrassData : register (b2)
+{
+
+}
 
 //INPUT/OUTPUT STRUCTS-----------------------------------------------------------------
 struct VS_INPUT_OUTPUT
@@ -48,16 +49,16 @@ struct PS_INPUT
 	float4 pos : SV_POSITION;
 };
 
+
 //VERTEX SHADER----------------------------------------------------------
 VS_INPUT_OUTPUT VS_Main(VS_INPUT_OUTPUT vertex)
 {
 	float4 pos = float4(vertex.pos, 1.0f);
 	pos = mul(pos, world_view_proj);
-	//pos = mul(pos, world);
-	//pos = mul(pos, viewProj);
 	vertex.pos = pos;
 	return	vertex;
 }
+
 
 //HULL-DOMAIN SHADERS----------------------------------------------------
 //See http://gpuexperiments.blogspot.co.uk/2010/02/tessellation-example.html
@@ -66,9 +67,10 @@ HS_CONSTANT_OUTPUT HSConst()
 	HS_CONSTANT_OUTPUT output;
 
 	output.edges[0] = 1.0f;				// Detail factor
-	output.edges[1] = tessDensity[0];	// tess density
+	output.edges[1] = tessDensity;		// tess density
 	return output;
 }
+
 
 [domain("isoline")]
 [partitioning("integer")]
@@ -81,6 +83,7 @@ HS_OUTPUT HS_Main(InputPatch<VS_INPUT_OUTPUT, 4> input, uint id : SV_OutputContr
 	output.cpoint = input[id].pos;
 	return output;
 }
+
 
 [domain("isoline")]
 DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2 uv : SV_DomainLocation)
@@ -98,7 +101,6 @@ DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2
 }
 
 
-
 //GEOMETRY SHADER--------------------------------------------------------
 [maxvertexcount(4)]
 void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
@@ -106,16 +108,16 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 	//should get optimised down to a c&p during compilation
 	for (uint i = 0; i < 2; i++)
 	{
-		float halfWidth = 0.05 * (1 - input[i].tVal);
-		PS_INPUT element;			//vertex for output
+		float halfWidth = halfGrassWidth * (1 - input[i].tVal);//0.05
+		PS_INPUT element;				//vertex for output
 
 		float4 pos = input[i].position; //position of node
 
-		pos.x += halfWidth;			//right of node
+		pos.x += halfWidth;				//right of node
 		element.pos = pos;
 		output.Append(element);
 
-		pos.x -= halfWidth * 2;		//left of node
+		pos.x -= halfWidth * 2;			//left of node
 		element.pos = pos;
 		output.Append(element);
 	}

@@ -1,15 +1,10 @@
 #pragma once
 __declspec(align(16))
-struct CBSimpleGrass_DS
+struct CBGrassGeometry
 {
-	float m_tessDensity[4];
-};
-
-__declspec(align(16))
-struct CBSimpleGrass_GS
-{
-	float m_halfBaseWidth;
-	float m_padding[3];
+	float tessDensity;
+	float halfGrassWidth;
+	float padding[2];
 };
 
 __declspec(align(16))

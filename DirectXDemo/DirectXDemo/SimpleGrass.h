@@ -20,6 +20,8 @@ public:
 	virtual void update(float _dt) override;
 	virtual void draw(ID3D11DeviceContext* _dc) override;
 
+	void setGrassWidth(float _width) { m_halfGrassWidth = _width / 2; }
+
 protected:
 	/////////////////////////////////////////////////
 	/// Shaders
@@ -33,9 +35,8 @@ protected:
 	/////////////////////////////////////////////////
 	/// Constant buffers
 	/////////////////////////////////////////////////
-	ID3D11Buffer* m_CB_density;
+	ID3D11Buffer* m_CB_geometry;
 	ID3D11Buffer* m_CB_world;
-	//ID3D11Buffer* m_CB_viewProj;
 	/////////////////////////////////////////////////
 	/// Shader misc
 	/////////////////////////////////////////////////
@@ -47,4 +48,5 @@ protected:
 	float m_maxDensity;
 	float m_minDensity;
 	float m_curDensity;
+	float m_halfGrassWidth;
 };
