@@ -47,8 +47,4 @@ protected:
 	float m_maxDensity;
 	float m_minDensity;
 	float m_curDensity;
-	/////////////////////////////////////////////////
-	/// Basic input stuff for testing
-	/////////////////////////////////////////////////
-	bool m_prevKeyState[2];
 };

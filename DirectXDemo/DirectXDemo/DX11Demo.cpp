@@ -1,12 +1,15 @@
 #include "DX11Demo.h"
 #include "dxerr.h"
+#include "ServiceLocator.h" 
+#include "Input.h"
 
 DX11Demo::DX11Demo() :	m_driverType(D3D_DRIVER_TYPE_NULL), 
 						m_featureLevel(D3D_FEATURE_LEVEL_11_1),
 						m_d3dDevice(nullptr), 
 						m_d3dContext(nullptr), 
 						m_swapChain(nullptr), 
-						m_backBufferTarget(nullptr)
+						m_backBufferTarget(nullptr),
+						m_input(nullptr)
 {}
 
 DX11Demo::~DX11Demo()
@@ -18,13 +21,20 @@ void DX11Demo::shutdown()
 {
 	unload();
 
+	if (m_input)
+	{
+		OCH::ServiceLocator<Input>::remove(m_input);
+		delete m_input;
+	}
+
+
 	if (m_depthTexture) m_depthTexture->Release();
 	if (m_depthStencilView) m_depthStencilView->Release();
 	if (m_backBufferTarget) m_backBufferTarget->Release();
 	if (m_swapChain) m_swapChain->Release();
 	if (m_d3dContext) m_d3dContext->Release();
 	if (m_d3dDevice) m_d3dDevice->Release();
-
+	
 	m_d3dDevice = nullptr;
 	m_d3dContext = nullptr;
 	m_swapChain = nullptr;
@@ -42,6 +52,11 @@ bool DX11Demo::load()
 void DX11Demo::unload()
 {
 	//override with demo code if required
+}
+
+void DX11Demo::update(float _dt)
+{
+	m_input->update();
 }
 
 
@@ -173,5 +188,11 @@ bool DX11Demo::init(HINSTANCE _hInstance, HWND _hwnd)
 	viewport.TopLeftY = 0.0f;
 	m_d3dContext->RSSetViewports(1, &viewport);
 
-	return load();
+	bool success;
+	//input
+	m_input = new Input();
+	success = m_input->init(m_hInstance,m_hwnd);
+	OCH::ServiceLocator<Input>::add(m_input);
+
+	return success && load();
 }

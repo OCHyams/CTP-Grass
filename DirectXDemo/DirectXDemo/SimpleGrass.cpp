@@ -3,6 +3,8 @@
 #include "dxerr.h"
 #include <DirectXMath.h>
 #include "DXHelper.h"
+#include "Input.h"
+#include "ServiceLocator.h"
 
 SimpleGrass::SimpleGrass() :	m_vs(nullptr),
 								m_hs(nullptr),
@@ -226,22 +228,16 @@ void SimpleGrass::unload()
 void SimpleGrass::update(float _dt)
 {
 	GameObject::update(_dt);
-
-	//crappy input detection to show off LODing
-	if (GetAsyncKeyState(VK_LEFT) && !m_prevKeyState[0])
+	Input* input = OCH::ServiceLocator<Input>::get();
+	
+	if (input->getKeyDown(DIK_LEFT))
 	{
 		m_curDensity = --m_curDensity >= m_minDensity ? m_curDensity : m_minDensity;
-		m_prevKeyState[0] = true;
 	}
-	else if (GetAsyncKeyState(VK_RIGHT) && !m_prevKeyState[1])
+	else if (input->getKeyDown(DIK_RIGHT))
 	{
 		m_curDensity = ++m_curDensity <= m_maxDensity ? m_curDensity : m_maxDensity;
-		m_prevKeyState[1] = true;
 	}
-	
-	m_prevKeyState[0] = GetAsyncKeyState(VK_LEFT);
-	m_prevKeyState[1] = GetAsyncKeyState(VK_RIGHT);
-	
 }
 
 void SimpleGrass::draw(ID3D11DeviceContext* _dc)
@@ -256,8 +252,6 @@ void SimpleGrass::draw(ID3D11DeviceContext* _dc)
 	_dc->PSSetShader(m_ps, 0, 0);
 	_dc->GSSetShader(m_gs, 0, 0);
 	_dc->HSSetShader(m_hs, 0, 0);
-
-
 	_dc->DSSetShader(m_ds, 0, 0);
 	_dc->RSSetState(m_rasterizer);
 
@@ -266,7 +260,6 @@ void SimpleGrass::draw(ID3D11DeviceContext* _dc)
 	_dc->Map(m_CB_world, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	XMMATRIX* dataPtr = (XMMATRIX*)mappedResource.pData;
 	*dataPtr = XMMatrixTranspose(XMLoadFloat4x4(&m_worldViewProj));
-
 	_dc->Unmap(m_CB_world, 0);
 
 	CBSimpleGrass_DS buffer = {m_curDensity, 0,0,0};

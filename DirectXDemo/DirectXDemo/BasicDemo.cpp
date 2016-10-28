@@ -2,7 +2,6 @@
 #include "SimpleGrass.h"
 #include "Camera.h"
 #include "Triangle.h"
-
 BasicDemo::BasicDemo()
 {}
 
@@ -40,6 +39,8 @@ void BasicDemo::unload()
 
 void BasicDemo::update(float _dt)
 {
+	DX11Demo::update(_dt);
+
 	for (auto obj : m_objects)
 	{
 		obj->update(_dt);
