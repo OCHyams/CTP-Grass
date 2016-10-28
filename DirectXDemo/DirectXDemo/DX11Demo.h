@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <d3d11_2.h>
 #include <d3d11.h>
+#include "Time.h"
 class Input;
 /////////////////////////////////////////////////
 /// Base class for DirectX demo program
@@ -19,7 +20,7 @@ public:
 	virtual bool load();
 	virtual void unload();
 
-	virtual void update(float _dt);
+	virtual void update();
 	virtual void render() = 0;
 
 protected:
@@ -49,4 +50,8 @@ protected:
 	/// Input 
 	/////////////////////////////////////////////////
 	Input* m_input;
+	/////////////////////////////////////////////////
+	/// Time 
+	/////////////////////////////////////////////////
+	Time m_time;
 };

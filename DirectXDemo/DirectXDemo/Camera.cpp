@@ -17,7 +17,7 @@ void Camera::unload()
 
 }
 
-void Camera::update(float _dt)
+void Camera::update()
 {
 
 	return;

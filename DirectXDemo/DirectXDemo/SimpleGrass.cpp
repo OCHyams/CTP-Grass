@@ -4,6 +4,7 @@
 #include <DirectXMath.h>
 #include "DXHelper.h"
 #include "Input.h"
+#include "Time.h"
 #include "ServiceLocator.h"
 
 SimpleGrass::SimpleGrass() :	m_vs(nullptr),
@@ -190,7 +191,7 @@ bool SimpleGrass::load(ID3D11Device* _device)
 	//CBUFFER
 	//DS
 	if (!DXHelper::createBasicConstBuffer(&m_CB_geometry,
-		_device, sizeof(float) * 4,
+		_device, sizeof(CBGrassGeometry),
 		L"Couldn't create the hull shader const buffer."))
 	{
 		return false;
@@ -228,9 +229,9 @@ void SimpleGrass::unload()
 	m_vs = nullptr;
 }
 
-void SimpleGrass::update(float _dt)
+void SimpleGrass::update()
 {
-	GameObject::update(_dt);
+	GameObject::update();
 	Input* input = OCH::ServiceLocator<Input>::get();
 	
 	if (input->getKeyDown(DIK_LEFT))
@@ -265,7 +266,8 @@ void SimpleGrass::draw(ID3D11DeviceContext* _dc)
 	*dataPtr = XMMatrixTranspose(XMLoadFloat4x4(&m_worldViewProj));
 	_dc->Unmap(m_CB_world, 0);
 
-	CBGrassGeometry buffer = {m_curDensity, m_halfGrassWidth, 0, 0};
+	Time t = *OCH::ServiceLocator<Time>::get();
+	CBGrassGeometry buffer = {m_curDensity, m_halfGrassWidth, t.time, m_wind, 0 , 0};
 	_dc->Map(m_CB_geometry, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &buffer, sizeof(CBGrassGeometry));
 	_dc->Unmap(m_CB_geometry, 0);

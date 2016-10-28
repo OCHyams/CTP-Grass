@@ -138,6 +138,7 @@
     <ClInclude Include="Input.h" />
     <ClInclude Include="ServiceLocator.h" />
     <ClInclude Include="SimpleGrass.h" />
+    <ClInclude Include="Time.h" />
     <ClInclude Include="Triangle.h" />
   </ItemGroup>
   <ItemGroup>

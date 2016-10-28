@@ -21,6 +21,7 @@ void DX11Demo::shutdown()
 {
 	unload();
 
+	OCH::ServiceLocator<Time>::remove(&m_time);
 	if (m_input)
 	{
 
@@ -46,17 +47,20 @@ void DX11Demo::shutdown()
 
 bool DX11Demo::load()
 {
-	//override with demo code if required
 	return true;
 }
 
 void DX11Demo::unload()
 {
-	//override with demo code if required
+	//override with derrived functionality
 }
 
-void DX11Demo::update(float _dt)
+void DX11Demo::update()
 {
+	float tickCount = GetTickCount();
+	m_time.deltaTime = tickCount - m_time.time;
+	m_time.time = tickCount;
+
 	m_input->update();
 }
 
@@ -194,6 +198,10 @@ bool DX11Demo::init(HINSTANCE _hInstance, HWND _hwnd)
 	m_input = new Input();
 	success = m_input->init(m_hInstance,m_hwnd);
 	OCH::ServiceLocator<Input>::add(m_input);
+
+
+	//time
+	OCH::ServiceLocator<Time>::add(&m_time);
 
 	return success && load();
 }

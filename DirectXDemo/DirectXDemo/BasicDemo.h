@@ -12,7 +12,7 @@ public:
 	bool load() override;
 	void unload() override;
 
-	void update(float _dt) override;
+	void update() override;
 	void render() override;
 
 private:

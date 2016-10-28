@@ -2,7 +2,7 @@
 
 DirectX::XMFLOAT4X4 GameObject::s_viewProj = DirectX::XMFLOAT4X4();
 
-void GameObject::update(float _dt)
+void GameObject::update()
 {
 	using namespace DirectX;
 	XMMATRIX world = XMMatrixTranslationFromVector(XMLoadFloat3(&m_pos));

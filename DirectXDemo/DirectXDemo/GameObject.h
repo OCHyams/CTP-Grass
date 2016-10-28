@@ -17,7 +17,7 @@ public:
 	virtual bool load(ID3D11Device*) =0;
 	virtual void unload() = 0;
 
-	virtual void update(float _dt); //should really do matrix updates here! see codebase from Simon's projects
+	virtual void update(); //should really do matrix updates here! see codebase from Simon's projects
 	virtual void draw(ID3D11DeviceContext* _dc) =0;
 
 	static void setViewProjMat(const DirectX::XMFLOAT4X4& _viewProj);

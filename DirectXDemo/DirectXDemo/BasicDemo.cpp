@@ -48,13 +48,13 @@ void BasicDemo::unload()
 	}
 }
 
-void BasicDemo::update(float _dt)
+void BasicDemo::update()
 {
-	DX11Demo::update(_dt);
+	DX11Demo::update();
 
 	for (auto obj : m_objects)
 	{
-		obj->update(_dt);
+		obj->update();
 	}
 }
 

@@ -47,7 +47,7 @@ int WINAPI wWinMain(HINSTANCE _hInstance, HINSTANCE _prevInstance, LPWSTR _cmdLi
 		}
 		else
 		{
-			demo->update(0.0f);
+			demo->update();
 			demo->render();
 		}
 	}

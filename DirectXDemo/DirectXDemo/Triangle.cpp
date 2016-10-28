@@ -132,7 +132,7 @@ void ShaderDemoObject::unload()
 	m_vs = nullptr;
 }
 
-void ShaderDemoObject::update(float _dt)
+void ShaderDemoObject::update()
 {
 }
 

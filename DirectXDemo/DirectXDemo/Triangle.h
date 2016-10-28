@@ -11,7 +11,7 @@ public:
 	virtual bool load(ID3D11Device* _device) override;
 	virtual void unload() override;
 
-	virtual void update(float _dt) override;
+	virtual void update() override;
 	virtual void draw(ID3D11DeviceContext* _dc) override;
 
 protected:

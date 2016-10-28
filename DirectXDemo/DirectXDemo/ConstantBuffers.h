@@ -4,6 +4,8 @@ struct CBGrassGeometry
 {
 	float tessDensity;
 	float halfGrassWidth;
+	float time;
+	DirectX::XMFLOAT3 windStrength;
 	float padding[2];
 };
 
