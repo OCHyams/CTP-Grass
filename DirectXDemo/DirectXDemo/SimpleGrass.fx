@@ -51,7 +51,8 @@ inline float4 smoothf(float4 x)
 inline float4 trianglef(float4 x)
 {
 	return abs(frac(x + 0.5) * 2.0 - 1.0);
-}inline float3 windForce(float3 p)
+}
+inline float3 windForce(float3 p)
 {
 	// Compute the phase shift for the position p with respect to
 	// the current wind strength and direction
@@ -61,7 +62,8 @@ inline float4 trianglef(float4 x)
 	// Compute the mean of the four values and
 	// return the translation vector.
 	return wind * dot(ts, 0.25);
-}
+}
+
 VS_INPUT_OUTPUT VS_Main(VS_INPUT_OUTPUT vertex)
 {
 	float4 pos = float4(vertex.pos, 1.0f);
