@@ -126,7 +126,8 @@ bool SimpleGrass::load(ID3D11Device* _device)
 	//INPUT LAYOUT
 	D3D11_INPUT_ELEMENT_DESC vsLayout[] =
 	{
-		{ "POSITION",0, DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 }
+		{ "POSITION",0, DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "TVAL",0, DXGI_FORMAT_R32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 }
 	};
 
 	unsigned int totalLayoutElements = ARRAYSIZE(vsLayout);
@@ -141,19 +142,19 @@ bool SimpleGrass::load(ID3D11Device* _device)
 	}
 
 	//VERTEX DATA
-	BasicVertex verts[] =
+	BezierVertex verts[] =
 	{
-		DirectX::XMFLOAT3(0.f, 0.f, 0.f),
-		DirectX::XMFLOAT3(0.f, 0.2f, 0.f),
-		DirectX::XMFLOAT3(0.f, 0.4f, 0.f),
-		DirectX::XMFLOAT3(-0.2f, 0.6f, 0.f)
+		{DirectX::XMFLOAT3(0.f, 0.f, 0.f), 0.f},
+		{DirectX::XMFLOAT3(0.f, 0.2f, 0.f), 0.33f},
+		{DirectX::XMFLOAT3(0.f, 0.4f, 0.f), 0.66f},
+		{DirectX::XMFLOAT3(-0.2f, 0.6f, 0.f), 1.f}
 	};
 
 	D3D11_BUFFER_DESC vDesc;
 	ZeroMemory(&vDesc, sizeof(vDesc));
 	vDesc.Usage = D3D11_USAGE_DEFAULT;
 	vDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vDesc.ByteWidth = sizeof(BasicVertex) * 4;
+	vDesc.ByteWidth = sizeof(BezierVertex) * 4;
 
 	D3D11_SUBRESOURCE_DATA resourceData;
 	ZeroMemory(&resourceData, sizeof(resourceData));
@@ -246,7 +247,7 @@ void SimpleGrass::update()
 
 void SimpleGrass::draw(ID3D11DeviceContext* _dc)
 {
-	unsigned int stride = sizeof(BasicVertex);
+	unsigned int stride = sizeof(BezierVertex);
 	unsigned int offset = 0;
 
 	_dc->IASetInputLayout(m_inputLayout);

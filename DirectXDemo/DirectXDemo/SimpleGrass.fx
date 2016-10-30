@@ -15,7 +15,13 @@ cbuffer CBWorldViewProj : register (b1)
 
 
 //INPUT/OUTPUT STRUCTS-----------------------------------------------------------------
-struct VS_INPUT_OUTPUT
+struct VS_INPUT
+{
+	float3 pos	 : POSITION;//position
+	float t : TVAL;//how far along the blade? 
+};
+
+struct VS_OUTPUT
 {
 	float3 pos : POSITION;
 };
@@ -64,12 +70,13 @@ inline float3 windForce(float3 p)
 	return wind * dot(ts, 0.25);
 }
 
-VS_INPUT_OUTPUT VS_Main(VS_INPUT_OUTPUT vertex)
+VS_OUTPUT VS_Main(VS_INPUT vertex)
 {
+	VS_OUTPUT output;
 	float4 pos = float4(vertex.pos, 1.0f);
 	pos = mul(pos, world_view_proj);
-	vertex.pos = pos;
-	return	vertex;
+	output.pos = pos;
+	return output;
 }
 
 
@@ -90,7 +97,7 @@ HS_CONSTANT_OUTPUT HSConst()
 [outputtopology("line")]
 [outputcontrolpoints(4)]
 [patchconstantfunc("HSConst")]
-HS_OUTPUT HS_Main(InputPatch<VS_INPUT_OUTPUT, 4> input, uint id : SV_OutputControlPointID)
+HS_OUTPUT HS_Main(InputPatch<VS_OUTPUT, 4> input, uint id : SV_OutputControlPointID)
 {
 	HS_OUTPUT output;
 	output.cpoint = input[id].pos;
