@@ -9,8 +9,6 @@ struct CBGrassGeometry
 	float wind_y;
 	float wind_z;
 	float padding[2];
-	//DirectX::XMFLOAT3 wind;
-	//float padding[2];
 };
 
 __declspec(align(16))

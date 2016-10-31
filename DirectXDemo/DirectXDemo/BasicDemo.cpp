@@ -13,7 +13,7 @@ BasicDemo::~BasicDemo()
 bool BasicDemo::load()
 {
 	using namespace DirectX;
-	XMFLOAT3 wind = { 0.5f, 0.0f, 0.0f };
+	XMFLOAT3 wind = { 0.4f, 0.0f, 0.0f };
 
 	SimpleGrass* grass = new SimpleGrass();
 	m_objects.push_back(grass);

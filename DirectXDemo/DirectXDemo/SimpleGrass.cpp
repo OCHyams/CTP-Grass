@@ -126,8 +126,8 @@ bool SimpleGrass::load(ID3D11Device* _device)
 	//INPUT LAYOUT
 	D3D11_INPUT_ELEMENT_DESC vsLayout[] =
 	{
-		{ "POSITION",0, DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
-		{ "T_VAL",0, DXGI_FORMAT_R32_FLOAT ,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 }
+		{ "SV_POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "T_VAL",0, DXGI_FORMAT_R32_FLOAT ,0,12,D3D11_INPUT_PER_VERTEX_DATA,0 }
 	};
 
 	unsigned int totalLayoutElements = ARRAYSIZE(vsLayout);
@@ -144,10 +144,10 @@ bool SimpleGrass::load(ID3D11Device* _device)
 	//VERTEX DATA
 	BezierVertex verts[] =
 	{
-		{DirectX::XMFLOAT3(0.f, 0.f, 0.f), 0.f},
-		{DirectX::XMFLOAT3(0.f, 0.2f, 0.f), 0.33f},
-		{DirectX::XMFLOAT3(0.f, 0.4f, 0.f), 0.66f},
-		{DirectX::XMFLOAT3(0.0f, 0.6f, -0.1f), 1.f}
+		{ DirectX::XMFLOAT3(0.f, 0.f, 0.f), 0.f},
+		{ DirectX::XMFLOAT3(0.f, 0.2f, 0.f), 0.33f},
+		{ DirectX::XMFLOAT3(0.f, 0.4f, 0.f), 0.66f},
+		{ DirectX::XMFLOAT3(0.0f, 0.6f, -0.1f), 1.f}
 	};
 
 	D3D11_BUFFER_DESC vDesc;

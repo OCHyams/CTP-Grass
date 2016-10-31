@@ -19,7 +19,7 @@ cbuffer CBWorldViewProj : register (b1)
 //INPUT/OUTPUT STRUCTS-----------------------------------------------------------------
 struct VS_INPUT
 {
-	float3 pos	 : POSITION;//position
+	float3 pos	: SV_POSITION;//position
 	float tVal : T_VAL;	//how far along the blade? 
 };
 
@@ -78,10 +78,7 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 	float4 pos = float4(vertex.pos, 1.f);
 	pos = mul(pos, world_view_proj);
 
-	//output.pos = pos;
-	//testing wind
-	//output.pos = pos + (windForce(pos, float3(wind_x, wind_y, wind_z)) *vertex.tVal);
-	output.pos = pos;
+	output.pos = pos + (windForce(pos, float3(wind_x, wind_y, wind_z)) *vertex.tVal);
 	return output;
 }
 
@@ -123,9 +120,6 @@ DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2
 
 	output.position = float4(pos, 1.0f);
 	output.tVal = t;
-
-	//this should be in the vertex shader to save hundreds of calculations but is here for testing right now...
-	output.position = float4(pos + (windForce(pos, float3(wind_x, wind_y, wind_z)) * t), 1.0f);
 
 	return output;
 }
