@@ -14,7 +14,7 @@ public:
 	virtual void unload() override;
 
 	virtual void update() override;
-	virtual void draw(ID3D11DeviceContext* _dc) override;
+	virtual void draw(const DrawData&) override;
 
 	const DirectX::XMFLOAT4X4& getViewMatrix();
 	const DirectX::XMFLOAT4X4& getProjMatrix();

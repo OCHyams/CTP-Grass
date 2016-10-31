@@ -12,7 +12,7 @@ public:
 	virtual void unload() override;
 
 	virtual void update() override;
-	virtual void draw(ID3D11DeviceContext* _dc) override;
+	virtual void draw(const DrawData&) override;
 
 protected:
 	ID3D11VertexShader* m_vs;

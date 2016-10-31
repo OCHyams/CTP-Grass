@@ -19,7 +19,7 @@ public:
 	virtual void unload() override;
 
 	virtual void update() override;
-	virtual void draw(ID3D11DeviceContext* _dc) override;
+	virtual void draw(const DrawData&) override;
 
 	void setGrassWidth(float _width) { m_halfGrassWidth = _width / 2; }
 	void setWind(const DirectX::XMFLOAT3& _wind) { m_wind = _wind; }

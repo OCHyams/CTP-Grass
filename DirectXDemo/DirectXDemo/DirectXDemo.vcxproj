@@ -124,6 +124,7 @@
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SimpleGrass.cpp" />
+    <ClCompile Include="Time.cpp" />
     <ClCompile Include="Triangle.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -131,6 +132,7 @@
     <ClInclude Include="basicVertex.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ConstantBuffers.h" />
+    <ClInclude Include="DrawData.h" />
     <ClInclude Include="DX11Demo.h" />
     <ClInclude Include="dxerr.h" />
     <ClInclude Include="DXHelper.h" />

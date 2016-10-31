@@ -31,3 +31,4 @@ private:
 	unsigned char m_keys[256];
 	unsigned char m_prevKeys[256];
 };
+

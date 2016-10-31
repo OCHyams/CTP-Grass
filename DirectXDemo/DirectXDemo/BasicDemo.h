@@ -18,5 +18,5 @@ public:
 private:
 	
 	std::vector<GameObject*> m_objects;
-
+	Camera* m_cam;
 };

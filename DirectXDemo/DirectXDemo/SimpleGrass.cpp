@@ -147,7 +147,7 @@ bool SimpleGrass::load(ID3D11Device* _device)
 		{DirectX::XMFLOAT3(0.f, 0.f, 0.f), 0.f},
 		{DirectX::XMFLOAT3(0.f, 0.2f, 0.f), 0.33f},
 		{DirectX::XMFLOAT3(0.f, 0.4f, 0.f), 0.66f},
-		{DirectX::XMFLOAT3(0.0f, 0.6f, 0.f), 1.f}
+		{DirectX::XMFLOAT3(0.0f, 0.6f, -0.1f), 1.f}
 	};
 
 	D3D11_BUFFER_DESC vDesc;
@@ -245,38 +245,38 @@ void SimpleGrass::update()
 	}
 }
 
-void SimpleGrass::draw(ID3D11DeviceContext* _dc)
+void SimpleGrass::draw(const DrawData& _data)
 {
 	unsigned int stride = sizeof(BezierVertex);
 	unsigned int offset = 0;
 
-	_dc->IASetInputLayout(m_inputLayout);
-	_dc->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
-	_dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);//D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST D3D11_PRIMITIVE_TOPOLOGY_POINTLIST D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST
-	_dc->VSSetShader(m_vs, 0, 0);
-	_dc->PSSetShader(m_ps, 0, 0);
-	_dc->GSSetShader(m_gs, 0, 0);
-	_dc->HSSetShader(m_hs, 0, 0);
-	_dc->DSSetShader(m_ds, 0, 0);
-	_dc->RSSetState(m_rasterizer);
+	_data.m_dc->IASetInputLayout(m_inputLayout);
+	_data.m_dc->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+	_data.m_dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);//D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST D3D11_PRIMITIVE_TOPOLOGY_POINTLIST D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST
+	_data.m_dc->VSSetShader(m_vs, 0, 0);
+	_data.m_dc->PSSetShader(m_ps, 0, 0);
+	_data.m_dc->GSSetShader(m_gs, 0, 0);
+	_data.m_dc->HSSetShader(m_hs, 0, 0);
+	_data.m_dc->DSSetShader(m_ds, 0, 0);
+	_data.m_dc->RSSetState(m_rasterizer);
 
 	using namespace DirectX;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	_dc->Map(m_CB_world, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	_data.m_dc->Map(m_CB_world, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	XMMATRIX* dataPtr = (XMMATRIX*)mappedResource.pData;
 	*dataPtr = XMMatrixTranspose(XMLoadFloat4x4(&m_worldViewProj));
-	_dc->Unmap(m_CB_world, 0);
+	_data.m_dc->Unmap(m_CB_world, 0);
 
-	Time t = *OCH::ServiceLocator<Time>::get();
-	CBGrassGeometry buffer = {m_curDensity, m_halfGrassWidth, t.time, m_wind, 0 , 0};
-	_dc->Map(m_CB_geometry, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	Time* t = OCH::ServiceLocator<Time>::get();
+	CBGrassGeometry buffer = {m_curDensity, m_halfGrassWidth, t->time, m_wind, 0 , 0};
+	_data.m_dc->Map(m_CB_geometry, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &buffer, sizeof(CBGrassGeometry));
-	_dc->Unmap(m_CB_geometry, 0);
+	_data.m_dc->Unmap(m_CB_geometry, 0);
 
-	_dc->HSSetConstantBuffers(0, 1, &m_CB_geometry); 
-	_dc->GSSetConstantBuffers(0, 1, &m_CB_geometry);
-	_dc->VSSetConstantBuffers(1, 1, &m_CB_world);
+	_data.m_dc->HSSetConstantBuffers(0, 1, &m_CB_geometry);
+	_data.m_dc->GSSetConstantBuffers(0, 1, &m_CB_geometry);
+	_data.m_dc->VSSetConstantBuffers(1, 1, &m_CB_world);
 
-	_dc->Draw(4, 0);
+	_data.m_dc->Draw(4, 0);
 }
 

@@ -136,16 +136,16 @@ void ShaderDemoObject::update()
 {
 }
 
-void ShaderDemoObject::draw(ID3D11DeviceContext* _dc)
+void ShaderDemoObject::draw(const DrawData& _data)
 {
 	unsigned int stride = sizeof(BasicVertex);
 	unsigned int offset = 0;
 
-	_dc->IASetInputLayout(m_inputLayout);
-	_dc->IASetVertexBuffers(0,1,&m_vertexBuffer, &stride, &offset);
-	_dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	_dc->VSSetShader(m_vs, 0, 0);
-	_dc->PSSetShader(m_ps, 0, 0);
-	_dc->GSSetShader(m_gs, 0, 0);
-	_dc->Draw(3, 0);
+	_data.m_dc->IASetInputLayout(m_inputLayout);
+	_data.m_dc->IASetVertexBuffers(0,1,&m_vertexBuffer, &stride, &offset);
+	_data.m_dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	_data.m_dc->VSSetShader(m_vs, 0, 0);
+	_data.m_dc->PSSetShader(m_ps, 0, 0);
+	_data.m_dc->GSSetShader(m_gs, 0, 0);
+	_data.m_dc->Draw(3, 0);
 }

@@ -18,7 +18,7 @@ cbuffer CBWorldViewProj : register (b1)
 struct VS_INPUT
 {
 	float3 pos	 : POSITION;//position
-	float t : TVAL;//how far along the blade? 
+	float t		 : TVAL;	//how far along the blade? 
 };
 
 struct VS_OUTPUT
@@ -73,9 +73,12 @@ inline float3 windForce(float3 p)
 VS_OUTPUT VS_Main(VS_INPUT vertex)
 {
 	VS_OUTPUT output;
-	float4 pos = float4(vertex.pos, 1.0f);
+	float4 pos = float4(vertex.pos, 1.f);
 	pos = mul(pos, world_view_proj);
-	output.pos = pos;
+
+	//testing wind
+	output.pos = pos + (windForce(pos) * vertex.t);
+
 	return output;
 }
 

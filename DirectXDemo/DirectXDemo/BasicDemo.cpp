@@ -2,6 +2,7 @@
 #include "SimpleGrass.h"
 #include "Camera.h"
 #include "Triangle.h"
+#include "DrawData.h"
 BasicDemo::BasicDemo()
 {}
 
@@ -12,26 +13,28 @@ BasicDemo::~BasicDemo()
 bool BasicDemo::load()
 {
 	using namespace DirectX;
+	XMFLOAT3 wind = { 10.f, 0.0f,10.0f };
 
-	GameObject* grass = new SimpleGrass();
+	SimpleGrass* grass = new SimpleGrass();
 	m_objects.push_back(grass);
 	CHECK_FAIL(grass->load(m_d3dDevice));
-	grass->setPos(XMFLOAT3(0.1,0.f,0.f));
+	grass->setPos(XMFLOAT3(0.1,-0.2f,0.f));
+	grass->setWind(wind);
 
 	grass = new SimpleGrass();
 	m_objects.push_back(grass);
 	CHECK_FAIL(grass->load(m_d3dDevice));
-	grass->setPos(XMFLOAT3(0.f, 0.f, 0.f));
+	grass->setPos(XMFLOAT3(0.f, -0.2f, 0.f));
 
 	grass = new SimpleGrass();
 	m_objects.push_back(grass);
 	CHECK_FAIL(grass->load(m_d3dDevice));
-	grass->setPos(XMFLOAT3(-0.1f, 0.f, 0.f));
+	grass->setPos(XMFLOAT3(-0.1f, -0.2f, 0.f));
 
-	GameObject* cam = new Camera();
-	cam->setPos({ 0.0f, 0.6f, 0.5f });
-	m_objects.push_back(cam);
-	CHECK_FAIL(cam->load(m_d3dDevice));
+	m_cam = new Camera();
+	m_cam->setPos({ 0.0f, 0.6f, -0.5f });
+	m_objects.push_back(m_cam);
+	CHECK_FAIL(m_cam->load(m_d3dDevice));
 
 	return true;
 }
@@ -65,10 +68,11 @@ void BasicDemo::render()
 	float col[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	m_d3dContext->ClearRenderTargetView(m_backBufferTarget, col);
 	m_d3dContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0xFF);
+	DrawData data = { m_cam, m_d3dContext };
 
 	for (auto obj : m_objects)
 	{
-		obj->draw(m_d3dContext);
+		obj->draw(data);
 	}
 
 	m_swapChain->Present(0, 0);

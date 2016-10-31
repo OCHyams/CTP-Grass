@@ -57,10 +57,7 @@ void DX11Demo::unload()
 
 void DX11Demo::update()
 {
-	float tickCount = GetTickCount();
-	m_time.deltaTime = tickCount - m_time.time;
-	m_time.time = tickCount;
-
+	m_clock.updateGameTime(m_time);
 	m_input->update();
 }
 
@@ -202,6 +199,8 @@ bool DX11Demo::init(HINSTANCE _hInstance, HWND _hwnd)
 
 	//time
 	OCH::ServiceLocator<Time>::add(&m_time);
+	m_clock.reset();
+	m_clock.updateGameTime(m_time);
 
 	return success && load();
 }
