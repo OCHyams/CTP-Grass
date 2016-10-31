@@ -127,7 +127,7 @@ bool SimpleGrass::load(ID3D11Device* _device)
 	D3D11_INPUT_ELEMENT_DESC vsLayout[] =
 	{
 		{ "POSITION",0, DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
-		{ "TVAL",0, DXGI_FORMAT_R32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 }
+		{ "T_VAL",0, DXGI_FORMAT_R32_FLOAT ,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 }
 	};
 
 	unsigned int totalLayoutElements = ARRAYSIZE(vsLayout);
@@ -268,15 +268,16 @@ void SimpleGrass::draw(const DrawData& _data)
 	_data.m_dc->Unmap(m_CB_world, 0);
 
 	Time* t = OCH::ServiceLocator<Time>::get();
-	CBGrassGeometry buffer = {m_curDensity, m_halfGrassWidth, t->time, m_wind, 0 , 0};
+	CBGrassGeometry buffer = { m_curDensity, m_halfGrassWidth, t->time, m_wind.x, m_wind.y, m_wind.z, 0 , 0 };
 	_data.m_dc->Map(m_CB_geometry, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &buffer, sizeof(CBGrassGeometry));
 	_data.m_dc->Unmap(m_CB_geometry, 0);
 
 	_data.m_dc->HSSetConstantBuffers(0, 1, &m_CB_geometry);
 	_data.m_dc->GSSetConstantBuffers(0, 1, &m_CB_geometry);
+	_data.m_dc->DSSetConstantBuffers(0, 1, &m_CB_geometry);
+	_data.m_dc->VSSetConstantBuffers(0, 1, &m_CB_geometry);
 	_data.m_dc->VSSetConstantBuffers(1, 1, &m_CB_world);
-
 	_data.m_dc->Draw(4, 0);
 }
 

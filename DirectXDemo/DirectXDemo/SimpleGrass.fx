@@ -3,8 +3,10 @@ cbuffer CONSTS : register(b0)
 {
 	float tessDensity;
 	float halfGrassWidth;
-	float time;
-	float3 wind;
+	float time;	
+	float wind_x;//was getting upset with float3 here...
+	float wind_y;
+	float wind_z;
 	float2 padding;
 };
 
@@ -18,7 +20,7 @@ cbuffer CBWorldViewProj : register (b1)
 struct VS_INPUT
 {
 	float3 pos	 : POSITION;//position
-	float t		 : TVAL;	//how far along the blade? 
+	float tVal : T_VAL;	//how far along the blade? 
 };
 
 struct VS_OUTPUT
@@ -58,7 +60,7 @@ inline float4 trianglef(float4 x)
 {
 	return abs(frac(x + 0.5) * 2.0 - 1.0);
 }
-inline float3 windForce(float3 p)
+inline float3 windForce(float3 p, float3 wind)
 {
 	// Compute the phase shift for the position p with respect to
 	// the current wind strength and direction
@@ -76,9 +78,10 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 	float4 pos = float4(vertex.pos, 1.f);
 	pos = mul(pos, world_view_proj);
 
+	//output.pos = pos;
 	//testing wind
-	output.pos = pos + (windForce(pos) * vertex.t);
-
+	//output.pos = pos + (windForce(pos, float3(wind_x, wind_y, wind_z)) *vertex.tVal);
+	output.pos = pos;
 	return output;
 }
 
@@ -115,10 +118,14 @@ DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2
 
 	float t = uv.x;
 
+	//cubic bezier curve
 	float3 pos = pow(1.0f - t, 3.0f) * op[0].cpoint + 3.0f * pow(1.0f - t, 2.0f) * t * op[1].cpoint + 3.0f * (1.0f - t) * pow(t, 2.0f) * op[2].cpoint + pow(t, 3.0f) * op[3].cpoint;
 
 	output.position = float4(pos, 1.0f);
 	output.tVal = t;
+
+	//this should be in the vertex shader to save hundreds of calculations but is here for testing right now...
+	output.position = float4(pos + (windForce(pos, float3(wind_x, wind_y, wind_z)) * t), 1.0f);
 
 	return output;
 }
@@ -131,7 +138,7 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 	//should get optimised down to a c&p during compilation
 	for (uint i = 0; i < 2; i++)
 	{
-		float halfWidth = halfGrassWidth * (1 - (input[i].tVal * input[i].tVal)); //cubic curve for slightly more realistic grass :)
+		float halfWidth = halfGrassWidth * (1 - (input[i].tVal * input[i].tVal)); //parabolic curve for slightly more realistic grass :)
 		PS_INPUT element;				//vertex for output
 
 		float4 pos = input[i].position; //position of node
