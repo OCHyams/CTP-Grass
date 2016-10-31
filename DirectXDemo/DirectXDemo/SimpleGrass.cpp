@@ -147,7 +147,7 @@ bool SimpleGrass::load(ID3D11Device* _device)
 		{DirectX::XMFLOAT3(0.f, 0.f, 0.f), 0.f},
 		{DirectX::XMFLOAT3(0.f, 0.2f, 0.f), 0.33f},
 		{DirectX::XMFLOAT3(0.f, 0.4f, 0.f), 0.66f},
-		{DirectX::XMFLOAT3(-0.2f, 0.6f, 0.f), 1.f}
+		{DirectX::XMFLOAT3(0.0f, 0.6f, 0.f), 1.f}
 	};
 
 	D3D11_BUFFER_DESC vDesc;

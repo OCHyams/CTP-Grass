@@ -128,7 +128,7 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 	//should get optimised down to a c&p during compilation
 	for (uint i = 0; i < 2; i++)
 	{
-		float halfWidth = halfGrassWidth * (1 - input[i].tVal);
+		float halfWidth = halfGrassWidth * (1 - (input[i].tVal * input[i].tVal)); //cubic curve for slightly more realistic grass :)
 		PS_INPUT element;				//vertex for output
 
 		float4 pos = input[i].position; //position of node
