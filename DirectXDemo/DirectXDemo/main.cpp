@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include "BasicDemo.h"
 #include <memory>
+#include "AntTweakBar.h"
 
 LRESULT CALLBACK wndProc(HWND _hwnd, UINT _msg, WPARAM _wParam, LPARAM _lParam);
 
@@ -58,6 +59,9 @@ int WINAPI wWinMain(HINSTANCE _hInstance, HINSTANCE _prevInstance, LPWSTR _cmdLi
 
 LRESULT CALLBACK wndProc(HWND _hwnd, UINT _msg, WPARAM _wParam, LPARAM _lParam)
 {
+	if (TwEventWin(_hwnd, _msg, _wParam, _lParam))
+		return 0; // Event has been handled by AntTweakBar
+
 	PAINTSTRUCT paintStruct;
 	HDC hdc;
 

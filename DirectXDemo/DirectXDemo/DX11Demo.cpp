@@ -2,7 +2,7 @@
 #include "dxerr.h"
 #include "ServiceLocator.h" 
 #include "Input.h"
-
+#include "AntTweakBar.h"
 DX11Demo::DX11Demo() :	m_driverType(D3D_DRIVER_TYPE_NULL), 
 						m_featureLevel(D3D_FEATURE_LEVEL_11_1),
 						m_d3dDevice(nullptr), 
@@ -43,6 +43,8 @@ void DX11Demo::shutdown()
 	m_backBufferTarget = nullptr;
 	m_depthStencilView = nullptr;
 	m_depthTexture = nullptr;
+
+	TwTerminate();
 }
 
 bool DX11Demo::load()
@@ -201,6 +203,11 @@ bool DX11Demo::init(HINSTANCE _hInstance, HWND _hwnd)
 	OCH::ServiceLocator<Time>::add(&m_time);
 	m_clock.reset();
 	m_clock.updateGameTime(m_time);
+
+	//Antweak
+	//set up GUI library
+	TwInit(TW_DIRECT3D11, m_d3dDevice);
+	TwWindowSize(w, h);
 
 	return success && load();
 }

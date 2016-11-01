@@ -1,8 +1,12 @@
 #pragma once
 #include "DX11Demo.h"
 #include <vector>
+#include <DirectXMath.h>
+
 class GameObject;
 class Camera;
+class SimpleGrass;
+
 class BasicDemo : public DX11Demo
 {
 public:
@@ -16,7 +20,9 @@ public:
 	void render() override;
 
 private:
-	
+	DirectX::XMFLOAT3 m_wind;
+	float m_windStr;
 	std::vector<GameObject*> m_objects;
+	std::vector<SimpleGrass*> m_grass;
 	Camera* m_cam;
 };
