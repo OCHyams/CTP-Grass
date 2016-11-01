@@ -5,14 +5,23 @@ struct CBGrassGeometry
 	float tessDensity;
 	float halfGrassWidth;
 	float time;
+	//wind
 	float wind_x;
 	float wind_y;
 	float wind_z;
-	float padding[2];
+	//base position
+	float pos_x;
+	float pos_y;
+	float pos_z;
+	//tangent
+	float tan_x;
+	float tan_y;
+	float tan_z;
 };
 
 __declspec(align(16))
-struct CBSingleMatrix
+struct CBWorldViewProj
 {
-	DirectX::XMMATRIX m_mat;
+	DirectX::XMMATRIX m_wvp;
+	//DirectX::XMMATRIX m_iwvp;
 };

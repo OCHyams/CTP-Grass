@@ -13,7 +13,7 @@ BasicDemo::~BasicDemo()
 bool BasicDemo::load()
 {
 	using namespace DirectX;
-	XMFLOAT3 wind = { 0.4f, 0.0f, 0.0f };
+	XMFLOAT3 wind = { 0.5f, 0.0f, 0.0f };
 
 	SimpleGrass* grass = new SimpleGrass();
 	m_objects.push_back(grass);
@@ -31,6 +31,7 @@ bool BasicDemo::load()
 	m_objects.push_back(grass);
 	CHECK_FAIL(grass->load(m_d3dDevice));
 	grass->setPos(XMFLOAT3(-0.1f, -0.2f, 0.f));
+	grass->setRot(XMFLOAT3(0.f, XM_PIDIV2, 0.f));
 	grass->setWind(wind);
 
 	m_cam = new Camera();
@@ -67,9 +68,10 @@ void BasicDemo::render()
 {
 	if (m_d3dContext == 0) return;
 	
-	float col[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float col[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	m_d3dContext->ClearRenderTargetView(m_backBufferTarget, col);
-	m_d3dContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0xFF);
+	m_d3dContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0xff);
+
 	DrawData data = { m_cam, m_d3dContext };
 
 	for (auto obj : m_objects)

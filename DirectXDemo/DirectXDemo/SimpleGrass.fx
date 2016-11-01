@@ -3,16 +3,26 @@ cbuffer CONSTS : register(b0)
 {
 	float tessDensity;
 	float halfGrassWidth;
+	//game time
 	float time;	
-	float wind_x;//was getting upset with float3 here...
+	//wind vector
+	float wind_x;
 	float wind_y;
 	float wind_z;
-	float2 padding;
+	//used to compute the wind animation (orthoman style)
+	float base_x; 
+	float base_y;
+	float base_z;
+	//remove this stuff to revert back to old working - messing aruond with mesh generation stuff
+	float tan_x;
+	float tan_y;
+	float tan_z;
 };
 
 cbuffer CBWorldViewProj : register (b1)
 {
 	matrix world_view_proj;
+	//matrix iwvp;
 }
 
 
@@ -77,8 +87,9 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 	VS_OUTPUT output;
 	float4 pos = float4(vertex.pos, 1.f);
 	pos = mul(pos, world_view_proj);
-
+	//output.pos = pos + (windForce(float3(base_x, base_y, base_z), float3(wind_x, wind_y, wind_z)) *vertex.tVal); //<-orthomans technique....
 	output.pos = pos + (windForce(pos, float3(wind_x, wind_y, wind_z)) *vertex.tVal);
+
 	return output;
 }
 
@@ -129,22 +140,37 @@ DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2
 [maxvertexcount(4)]
 void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 {
-	//should get optimised down to a c&p during compilation
 	for (uint i = 0; i < 2; i++)
 	{
-		float halfWidth = halfGrassWidth * (1 - (input[i].tVal * input[i].tVal)); //parabolic curve for slightly more realistic grass :)
+		//float halfWidth = halfGrassWidth * (1 - (input[i].tVal * input[i].tVal)); //parabolic curve for slightly more realistic grass :)
 		PS_INPUT element;				//vertex for output
+		float4 tangent = float4(tan_x, tan_y, tan_z, 0.0f);
 
-		float4 pos = input[i].position; //position of node
-
-		pos.x += halfWidth;				//right of node
+		float4 pos = input[i].position+ tangent;
 		element.pos = pos;
 		output.Append(element);
 
-		pos.x -= halfWidth * 2;			//left of node
+		pos = input[i].position - tangent;
 		element.pos = pos;
 		output.Append(element);
 	}
+	////WORKING
+	////should get optimised down to a c&p during compilation
+	//for (uint i = 0; i < 2; i++)
+	//{
+	//	float halfWidth = halfGrassWidth * (1 - (input[i].tVal * input[i].tVal)); //parabolic curve for slightly more realistic grass :)
+	//	PS_INPUT element;				//vertex for output
+
+	//	float4 pos = input[i].position; //position of node
+
+	//	pos.x += halfWidth;				//right of node
+	//	element.pos = pos;
+	//	output.Append(element);
+
+	//	pos.x = input[i].position -halfWidth; //left of node
+	//	element.pos = pos;
+	//	output.Append(element);
+	//}
 }
 
 //PIXEL SHADER-----------------------------------------------------------
