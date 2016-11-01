@@ -13,25 +13,27 @@ BasicDemo::~BasicDemo()
 bool BasicDemo::load()
 {
 	using namespace DirectX;
-	XMFLOAT3 wind = { 0.5f, 0.0f, 0.0f };
+	XMFLOAT3 wind = { -0.4f, 0.0f, 0.0f };
 
 	SimpleGrass* grass = new SimpleGrass();
 	m_objects.push_back(grass);
 	CHECK_FAIL(grass->load(m_d3dDevice));
 	grass->setPos(XMFLOAT3(0.1,-0.2f,0.f));
+	grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
 	grass->setWind(wind);
 
 	grass = new SimpleGrass();
 	m_objects.push_back(grass);
 	CHECK_FAIL(grass->load(m_d3dDevice));
 	grass->setPos(XMFLOAT3(0.f, -0.2f, 0.f));
+	grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
 	grass->setWind(wind);
 
 	grass = new SimpleGrass();
 	m_objects.push_back(grass);
 	CHECK_FAIL(grass->load(m_d3dDevice));
 	grass->setPos(XMFLOAT3(-0.1f, -0.2f, 0.f));
-	grass->setRot(XMFLOAT3(0.f, XM_PIDIV2, 0.f));
+	grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
 	grass->setWind(wind);
 
 	m_cam = new Camera();

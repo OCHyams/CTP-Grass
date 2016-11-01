@@ -147,7 +147,7 @@ bool SimpleGrass::load(ID3D11Device* _device)
 		{ DirectX::XMFLOAT3(0.f, 0.f, 0.f), 0.f},
 		{ DirectX::XMFLOAT3(0.f, 0.2f, 0.f), 0.33f},
 		{ DirectX::XMFLOAT3(0.f, 0.4f, 0.f), 0.66f},
-		{ DirectX::XMFLOAT3(0.0f, 0.6f, -0.1f), 1.f}
+		{ DirectX::XMFLOAT3(0.0f, 0.6f, 0.f), 1.f} //0,0,-0.1f
 	};
 
 	D3D11_BUFFER_DESC vDesc;
@@ -175,7 +175,7 @@ bool SimpleGrass::load(ID3D11Device* _device)
 	rasterDesc.DepthBias = 0;
 	rasterDesc.DepthBiasClamp = 0.0f;
 	rasterDesc.DepthClipEnable = true;
-	rasterDesc.FillMode = D3D11_FILL_WIREFRAME;//D3D11_FILL_WIREFRAME  D3D11_FILL_SOLID
+	rasterDesc.FillMode = D3D11_FILL_SOLID;//D3D11_FILL_WIREFRAME  D3D11_FILL_SOLID
 	rasterDesc.FrontCounterClockwise = false;
 	rasterDesc.MultisampleEnable = false;
 	rasterDesc.ScissorEnable = false;
@@ -271,6 +271,7 @@ void SimpleGrass::draw(const DrawData& _data)
 	Time* t = OCH::ServiceLocator<Time>::get();
 	CBGrassGeometry buffer = { m_curDensity, m_halfGrassWidth, t->time, m_wind.x, m_wind.y, m_wind.z, m_pos.x, m_pos.y, m_pos.z};
 	XMMATRIX rot = XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&m_rot));
+	rot = XMMatrixMultiply(rot, wvp);
 	XMVECTOR tan = XMVector4Transform(XMLoadFloat3(&XMFLOAT3(m_halfGrassWidth, 0, 0)), rot);
 	XMFLOAT3 tanf3;
 	XMStoreFloat3(&tanf3, tan);

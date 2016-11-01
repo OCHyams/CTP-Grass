@@ -23,5 +23,4 @@ __declspec(align(16))
 struct CBWorldViewProj
 {
 	DirectX::XMMATRIX m_wvp;
-	//DirectX::XMMATRIX m_iwvp;
 };
