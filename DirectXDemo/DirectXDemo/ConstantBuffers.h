@@ -24,3 +24,15 @@ struct CBWorldViewProj
 {
 	DirectX::XMMATRIX m_wvp;
 };
+
+__declspec(align(16))
+struct CBLight
+{
+	float pos_x;
+	float pos_y;
+	float pos_z;
+	float intensity;
+	float cam_x;
+	float cam_y;
+	float cam_z;
+};

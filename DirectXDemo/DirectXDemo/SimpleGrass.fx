@@ -22,7 +22,18 @@ cbuffer CONSTS : register(b0)
 cbuffer CBWorldViewProj : register (b1)
 {
 	matrix world_view_proj;
-	//matrix iwvp;
+}
+
+//do this... ;)
+cbuffer CBLight : register (b2)
+{
+	float pos_x;
+	float pos_y;
+	float pos_z;
+	float intensity;
+	float cam_x;
+	float cam_y;
+	float cam_z;
 }
 
 
@@ -87,7 +98,7 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 	VS_OUTPUT output;
 	float4 pos = float4(vertex.pos, 1.f);
 	pos = mul(pos, world_view_proj);
-	output.pos = pos + (windForce(float3(base_x, base_y, base_z), float3(wind_x, wind_y, wind_z)) * vertex.tVal * vertex.tVal); //<-orthomans technique....
+	output.pos = pos + (windForce(float3(base_x, base_y, base_z), float3(wind_x, wind_y, wind_z)) * vertex.tVal * vertex.tVal); //<-orthomans technique.... (also, square tVal to have stiff base, cube for stiffer grass)
 	//output.pos = pos + (windForce(pos, float3(wind_x, wind_y, wind_z)) *vertex.tVal); //<-is this better?
 
 	return output;
@@ -145,7 +156,7 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 		PS_INPUT element;	//vertex for output
 		float4 tangent = float4(tan_x, tan_y, tan_z, 0.0f) * (1 - (input[i].tVal * input[i].tVal)); //parabolic curve for slightly more realistic grass :)
 
-		float4 pos = input[i].position+ tangent;
+		float4 pos = input[i].position + tangent;
 		element.pos = pos;
 		output.Append(element);
 
@@ -153,24 +164,6 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 		element.pos = pos;
 		output.Append(element);
 	}
-
-	////WORKING
-	////should get optimised down to a c&p during compilation
-	//for (uint i = 0; i < 2; i++)
-	//{
-	//	float halfWidth = halfGrassWidth * (1 - (input[i].tVal * input[i].tVal)); //parabolic curve for slightly more realistic grass :)
-	//	PS_INPUT element;				//vertex for output
-
-	//	float4 pos = input[i].position; //position of node
-
-	//	pos.x += halfWidth;				//right of node
-	//	element.pos = pos;
-	//	output.Append(element);
-
-	//	pos.x = input[i].position -halfWidth; //left of node
-	//	element.pos = pos;
-	//	output.Append(element);
-	//}
 }
 
 //PIXEL SHADER-----------------------------------------------------------

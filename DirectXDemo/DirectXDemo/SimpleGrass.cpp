@@ -14,7 +14,8 @@ SimpleGrass::SimpleGrass() :	m_vs(nullptr),
 								m_CB_geometry(nullptr),
 								m_CB_world(nullptr),
 								m_inputLayout(nullptr),
-								m_vertexBuffer(nullptr)
+								m_vertexBuffer(nullptr),
+								m_CB_light(nullptr)
 {}
 
 SimpleGrass::~SimpleGrass()
@@ -206,6 +207,14 @@ bool SimpleGrass::load(ID3D11Device* _device)
 		return false;
 	}
 
+	//Light
+	if (!DXHelper::createBasicConstBuffer(&m_CB_light,
+		_device, sizeof(CBLight),
+		L"Couldn't create the light const buffer."))
+	{
+		return false;
+	}
+
 
 	//default grass width
 	m_halfGrassWidth = 0.04f;
@@ -215,6 +224,7 @@ bool SimpleGrass::load(ID3D11Device* _device)
 
 void SimpleGrass::unload()
 {
+	if (m_CB_light) m_CB_light->Release();
 	if (m_vertexBuffer) m_vertexBuffer->Release();
 	if (m_inputLayout) m_inputLayout->Release();
 	if (m_CB_world) m_CB_world->Release();
@@ -224,6 +234,7 @@ void SimpleGrass::unload()
 	if (m_hs) m_hs->Release();
 	if (m_vs) m_vs->Release();
 
+	m_CB_light = nullptr;
 	m_vertexBuffer = nullptr;
 	m_inputLayout = nullptr;
 	m_ps = nullptr;
@@ -282,12 +293,26 @@ void SimpleGrass::draw(const DrawData& _data)
 	memcpy(mappedResource.pData, &buffer, sizeof(CBGrassGeometry));
 	_data.m_dc->Unmap(m_CB_geometry, 0);
 
+	_data.m_dc->Map(m_CB_light, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	CBLight* light = (CBLight*)mappedResource.pData;
+	//do this for now! :)
+	light->cam_x = 0;
+	light->cam_y = 0;
+	light->cam_z = 0;
+	light->intensity = 0;
+	light->pos_x = 0;
+	light->pos_y = 0;
+	light->pos_z = 0;
+	_data.m_dc->Unmap(m_CB_light, 0);
+
 	_data.m_dc->HSSetConstantBuffers(0, 1, &m_CB_geometry);
 	_data.m_dc->GSSetConstantBuffers(0, 1, &m_CB_geometry);
 	_data.m_dc->DSSetConstantBuffers(0, 1, &m_CB_geometry);
 	_data.m_dc->VSSetConstantBuffers(0, 1, &m_CB_geometry);
 	_data.m_dc->VSSetConstantBuffers(1, 1, &m_CB_world);
 	_data.m_dc->GSSetConstantBuffers(1, 1, &m_CB_world);
+	_data.m_dc->VSSetConstantBuffers(2, 1, &m_CB_light);
+	_data.m_dc->PSSetConstantBuffers(2, 1, &m_CB_light);
 
 	_data.m_dc->Draw(4, 0);
 }
