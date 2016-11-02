@@ -3,11 +3,22 @@
 #include "ServiceLocator.h"
 #include "Input.h"
 #include "Time.h"
+#include "AntTweakBar.h"
 bool Camera::load(ID3D11Device*)
 {
+	//Tweak bar
+	TwBar* GUI = TwNewBar("Cam");
+	TwDefine(" Cam position='10 200' ");
+	TwDefine(" Cam size='100 150' ");
+	TwDefine(" Cam movable= false ");
+	TwDefine(" Cam resizable= true ");
+	TwAddVarRW(GUI, "x", TwType::TW_TYPE_FLOAT, &(m_pos.x), "");
+	TwAddVarRW(GUI, "y", TwType::TW_TYPE_FLOAT, &(m_pos.y), "");
+	TwAddVarRW(GUI, "z", TwType::TW_TYPE_FLOAT, &(m_pos.z), "");
+
 	using namespace DirectX;
 	XMStoreFloat4x4(&m_view, XMMatrixLookAtLH(XMLoadFloat3(&m_pos), XMLoadFloat3(&m_target), XMLoadFloat3(&m_up)));
-	XMStoreFloat4x4(&m_proj, DirectX::XMMatrixPerspectiveFovLH(XM_PIDIV4, 640 / 480, 0.000f, 300.f)); //make this less magic number-y 
+	XMStoreFloat4x4(&m_proj, DirectX::XMMatrixPerspectiveFovLH(XM_PIDIV4, 640 / 480, 0.000f, 1000)); //make this less magic number-y 
 
 
 	updateViewProjForGO();
@@ -25,7 +36,7 @@ void Camera::update()
 	using namespace DirectX;
 	using TIME = OCH::ServiceLocator<Time>;
 	using INPUT = OCH::ServiceLocator<Input>;
-	float speed = 0.1 * TIME::get()->deltaTime;
+	float speed = 0.3 * TIME::get()->deltaTime;
 
 	if (INPUT::get()->getKey(DIK_A))
 	{
@@ -42,6 +53,14 @@ void Camera::update()
 	else if (INPUT::get()->getKey(DIK_S))
 	{
 		m_pos.y -= speed;
+	}
+	else if (INPUT::get()->getKey(DIK_Q))
+	{
+		m_pos.z += speed;
+	}
+	else if (INPUT::get()->getKey(DIK_E))
+	{
+		m_pos.z -= speed;
 	}
 
 	XMStoreFloat4x4(&m_view, XMMatrixLookAtLH(XMLoadFloat3(&m_pos), XMLoadFloat3(&m_target), XMLoadFloat3(&m_up)));

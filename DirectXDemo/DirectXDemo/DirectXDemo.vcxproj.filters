@@ -54,6 +54,9 @@
     <ClCompile Include="Time.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Plane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DX11Demo.h">
@@ -98,12 +101,18 @@
     <ClInclude Include="DrawData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Plane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="SolidGreenColour.fx">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="SimpleGrass.fx">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BasicShader.fx">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

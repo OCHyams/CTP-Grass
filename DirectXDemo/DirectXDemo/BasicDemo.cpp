@@ -3,6 +3,7 @@
 #include "Camera.h"
 #include "Triangle.h"
 #include "DrawData.h"
+#include "Plane.h"
 #include "AntTweakBar.h"
 BasicDemo::BasicDemo()
 {}
@@ -39,7 +40,7 @@ bool BasicDemo::load()
 	m_grass.push_back(grass);
 	CHECK_FAIL(grass->load(m_d3dDevice));
 	grass->setPos(XMFLOAT3(0.f, -0.2f, 0.f));
-	grass->setRot(XMFLOAT3(0.f, 0.8 * XM_PIDIV4, 0.f));
+	grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
 	grass->setWind(m_wind);
 
 	grass = new SimpleGrass();
@@ -47,11 +48,17 @@ bool BasicDemo::load()
 	m_grass.push_back(grass);
 	CHECK_FAIL(grass->load(m_d3dDevice));
 	grass->setPos(XMFLOAT3(-0.1f, -0.2f, 0.f));
-	grass->setRot(XMFLOAT3(0.f, 0.6 * XM_PIDIV4, 0.f));
+	grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
 	grass->setWind(m_wind);
 
+	Plane* plane = new Plane();
+	m_objects.push_back(plane);
+	CHECK_FAIL(plane->load(m_d3dDevice));
+	plane->setPos(XMFLOAT3(0.f, 0.f, 0.f));
+
+
 	m_cam = new Camera();
-	m_cam->setPos({ 0.0f, 0.6f, -0.5f });
+	m_cam->setPos({ 0.0f, 0.0f, -.5f });
 	m_objects.push_back(m_cam);
 	CHECK_FAIL(m_cam->load(m_d3dDevice));
 

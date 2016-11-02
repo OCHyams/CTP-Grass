@@ -94,9 +94,9 @@ bool ShaderDemoObject::load(ID3D11Device* _device)
 	//VERTEX DATA
 	BasicVertex verts[] =
 	{
-		DirectX::XMFLOAT3(0.25f, 0.25f, 0.5f),
-		DirectX::XMFLOAT3(0.25f, -0.25f, 0.5f),
-		DirectX::XMFLOAT3(-0.25f, -0.25f, 0.5f)
+		DirectX::XMFLOAT4(0.25f, 0.25f, 0.5f, 1.f),
+		DirectX::XMFLOAT4(0.25f, -0.25f, 0.5f, 1.f),
+		DirectX::XMFLOAT4(-0.25f, -0.25f, 0.5f, 1.f)
 	};
 
 	D3D11_BUFFER_DESC vDesc;

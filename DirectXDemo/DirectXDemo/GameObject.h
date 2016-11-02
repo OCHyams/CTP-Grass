@@ -10,22 +10,24 @@ class ID3D11Device;
 class GameObject
 {
 public:
-	GameObject() {}
+	GameObject() : m_scale (DirectX::XMFLOAT3(1,1,1)) {}
 	virtual ~GameObject() {}
 
 	virtual bool load(ID3D11Device*) =0;
 	virtual void unload() = 0;
 
-	virtual void update(); //should really do matrix updates here! see codebase from Simon's projects
+	virtual void update();
 	virtual void draw(const DrawData&) =0;
 
 	static void setViewProjMat(const DirectX::XMFLOAT4X4& _viewProj);
 
 	void setPos(const DirectX::XMFLOAT3& _pos) { m_pos = _pos; }
 	void setRot(const DirectX::XMFLOAT3& _rot) { m_rot = _rot; }
+	void setScale(const DirectX::XMFLOAT3& _scale) { m_scale = _scale; }
 protected:
 	DirectX::XMFLOAT3 m_pos;
 	DirectX::XMFLOAT3 m_rot;
+	DirectX::XMFLOAT3 m_scale;
 
 	DirectX::XMFLOAT4X4 m_worldViewProj;
 	static DirectX::XMFLOAT4X4 s_viewProj;

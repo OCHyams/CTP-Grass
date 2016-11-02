@@ -2,7 +2,7 @@
 #include <DirectXMath.h>
 struct BasicVertex
 {
-	DirectX::XMFLOAT3 pos;
+	DirectX::XMFLOAT4 pos;
 };
 
 struct BezierVertex

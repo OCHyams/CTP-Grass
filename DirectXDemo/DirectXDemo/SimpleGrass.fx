@@ -13,7 +13,7 @@ cbuffer CONSTS : register(b0)
 	float base_x; 
 	float base_y;
 	float base_z;
-	//remove this stuff to revert back to old working - messing aruond with mesh generation stuff
+	//tangent for mesh generation
 	float tan_x;
 	float tan_y;
 	float tan_z;

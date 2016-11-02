@@ -217,7 +217,7 @@ bool SimpleGrass::load(ID3D11Device* _device)
 
 
 	//default grass width
-	m_halfGrassWidth = 0.04f;
+	m_halfGrassWidth = 0.012f;
 
 	return true;
 }
