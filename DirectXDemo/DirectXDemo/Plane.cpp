@@ -178,6 +178,9 @@ void Plane::draw(const DrawData& _data)
 	_data.m_dc->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R16_UINT, 0);
 	_data.m_dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	_data.m_dc->VSSetShader(m_vs, 0, 0);
+	_data.m_dc->HSSetShader(nullptr, 0, 0);
+	_data.m_dc->DSSetShader(nullptr, 0, 0);
+	_data.m_dc->GSSetShader(nullptr, 0, 0);
 	_data.m_dc->PSSetShader(m_ps, 0, 0);
 	_data.m_dc->RSSetState(m_rasterizer);
 
@@ -193,5 +196,5 @@ void Plane::draw(const DrawData& _data)
 	_data.m_dc->VSSetConstantBuffers(0, 1, &m_CB_world);
 	_data.m_dc->PSSetConstantBuffers(0, 1, &m_CB_world);
 
-	_data.m_dc->Draw(4, 0);
+	_data.m_dc->DrawIndexed(6, 0, 0);
 }

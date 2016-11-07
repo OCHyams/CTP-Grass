@@ -98,7 +98,7 @@ void BasicDemo::render()
 	if (m_d3dContext == 0) return;
 	float col[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	m_d3dContext->ClearRenderTargetView(m_backBufferTarget, col);
-	m_d3dContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0xff);
+	m_d3dContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0x00);
 
 	DrawData data = { m_cam, m_d3dContext };
 	for (auto obj : m_objects)

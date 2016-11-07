@@ -17,12 +17,13 @@ cbuffer CBWorldViewProj : register (b0)
 
 PS_INPUT VS_Main(VS_INPUT vert)
 {
-	PS_INPUT output;
+	PS_INPUT output ;
+	output.pos = 0;
 	output.pos = mul(vert.pos, world_view_proj);
 	return output;
 }
 
 float4 PS_Main(PS_INPUT vert) : SV_TARGET
 {
-	return float4(0.0f,0.0f,1.0f,1.0f);
+	return float4(0.0f,0.0f,0.0f,1.0f);
 }

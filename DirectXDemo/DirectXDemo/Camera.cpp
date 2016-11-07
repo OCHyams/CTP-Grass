@@ -20,7 +20,7 @@ bool Camera::load(ID3D11Device*)
 
 	using namespace DirectX;
 	XMStoreFloat4x4(&m_view, XMMatrixLookAtLH(XMLoadFloat3(&m_pos), XMLoadFloat3(&m_target), XMLoadFloat3(&m_up)));
-	XMStoreFloat4x4(&m_proj, DirectX::XMMatrixPerspectiveFovLH(XM_PIDIV4, 640 /480 , 0.000f, 1000));
+	XMStoreFloat4x4(&m_proj, DirectX::XMMatrixPerspectiveFovLH(XM_PIDIV4, 640 /480 , 0.000f, 1000000));
 
 
 	updateViewProjForGO();
