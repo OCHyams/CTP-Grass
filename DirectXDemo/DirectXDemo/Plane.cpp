@@ -56,11 +56,10 @@ bool Plane::load(ID3D11Device* _device)
 	//INPUT LAYOUT
 	D3D11_INPUT_ELEMENT_DESC vsLayout[] =
 	{
-		{ "SV_POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
 	};
 
 	unsigned int totalLayoutElements = ARRAYSIZE(vsLayout);
-
 	result = _device->CreateInputLayout(vsLayout, totalLayoutElements, vsBuffer->GetBufferPointer(), vsBuffer->GetBufferSize(), &m_inputLayout);
 	vsBuffer->Release();
 
@@ -73,10 +72,10 @@ bool Plane::load(ID3D11Device* _device)
 	//VERTEX DATA
 	BasicVertex verts[] =
 	{
-		XMFLOAT4(0.f, 0.f, 0.f, 1.f),
-		XMFLOAT4(0.f, 0.f, 1.f, 1.f),
-		XMFLOAT4(1.f, 0.f, 1.f, 1.f),
-		XMFLOAT4(1.f, 0.f, 0.f, 1.f)
+		XMFLOAT4(-0.5f, 0.f, -0.5f, 1.f),
+		XMFLOAT4(0.5f, 0.f, -0.5f, 1.f),
+		XMFLOAT4(0.5f, 0.f, 0.5f, 1.f),
+		XMFLOAT4(-0.5f, 0.f, -0.5f, 1.f)
 	};
 
 	D3D11_BUFFER_DESC vDesc;
@@ -96,6 +95,25 @@ bool Plane::load(ID3D11Device* _device)
 		return false;
 	}
 
+	//Index buffer
+	WORD indicies[] =
+	{
+		3,1,0,2,1,3
+	};
+	D3D11_BUFFER_DESC iDesc;
+	ZeroMemory(&iDesc, sizeof(iDesc));
+	iDesc.Usage = D3D11_USAGE_DEFAULT;
+	iDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	iDesc.ByteWidth = sizeof(WORD) * ARRAYSIZE(indicies);
+	ZeroMemory(&resourceData, sizeof(resourceData));
+	resourceData.pSysMem = indicies;
+	result = _device->CreateBuffer(&iDesc, &resourceData, &m_indexBuffer);
+	if (FAILED(result))
+	{
+		DXTRACE_MSG(L"Couldn't create the index buffer.");
+		return false;
+	}
+
 	//RASTERIZER
 	D3D11_RASTERIZER_DESC rasterDesc;
 	ZeroMemory(&rasterDesc, sizeof(rasterDesc));
@@ -104,13 +122,13 @@ bool Plane::load(ID3D11Device* _device)
 	rasterDesc.DepthBias = 0;
 	rasterDesc.DepthBiasClamp = 0.0f;
 	rasterDesc.DepthClipEnable = true;
-	rasterDesc.FillMode = D3D11_FILL_WIREFRAME;//D3D11_FILL_WIREFRAME  D3D11_FILL_SOLID
+	rasterDesc.FillMode = D3D11_FILL_SOLID;//D3D11_FILL_WIREFRAME  D3D11_FILL_SOLID
 	rasterDesc.FrontCounterClockwise = false;
 	rasterDesc.MultisampleEnable = false;
 	rasterDesc.ScissorEnable = false;
 	rasterDesc.SlopeScaledDepthBias = 0.0f;
 
-	// Create the rasterizer state from the description we just filled out.
+	// Create the rasterizer state from the description we just filled out
 	result = _device->CreateRasterizerState(&rasterDesc, &m_rasterizer);
 	if (FAILED(result))
 	{
@@ -131,7 +149,9 @@ bool Plane::load(ID3D11Device* _device)
 
 void Plane::unload()
 {
-	
+	if (m_indexBuffer) m_indexBuffer->Release();
+
+
 	if (m_vertexBuffer) m_vertexBuffer->Release();
 	if (m_inputLayout) m_inputLayout->Release();
 	if (m_ps) m_ps->Release();
@@ -155,13 +175,15 @@ void Plane::draw(const DrawData& _data)
 
 	_data.m_dc->IASetInputLayout(m_inputLayout);
 	_data.m_dc->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
-	_data.m_dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);//D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST D3D11_PRIMITIVE_TOPOLOGY_POINTLIST D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST
+	_data.m_dc->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R16_UINT, 0);
+	_data.m_dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	_data.m_dc->VSSetShader(m_vs, 0, 0);
 	_data.m_dc->PSSetShader(m_ps, 0, 0);
 	_data.m_dc->RSSetState(m_rasterizer);
 
 	using namespace DirectX;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
+
 	_data.m_dc->Map(m_CB_world, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	CBWorldViewProj* dataPtr = (CBWorldViewProj*)mappedResource.pData;
 	XMMATRIX wvp = XMLoadFloat4x4(&m_worldViewProj);

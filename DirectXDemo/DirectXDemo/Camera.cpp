@@ -16,9 +16,11 @@ bool Camera::load(ID3D11Device*)
 	TwAddVarRW(GUI, "y", TwType::TW_TYPE_FLOAT, &(m_pos.y), "");
 	TwAddVarRW(GUI, "z", TwType::TW_TYPE_FLOAT, &(m_pos.z), "");
 
+
+
 	using namespace DirectX;
 	XMStoreFloat4x4(&m_view, XMMatrixLookAtLH(XMLoadFloat3(&m_pos), XMLoadFloat3(&m_target), XMLoadFloat3(&m_up)));
-	XMStoreFloat4x4(&m_proj, DirectX::XMMatrixPerspectiveFovLH(XM_PIDIV4, 640 / 480, 0.000f, 1000)); //make this less magic number-y 
+	XMStoreFloat4x4(&m_proj, DirectX::XMMatrixPerspectiveFovLH(XM_PIDIV4, 640 /480 , 0.000f, 1000));
 
 
 	updateViewProjForGO();

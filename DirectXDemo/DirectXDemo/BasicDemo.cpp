@@ -56,7 +56,6 @@ bool BasicDemo::load()
 	CHECK_FAIL(plane->load(m_d3dDevice));
 	plane->setPos(XMFLOAT3(0.f, 0.f, 0.f));
 
-
 	m_cam = new Camera();
 	m_cam->setPos({ 0.0f, 0.0f, -.5f });
 	m_objects.push_back(m_cam);

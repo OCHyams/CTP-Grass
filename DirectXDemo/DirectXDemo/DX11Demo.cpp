@@ -182,7 +182,7 @@ bool DX11Demo::init(HINSTANCE _hInstance, HWND _hwnd)
 	}
 
 	m_d3dContext->OMSetRenderTargets(1, &m_backBufferTarget, m_depthStencilView);
-
+	
 	D3D11_VIEWPORT viewport;
 	viewport.Width = static_cast<float>(w);
 	viewport.Height = static_cast<float>(h);
@@ -198,13 +198,12 @@ bool DX11Demo::init(HINSTANCE _hInstance, HWND _hwnd)
 	success = m_input->init(m_hInstance,m_hwnd);
 	OCH::ServiceLocator<Input>::add(m_input);
 
-
 	//time
 	OCH::ServiceLocator<Time>::add(&m_time);
 	m_clock.reset();
 	m_clock.updateGameTime(m_time);
 
-	//Antweak
+	//Anttweak
 	//set up GUI library
 	TwInit(TW_DIRECT3D11, m_d3dDevice);
 	TwWindowSize(w, h);

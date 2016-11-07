@@ -1,17 +1,28 @@
 
+
+struct VS_INPUT
+{
+	float4 pos : POSITION;
+};
+struct PS_INPUT
+{
+	float4 pos : SV_POSITION;
+};
+
 cbuffer CBWorldViewProj : register (b0)
 {
 	matrix world_view_proj;
 }
 
 
-float4 VS_Main(float4 pos : SV_POSITION) : SV_POSITION
+PS_INPUT VS_Main(VS_INPUT vert)
 {
-	pos = mul(pos, world_view_proj);
-	return pos;
+	PS_INPUT output;
+	output.pos = mul(vert.pos, world_view_proj);
+	return output;
 }
 
-float4 PS_Main(float4 pos : SV_POSITION) : SV_TARGET
+float4 PS_Main(PS_INPUT vert) : SV_TARGET
 {
 	return float4(0.0f,0.0f,1.0f,1.0f);
 }

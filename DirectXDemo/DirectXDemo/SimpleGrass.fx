@@ -24,7 +24,7 @@ cbuffer CBWorldViewProj : register (b1)
 	matrix world_view_proj;
 }
 
-//do this... ;)
+//do this...
 cbuffer CBLight : register (b2)
 {
 	float pos_x;
