@@ -24,6 +24,7 @@ public:
 	void setGrassWidth(float _width) { m_halfGrassWidth = _width / 2; }
 	void setWind(const DirectX::XMFLOAT3& _wind) { m_wind = _wind; }
 
+	static void updateCameraPosition(const DirectX::XMFLOAT3& _pos) { s_cameraPos = _pos; }
 protected:
 	/////////////////////////////////////////////////
 	/// Shaders
@@ -38,8 +39,12 @@ protected:
 	/// Constant buffers
 	/////////////////////////////////////////////////
 	ID3D11Buffer*			m_CB_geometry;
-	ID3D11Buffer*			m_CB_world;
+	ID3D11Buffer*			m_CB_worldviewproj;
 	ID3D11Buffer*			m_CB_light;
+	/////////////////////////////////////////////////
+	/// Constant buffers cpu side
+	/////////////////////////////////////////////////
+	CBWorldViewProj			m_CBcpu_worldviewproj;
 	/////////////////////////////////////////////////
 	/// Shader misc
 	/////////////////////////////////////////////////
@@ -56,4 +61,6 @@ protected:
 	/// Wind data stored here for testing!
 	/////////////////////////////////////////////////
 	DirectX::XMFLOAT3		m_wind;
+	static 
+	DirectX::XMFLOAT3		s_cameraPos;
 };

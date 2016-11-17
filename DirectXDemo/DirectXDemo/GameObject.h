@@ -24,6 +24,8 @@ public:
 	void setPos(const DirectX::XMFLOAT3& _pos) { m_pos = _pos; }
 	void setRot(const DirectX::XMFLOAT3& _rot) { m_rot = _rot; }
 	void setScale(const DirectX::XMFLOAT3& _scale) { m_scale = _scale; }
+
+	const DirectX::XMFLOAT3& getPos() const {return m_pos;}
 protected:
 	DirectX::XMFLOAT3 m_pos;
 	DirectX::XMFLOAT3 m_rot;

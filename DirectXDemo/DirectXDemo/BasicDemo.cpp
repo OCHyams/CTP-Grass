@@ -91,6 +91,8 @@ void BasicDemo::unload()
 void BasicDemo::update()
 {
 	DX11Demo::update();
+	SimpleGrass::updateCameraPosition(m_cam->getPos());
+
 	for (auto grass : m_grass)
 	{
 		using namespace DirectX;
@@ -108,8 +110,8 @@ void BasicDemo::update()
 void BasicDemo::render()
 {
 	if (m_d3dContext == 0) return;
+
 	float col[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	
 	m_d3dContext->ClearRenderTargetView(m_backBufferTarget, col);
 	m_d3dContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0xff);
 
