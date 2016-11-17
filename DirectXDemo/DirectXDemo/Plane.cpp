@@ -75,7 +75,7 @@ bool Plane::load(ID3D11Device* _device)
 		XMFLOAT4(-0.5f, 0.f, -0.5f, 1.f),
 		XMFLOAT4(0.5f, 0.f, -0.5f, 1.f),
 		XMFLOAT4(0.5f, 0.f, 0.5f, 1.f),
-		XMFLOAT4(-0.5f, 0.f, -0.5f, 1.f)
+		XMFLOAT4(-0.5f, 0.f, 0.5f, 1.f)
 	};
 
 	D3D11_BUFFER_DESC vDesc;
@@ -98,7 +98,7 @@ bool Plane::load(ID3D11Device* _device)
 	//Index buffer
 	WORD indicies[] =
 	{
-		3,1,0,2,1,3
+		0,1,3,2
 	};
 	D3D11_BUFFER_DESC iDesc;
 	ZeroMemory(&iDesc, sizeof(iDesc));
@@ -118,7 +118,7 @@ bool Plane::load(ID3D11Device* _device)
 	D3D11_RASTERIZER_DESC rasterDesc;
 	ZeroMemory(&rasterDesc, sizeof(rasterDesc));
 	rasterDesc.AntialiasedLineEnable = false;
-	rasterDesc.CullMode = D3D11_CULL_NONE; 
+	rasterDesc.CullMode = D3D11_CULL_FRONT; //D3D11_CULL_NONE D3D11_CULL_FRONT
 	rasterDesc.DepthBias = 0;
 	rasterDesc.DepthBiasClamp = 0.0f;
 	rasterDesc.DepthClipEnable = true;
@@ -136,11 +136,18 @@ bool Plane::load(ID3D11Device* _device)
 		return false;
 	}
 
-	//WORLD
-	if (!DXHelper::createBasicConstBuffer(&m_CB_world,
-		_device, sizeof(CBWorldViewProj),
-		L"Couldn't create the world const buffer."))
+	D3D11_BUFFER_DESC worldDesc;
+	ZeroMemory(&worldDesc, sizeof(worldDesc));
+	worldDesc.Usage = D3D11_USAGE_DEFAULT;
+	worldDesc.ByteWidth = sizeof(CBWorldViewProj);
+	worldDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	worldDesc.CPUAccessFlags = 0;
+	worldDesc.MiscFlags = 0;
+	worldDesc.StructureByteStride = 0;
+	result = _device->CreateBuffer(&worldDesc, NULL, &m_CB_world);
+	if (FAILED(result))
 	{
+		DXTRACE_MSG(L"Error: Couldn't create the world const buffer.");
 		return false;
 	}
 
@@ -176,7 +183,7 @@ void Plane::draw(const DrawData& _data)
 	_data.m_dc->IASetInputLayout(m_inputLayout);
 	_data.m_dc->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 	_data.m_dc->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R16_UINT, 0);
-	_data.m_dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	_data.m_dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	_data.m_dc->VSSetShader(m_vs, 0, 0);
 	_data.m_dc->HSSetShader(nullptr, 0, 0);
 	_data.m_dc->DSSetShader(nullptr, 0, 0);
@@ -185,16 +192,12 @@ void Plane::draw(const DrawData& _data)
 	_data.m_dc->RSSetState(m_rasterizer);
 
 	using namespace DirectX;
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-
-	_data.m_dc->Map(m_CB_world, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	CBWorldViewProj* dataPtr = (CBWorldViewProj*)mappedResource.pData;
-	XMMATRIX wvp = XMLoadFloat4x4(&m_worldViewProj);
-	dataPtr->m_wvp = XMMatrixTranspose(wvp);
-	_data.m_dc->Unmap(m_CB_world, 0);
+	m_CBcpu_world.m_wvp = XMLoadFloat4x4(&m_worldViewProj);
+	_data.m_dc->UpdateSubresource(m_CB_world,0, 0, &m_CBcpu_world,0,0);
+	
 
 	_data.m_dc->VSSetConstantBuffers(0, 1, &m_CB_world);
 	_data.m_dc->PSSetConstantBuffers(0, 1, &m_CB_world);
 
-	_data.m_dc->DrawIndexed(6, 0, 0);
+	_data.m_dc->DrawIndexed(4, 0, 0);
 }

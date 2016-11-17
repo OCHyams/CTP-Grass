@@ -27,11 +27,12 @@ bool BasicDemo::load()
 	m_wind = { -1.f, 0.0f, 0.0f };
 	m_windStr = 0.4;
 
+
 	SimpleGrass* grass = new SimpleGrass();
 	m_objects.push_back(grass);
 	m_grass.push_back(grass);
 	CHECK_FAIL(grass->load(m_d3dDevice));
-	grass->setPos(XMFLOAT3(0.1,-0.2f,0.f));
+	grass->setPos(XMFLOAT3(0.1,0.0f,0.f));
 	grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
 	grass->setWind(m_wind);
 
@@ -39,7 +40,7 @@ bool BasicDemo::load()
 	m_objects.push_back(grass);
 	m_grass.push_back(grass);
 	CHECK_FAIL(grass->load(m_d3dDevice));
-	grass->setPos(XMFLOAT3(0.f, -0.2f, 0.f));
+	grass->setPos(XMFLOAT3(0.f, 0.0f, 0.f));
 	grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
 	grass->setWind(m_wind);
 
@@ -47,17 +48,28 @@ bool BasicDemo::load()
 	m_objects.push_back(grass);
 	m_grass.push_back(grass);
 	CHECK_FAIL(grass->load(m_d3dDevice));
-	grass->setPos(XMFLOAT3(-0.1f, -0.2f, 0.f));
+	grass->setPos(XMFLOAT3(-0.1f, 0.0f, 0.f));
 	grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
 	grass->setWind(m_wind);
+
+	grass = new SimpleGrass();
+	m_objects.push_back(grass);
+	m_grass.push_back(grass);
+	CHECK_FAIL(grass->load(m_d3dDevice));
+	grass->setPos(XMFLOAT3(0.f, 0.0f, -0.1f));
+	grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
+	grass->setWind(m_wind);
+	
 
 	Plane* plane = new Plane();
 	m_objects.push_back(plane);
 	CHECK_FAIL(plane->load(m_d3dDevice));
-	plane->setPos(XMFLOAT3(0.f, 0.f, 0.f));
+	plane->setPos(XMFLOAT3(0.f, 0.0f, 0.f));
+	plane->setRot({ 0.f,0.f,0.f });
+	plane->setScale({1.f,1.f,1.f});
 
-	m_cam = new Camera();
-	m_cam->setPos({ 0.0f, 0.0f, -.5f });
+	m_cam = new Camera({0,0.2f,0});
+	m_cam->setPos({ 0.0f, 0.5f, -.5f });
 	m_objects.push_back(m_cam);
 	CHECK_FAIL(m_cam->load(m_d3dDevice));
 
@@ -97,8 +109,9 @@ void BasicDemo::render()
 {
 	if (m_d3dContext == 0) return;
 	float col[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	
 	m_d3dContext->ClearRenderTargetView(m_backBufferTarget, col);
-	m_d3dContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0x00);
+	m_d3dContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0xff);
 
 	DrawData data = { m_cam, m_d3dContext };
 	for (auto obj : m_objects)

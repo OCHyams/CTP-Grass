@@ -5,8 +5,8 @@
 class Camera : public GameObject
 {
 public:
-	Camera() : Camera(DirectX::XMFLOAT3(0.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 1.f, 0.f)) {}
-	Camera(const DirectX::XMFLOAT3& _target) : Camera(_target, DirectX::XMFLOAT3(0.f,1.f,0.f)) {}
+	Camera() : m_target(0.f, 0.f, 0.f), m_up(0.f, 1.f, 0.f) {}
+	Camera(const DirectX::XMFLOAT3& _target) : m_target(_target), m_up(0.f,1.f,0.f) {}
 	Camera(const DirectX::XMFLOAT3& _target, const DirectX::XMFLOAT3& _up) : m_target(_target), m_up(_up) {}
 	virtual ~Camera() {}
 

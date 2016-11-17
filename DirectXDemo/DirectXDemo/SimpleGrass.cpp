@@ -148,7 +148,7 @@ bool SimpleGrass::load(ID3D11Device* _device)
 		{ DirectX::XMFLOAT3(0.f, 0.f, 0.f), 0.f},
 		{ DirectX::XMFLOAT3(0.f, 0.2f, 0.f), 0.33f},
 		{ DirectX::XMFLOAT3(0.f, 0.4f, 0.f), 0.66f},
-		{ DirectX::XMFLOAT3(0.0f, 0.6f, 0.f), 1.f} //0,0,-0.1f
+		{ DirectX::XMFLOAT3(0.0f, 0.6f, 0.f), 1.f}
 	};
 
 	D3D11_BUFFER_DESC vDesc;
@@ -276,7 +276,7 @@ void SimpleGrass::draw(const DrawData& _data)
 	_data.m_dc->Map(m_CB_world, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	CBWorldViewProj* dataPtr = (CBWorldViewProj*)mappedResource.pData;
 	XMMATRIX wvp = XMLoadFloat4x4(&m_worldViewProj);
-	dataPtr->m_wvp = XMMatrixTranspose(wvp);
+	dataPtr->m_wvp = wvp;
 	_data.m_dc->Unmap(m_CB_world, 0);
 
 	Time* t = OCH::ServiceLocator<Time>::get();

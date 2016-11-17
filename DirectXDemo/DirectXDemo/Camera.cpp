@@ -20,7 +20,7 @@ bool Camera::load(ID3D11Device*)
 
 	using namespace DirectX;
 	XMStoreFloat4x4(&m_view, XMMatrixLookAtLH(XMLoadFloat3(&m_pos), XMLoadFloat3(&m_target), XMLoadFloat3(&m_up)));
-	XMStoreFloat4x4(&m_proj, DirectX::XMMatrixPerspectiveFovLH(XM_PIDIV4, 640 /480 , 0.000f, 1000000));
+	XMStoreFloat4x4(&m_proj, DirectX::XMMatrixPerspectiveFovLH(XM_PIDIV4, 640 /480 , 0.1f, 10));
 
 
 	updateViewProjForGO();
@@ -65,7 +65,12 @@ void Camera::update()
 		m_pos.z -= speed;
 	}
 
-	XMStoreFloat4x4(&m_view, XMMatrixLookAtLH(XMLoadFloat3(&m_pos), XMLoadFloat3(&m_target), XMLoadFloat3(&m_up)));
+	XMVECTOR eye = XMLoadFloat3(&m_pos);
+	XMVECTOR target = XMLoadFloat3(&m_target);
+	XMVECTOR up = XMLoadFloat3(&m_up);
+	XMMATRIX lookat = XMMatrixLookAtLH(eye, target, up);
+	XMStoreFloat4x4(&m_view, lookat);
+
 	updateViewProjForGO();
 	return;
 }
