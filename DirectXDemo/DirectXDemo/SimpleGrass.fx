@@ -46,7 +46,7 @@ struct VS_INPUT
 
 struct VS_OUTPUT
 {
-	float3 pos : POSITION;
+	float4 pos : POSITION;
 };
 
 struct HS_CONSTANT_OUTPUT
@@ -56,7 +56,7 @@ struct HS_CONSTANT_OUTPUT
 
 struct HS_OUTPUT
 {
-	float3 cpoint : CPOINT;
+	float4 cpoint : CPOINT;
 };
 
 struct DS_OUTPUT
@@ -81,7 +81,7 @@ inline float4 trianglef(float4 x)
 {
 	return abs(frac(x + 0.5) * 2.0 - 1.0);
 }
-inline float3 windForce(float3 p, float3 wind)
+inline float4 windForce(float3 p, float3 wind)
 {
 	// Compute the phase shift for the position p with respect to
 	// the current wind strength and direction
@@ -90,7 +90,7 @@ inline float3 windForce(float3 p, float3 wind)
 	float4 ts = smoothf(trianglef(float4(1.975, 0.793, 0.375, 0.193) * phase));
 	// Compute the mean of the four values and
 	// return the translation vector.
-	return wind * dot(ts, 0.25);
+	return float4(wind * dot(ts, 0.25), 0.0f);
 }
 
 VS_OUTPUT VS_Main(VS_INPUT vertex)
@@ -138,9 +138,9 @@ DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2
 	float t = uv.x;
 
 	//cubic bezier curve
-	float3 pos = pow(1.0f - t, 3.0f) * op[0].cpoint + 3.0f * pow(1.0f - t, 2.0f) * t * op[1].cpoint + 3.0f * (1.0f - t) * pow(t, 2.0f) * op[2].cpoint + pow(t, 3.0f) * op[3].cpoint;
+	float4 pos = pow(1.0f - t, 3.0f) * op[0].cpoint + 3.0f * pow(1.0f - t, 2.0f) * t * op[1].cpoint + 3.0f * (1.0f - t) * pow(t, 2.0f) * op[2].cpoint + pow(t, 3.0f) * op[3].cpoint;
 
-	output.position = float4(pos, 1.0f);
+	output.position = pos; // float4(pos, 1.0f);
 	output.tVal = t;
 
 	return output;

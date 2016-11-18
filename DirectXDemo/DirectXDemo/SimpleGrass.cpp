@@ -276,10 +276,9 @@ void SimpleGrass::update()
 	using namespace DirectX;
 	GameObject::update();
 
-	//change LOD with camera distance 
+	/*change LOD with camera distance*/ 
 	XMVECTOR difference = XMVectorSubtract(XMLoadFloat3(&s_cameraPos), XMLoadFloat3(&m_pos));
 	XMVECTOR vdist = XMVector3Length(difference);
-
 	float distance = vdist.m128_f32[0];
 	float __near = 0.5;
 	float __far = 1.0f;

@@ -28,6 +28,15 @@ bool BasicDemo::load()
 	m_windStr = 0.4;
 
 
+
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < 10; ++j)
+		{
+
+		}
+	}
+
 	SimpleGrass* grass = new SimpleGrass();
 	m_objects.push_back(grass);
 	m_grass.push_back(grass);
