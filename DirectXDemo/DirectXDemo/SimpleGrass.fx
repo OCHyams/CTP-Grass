@@ -17,6 +17,7 @@ cbuffer CONSTS : register(b0)
 	float tan_x;
 	float tan_y;
 	float tan_z;
+	float tan_w;
 };
 
 cbuffer CBWorldViewProj : register (b1)
@@ -99,7 +100,7 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 	float4 pos = float4(vertex.pos, 1.f);
 	pos = mul(pos, world_view_proj);
 	output.pos = pos +(windForce(float3(base_x, base_y, base_z), float3(wind_x, wind_y, wind_z)) * vertex.tVal * vertex.tVal); //<-orthomans technique.... (also, square tVal to have stiff base, cube for stiffer grass)
-	//output.pos = pos + (windForce(pos, float3(wind_x, wind_y, wind_z)) *vertex.tVal); //<-is this better?
+	//output.pos = pos + (windForce(pos, float3(wind_x, wind_y, wind_z)) *vertex.tVal* vertex.tVal); //<-is this better?
 
 	return output;
 }
@@ -154,7 +155,7 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 	for (uint i = 0; i < 2; i++)
 	{
 		PS_INPUT element;	//vertex for output
-		float4 tangent = float4(tan_x, tan_y, tan_z, 0.0f) * (1 - (input[i].tVal * input[i].tVal)); //parabolic curve for slightly more realistic grass :)
+		float4 tangent = float4(tan_x, tan_y, tan_z, tan_w) * (1 - (input[i].tVal * input[i].tVal)); //parabolic curve for slightly more realistic grass :)
 
 		float4 pos = input[i].position + tangent;
 		element.pos = pos;

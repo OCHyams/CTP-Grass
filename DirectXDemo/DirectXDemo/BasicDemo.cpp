@@ -28,16 +28,28 @@ bool BasicDemo::load()
 	m_windStr = 0.4;
 
 
+	float x = -0.5;
+	float add = 0.1;
 
 	for (int i = 0; i < 10; ++i)
 	{
+		float z = -0.5;
 		for (int j = 0; j < 10; ++j)
 		{
+			SimpleGrass* grass = new SimpleGrass();
+			m_objects.push_back(grass);
+			m_grass.push_back(grass);
+			CHECK_FAIL(grass->load(m_d3dDevice));
+			grass->setPos(XMFLOAT3(x, 0.0f, z));
+			grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
+			grass->setWind(m_wind);
 
+			z += add;
 		}
+		x += add;
 	}
 
-	SimpleGrass* grass = new SimpleGrass();
+	/*SimpleGrass* grass = new SimpleGrass();
 	m_objects.push_back(grass);
 	m_grass.push_back(grass);
 	CHECK_FAIL(grass->load(m_d3dDevice));
@@ -67,7 +79,7 @@ bool BasicDemo::load()
 	CHECK_FAIL(grass->load(m_d3dDevice));
 	grass->setPos(XMFLOAT3(0.f, 0.0f, -0.1f));
 	grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
-	grass->setWind(m_wind);
+	grass->setWind(m_wind);*/
 	
 
 	Plane* plane = new Plane();

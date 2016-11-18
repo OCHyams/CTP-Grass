@@ -17,6 +17,7 @@ struct CBGrassGeometry
 	float tan_x;
 	float tan_y;
 	float tan_z;
+	float tan_w;
 };
 
 __declspec(align(16))

@@ -178,7 +178,7 @@ bool SimpleGrass::load(ID3D11Device* _device)
 	rasterDesc.DepthBias = 0;
 	rasterDesc.DepthBiasClamp = 0.0f;
 	rasterDesc.DepthClipEnable = true;
-	rasterDesc.FillMode = D3D11_FILL_WIREFRAME;//D3D11_FILL_WIREFRAME  D3D11_FILL_SOLID
+	rasterDesc.FillMode = D3D11_FILL_SOLID;//D3D11_FILL_WIREFRAME  D3D11_FILL_SOLID
 	rasterDesc.FrontCounterClockwise = false;
 	rasterDesc.MultisampleEnable = false;
 	rasterDesc.ScissorEnable = false;
@@ -280,8 +280,8 @@ void SimpleGrass::update()
 	XMVECTOR difference = XMVectorSubtract(XMLoadFloat3(&s_cameraPos), XMLoadFloat3(&m_pos));
 	XMVECTOR vdist = XMVector3Length(difference);
 	float distance = vdist.m128_f32[0];
-	float __near = 0.5;
-	float __far = 1.0f;
+	float __near = 1;
+	float __far = 5.0f;
 
 	if (distance < __near) m_curDensity = m_maxDensity;
 	else if (distance > __far) m_curDensity = m_minDensity;
@@ -343,12 +343,12 @@ void SimpleGrass::updateConstBuffers()
 
 	//Geometry generation buffer
 	XMMATRIX rot = XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&m_rot));
-	//rot = XMMatrixMultiply(rot, wvp); <-- this shouldn't correct i don't think...
+	//rot = XMMatrixMultiply(rot, XMLoadFloat4x4(&m_worldViewProj)); //<-- this shouldn't correct i don't think...
 	rot = XMMatrixMultiply(rot, XMLoadFloat4x4(&s_viewProj)); //<-- this seeems more correct... (regardless, grass still doesn't work properly :C)
-	XMVECTOR tan = XMVector4Transform(XMLoadFloat3(&XMFLOAT3(m_halfGrassWidth, 0, 0)), rot);
-	XMFLOAT3 tanf3;
-	XMStoreFloat3(&tanf3, tan);
-	m_CBcpu_geometry = { m_curDensity, m_halfGrassWidth, (float)t->time, m_wind.x, m_wind.y, m_wind.z, m_pos.x, m_pos.y, m_pos.z, tanf3.x, tanf3.y, tanf3.z };
+	XMVECTOR tan = XMVector4Transform(XMLoadFloat4(&XMFLOAT4(m_halfGrassWidth, 0, 0, 0)), rot);
+	XMFLOAT4 tanf4;
+	XMStoreFloat4(&tanf4, tan);
+	m_CBcpu_geometry = { m_curDensity, m_halfGrassWidth, (float)t->time, m_wind.x, m_wind.y, m_wind.z, m_pos.x, m_pos.y, m_pos.z, tanf4.x, tanf4.y, tanf4.z, tanf4.w };
 
 	//world view projection buffer
 	m_CBcpu_worldviewproj.m_wvp = XMLoadFloat4x4(&m_worldViewProj);
