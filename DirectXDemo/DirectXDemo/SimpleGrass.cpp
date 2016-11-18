@@ -193,24 +193,31 @@ bool SimpleGrass::load(ID3D11Device* _device)
 	}
 
 	//CBUFFER
-	//DS
-	if (!DXHelper::createBasicConstBuffer(&m_CB_geometry,
-		_device, sizeof(CBGrassGeometry),
-		L"Couldn't create the hull shader const buffer."))
+	//Geometry buffer
+	D3D11_BUFFER_DESC bufferdesc;
+	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
+	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferdesc.ByteWidth = sizeof(CBGrassGeometry);
+	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bufferdesc.CPUAccessFlags = 0;
+	bufferdesc.MiscFlags = 0;
+	bufferdesc.StructureByteStride = 0;
+	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_geometry);
+	if (FAILED(result))
 	{
+		DXTRACE_MSG(L"Couldn't create the geometry const buffer.");
 		return false;
 	}
 	
-	//WORLD
-	D3D11_BUFFER_DESC worldDesc;
-	ZeroMemory(&worldDesc, sizeof(worldDesc));
-	worldDesc.Usage = D3D11_USAGE_DEFAULT;
-	worldDesc.ByteWidth = sizeof(CBWorldViewProj);
-	worldDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	worldDesc.CPUAccessFlags = 0;
-	worldDesc.MiscFlags = 0;
-	worldDesc.StructureByteStride = 0;
-	result = _device->CreateBuffer(&worldDesc, NULL, &m_CB_worldviewproj);
+	//World view proj
+	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
+	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferdesc.ByteWidth = sizeof(CBWorldViewProj);
+	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bufferdesc.CPUAccessFlags = 0;
+	bufferdesc.MiscFlags = 0;
+	bufferdesc.StructureByteStride = 0;
+	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_worldviewproj);
 	if (FAILED(result))
 	{
 		DXTRACE_MSG(L"Error: Couldn't create the world const buffer.");
@@ -218,10 +225,23 @@ bool SimpleGrass::load(ID3D11Device* _device)
 	}
 
 	//Light
-	if (!DXHelper::createBasicConstBuffer(&m_CB_light,
+	/*if (!DXHelper::createBasicConstBuffer(&m_CB_light,
 		_device, sizeof(CBLight),
 		L"Couldn't create the light const buffer."))
 	{
+		return false;
+	}*/	
+	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
+	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferdesc.ByteWidth = sizeof(CBLight);
+	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bufferdesc.CPUAccessFlags = 0;
+	bufferdesc.MiscFlags = 0;
+	bufferdesc.StructureByteStride = 0;
+	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_light);
+	if (FAILED(result))
+	{
+		DXTRACE_MSG(L"Error: Couldn't create the world const buffer.");
 		return false;
 	}
 
@@ -255,16 +275,6 @@ void SimpleGrass::update()
 {
 	using namespace DirectX;
 	GameObject::update();
-	//Input* input = OCH::ServiceLocator<Input>::get();
-	//
-	//if (input->getKeyDown(DIK_LEFT))
-	//{
-	//	m_curDensity = --m_curDensity >= m_minDensity ? m_curDensity : m_minDensity;
-	//}
-	//else if (input->getKeyDown(DIK_RIGHT))
-	//{
-	//	m_curDensity = ++m_curDensity <= m_maxDensity ? m_curDensity : m_maxDensity;
-	//}
 
 	//change LOD with camera distance 
 	XMVECTOR difference = XMVectorSubtract(XMLoadFloat3(&s_cameraPos), XMLoadFloat3(&m_pos));
@@ -286,14 +296,15 @@ void SimpleGrass::update()
 		float lerped = maxDens * (1-norm);
 		m_curDensity = lerped + m_minDensity;
 	}
+
+	updateConstBuffers();
 }
 
 void SimpleGrass::draw(const DrawData& _data)
 {
+	//set intermidiate assembly settings
 	unsigned int stride = sizeof(BezierVertex);
 	unsigned int offset = 0;
-
-	//set intermidiate assembly settings
 	_data.m_dc->IASetInputLayout(m_inputLayout);
 	_data.m_dc->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, NULL);
 	_data.m_dc->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
@@ -307,40 +318,12 @@ void SimpleGrass::draw(const DrawData& _data)
 	_data.m_dc->DSSetShader(m_ds, 0, 0);
 	_data.m_dc->RSSetState(m_rasterizer);
 
-	using namespace DirectX;
 	//update subresources
-	m_CBcpu_worldviewproj.m_wvp = XMLoadFloat4x4(&m_worldViewProj);
 	_data.m_dc->UpdateSubresource(m_CB_worldviewproj, 0, 0, &m_CBcpu_worldviewproj, 0, 0);
+	_data.m_dc->UpdateSubresource(m_CB_geometry, 0, 0, &m_CBcpu_geometry, 0, 0);
+	_data.m_dc->UpdateSubresource(m_CB_light, 0, 0, &m_CBcpu_light, 0, 0);
 
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-
-	Time* t = OCH::ServiceLocator<Time>::get();
-	CBGrassGeometry buffer = { m_curDensity, m_halfGrassWidth, t->time, m_wind.x, m_wind.y, m_wind.z, m_pos.x, m_pos.y, m_pos.z};
-	XMMATRIX rot = XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&m_rot));
-	//rot = XMMatrixMultiply(rot, wvp); <-- this shouldn't correct i don't think...
-	rot = XMMatrixMultiply(rot, XMLoadFloat4x4(&s_viewProj)); //<-- this seeems more correct... (regardless, grass still doesn't work properly :C)
-	XMVECTOR tan = XMVector4Transform(XMLoadFloat3(&XMFLOAT3(m_halfGrassWidth, 0, 0)), rot);
-	XMFLOAT3 tanf3;
-	XMStoreFloat3(&tanf3, tan);
-	buffer.tan_x = tanf3.x;
-	buffer.tan_y = tanf3.y;
-	buffer.tan_z = tanf3.z;
-	_data.m_dc->Map(m_CB_geometry, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	memcpy(mappedResource.pData, &buffer, sizeof(CBGrassGeometry));
-	_data.m_dc->Unmap(m_CB_geometry, 0);
-
-	_data.m_dc->Map(m_CB_light, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	CBLight* light = (CBLight*)mappedResource.pData;
-	//do this for now! :)
-	light->cam_x = 0;
-	light->cam_y = 0;
-	light->cam_z = 0;
-	light->intensity = 0;
-	light->pos_x = 0;
-	light->pos_y = 0;
-	light->pos_z = 0;
-	_data.m_dc->Unmap(m_CB_light, 0);
-
+	//set constant buffers
 	_data.m_dc->HSSetConstantBuffers(0, 1, &m_CB_geometry);
 	_data.m_dc->GSSetConstantBuffers(0, 1, &m_CB_geometry);
 	_data.m_dc->DSSetConstantBuffers(0, 1, &m_CB_geometry);
@@ -350,6 +333,30 @@ void SimpleGrass::draw(const DrawData& _data)
 	_data.m_dc->VSSetConstantBuffers(2, 1, &m_CB_light);
 	_data.m_dc->PSSetConstantBuffers(2, 1, &m_CB_light);
 
+	//draw verticies
 	_data.m_dc->Draw(4, 0);
+}
+
+void SimpleGrass::updateConstBuffers()
+{
+	using namespace DirectX;
+	Time* t = OCH::ServiceLocator<Time>::get();
+
+	//Geometry generation buffer
+	XMMATRIX rot = XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&m_rot));
+	//rot = XMMatrixMultiply(rot, wvp); <-- this shouldn't correct i don't think...
+	rot = XMMatrixMultiply(rot, XMLoadFloat4x4(&s_viewProj)); //<-- this seeems more correct... (regardless, grass still doesn't work properly :C)
+	XMVECTOR tan = XMVector4Transform(XMLoadFloat3(&XMFLOAT3(m_halfGrassWidth, 0, 0)), rot);
+	XMFLOAT3 tanf3;
+	XMStoreFloat3(&tanf3, tan);
+	m_CBcpu_geometry = { m_curDensity, m_halfGrassWidth, (float)t->time, m_wind.x, m_wind.y, m_wind.z, m_pos.x, m_pos.y, m_pos.z, tanf3.x, tanf3.y, tanf3.z };
+
+	//world view projection buffer
+	m_CBcpu_worldviewproj.m_wvp = XMLoadFloat4x4(&m_worldViewProj);
+
+	//light
+	//do this for now!
+	m_CBcpu_light = {0,0,0,0,0,0,0};
+
 }
 

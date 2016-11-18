@@ -45,6 +45,8 @@ protected:
 	/// Constant buffers cpu side
 	/////////////////////////////////////////////////
 	CBWorldViewProj			m_CBcpu_worldviewproj;
+	CBGrassGeometry			m_CBcpu_geometry;
+	CBLight					m_CBcpu_light;
 	/////////////////////////////////////////////////
 	/// Shader misc
 	/////////////////////////////////////////////////
@@ -63,4 +65,6 @@ protected:
 	DirectX::XMFLOAT3		m_wind;
 	static 
 	DirectX::XMFLOAT3		s_cameraPos;
+
+	void updateConstBuffers();
 };
