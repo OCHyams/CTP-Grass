@@ -24,7 +24,7 @@ bool BasicDemo::load()
 	TwAddVarRW(GUI, "dir", TwType::TW_TYPE_DIR3F, &m_wind, "opened = true axisz = -z showval = false");
 
 	using namespace DirectX;
-	m_wind = { -1.f, 0.0f, 0.0f };
+	m_wind = { 0.f, 0.0f, 1.0f };
 	m_windStr = 0.4;
 
 

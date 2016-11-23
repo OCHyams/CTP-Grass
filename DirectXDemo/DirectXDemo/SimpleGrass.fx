@@ -98,10 +98,12 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 {
 	VS_OUTPUT output;
 	float4 pos = float4(vertex.pos, 1.f);
-	pos = mul(pos, world_view_proj);
-	output.pos = pos +(windForce(float3(base_x, base_y, base_z), float3(wind_x, wind_y, wind_z)) * vertex.tVal * vertex.tVal); //<-orthomans technique.... (also, square tVal to have stiff base, cube for stiffer grass)
-	//output.pos = pos + (windForce(pos, float3(wind_x, wind_y, wind_z)) *vertex.tVal* vertex.tVal); //<-is this better?
 
+	pos += (windForce(float3(base_x, base_y, base_z), float3(wind_x, wind_y, wind_z)) * vertex.tVal * vertex.tVal); //<-orthomans technique.... (also, square tVal to have stiff base, cube for stiffer grass)
+	pos = mul(pos, world_view_proj);
+	//output.pos = pos +(windForce(float3(base_x, base_y, base_z), float3(wind_x, wind_y, wind_z)) * vertex.tVal * vertex.tVal); //<-orthomans technique.... (also, square tVal to have stiff base, cube for stiffer grass)
+	//output.pos = pos + (windForce(pos, float3(wind_x, wind_y, wind_z)) *vertex.tVal* vertex.tVal); //<-is this better?
+	output.pos = pos;
 	return output;
 }
 
