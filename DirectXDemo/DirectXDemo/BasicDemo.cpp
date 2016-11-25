@@ -4,6 +4,7 @@
 #include "Triangle.h"
 #include "DrawData.h"
 #include "Plane.h"
+#include "Field.h"
 #include "AntTweakBar.h"
 BasicDemo::BasicDemo()
 {}
@@ -28,7 +29,11 @@ bool BasicDemo::load()
 	m_windStr = 0.4;
 
 
-	float x = -0.5;
+	Field::loadShared(m_d3dDevice);
+	m_field.m_halfGrassWidth = 0.012f;
+	m_field.load(m_d3dDevice, 40, { 5,5 }, {-5,0,-5});
+
+	/*float x = -0.5;
 	float add = 0.1;
 
 	for (int i = 0; i < 10; ++i)
@@ -47,41 +52,10 @@ bool BasicDemo::load()
 			z += add;
 		}
 		x += add;
-	}
+	}*/
 
-	/*SimpleGrass* grass = new SimpleGrass();
-	m_objects.push_back(grass);
-	m_grass.push_back(grass);
-	CHECK_FAIL(grass->load(m_d3dDevice));
-	grass->setPos(XMFLOAT3(0.1,0.0f,0.f));
-	grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
-	grass->setWind(m_wind);
 
-	grass = new SimpleGrass();
-	m_objects.push_back(grass);
-	m_grass.push_back(grass);
-	CHECK_FAIL(grass->load(m_d3dDevice));
-	grass->setPos(XMFLOAT3(0.f, 0.0f, 0.f));
-	grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
-	grass->setWind(m_wind);
-
-	grass = new SimpleGrass();
-	m_objects.push_back(grass);
-	m_grass.push_back(grass);
-	CHECK_FAIL(grass->load(m_d3dDevice));
-	grass->setPos(XMFLOAT3(-0.1f, 0.0f, 0.f));
-	grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
-	grass->setWind(m_wind);
-
-	grass = new SimpleGrass();
-	m_objects.push_back(grass);
-	m_grass.push_back(grass);
-	CHECK_FAIL(grass->load(m_d3dDevice));
-	grass->setPos(XMFLOAT3(0.f, 0.0f, -0.1f));
-	grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
-	grass->setWind(m_wind);*/
 	
-
 	Plane* plane = new Plane();
 	m_objects.push_back(plane);
 	CHECK_FAIL(plane->load(m_d3dDevice));
@@ -100,6 +74,7 @@ bool BasicDemo::load()
 
 void BasicDemo::unload()
 {
+	Field::unloadShared();
 	for (auto obj : m_objects)
 	{
 		if (obj)
@@ -121,6 +96,8 @@ void BasicDemo::update()
 		XMFLOAT3 windf3;
 		XMStoreFloat3(&windf3, windv);
 		grass->setWind(windf3);
+
+		m_field.setWind(windf3);
 	}
 	for (auto obj : m_objects)
 	{
@@ -137,6 +114,11 @@ void BasicDemo::render()
 	m_d3dContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0xff);
 
 	DrawData data = { m_cam, m_d3dContext };
+
+	using namespace DirectX;
+	m_field.s_viewproj = XMLoadFloat4x4(&GameObject::getViewProj());//move this out onto camera, and call this function in draw instead of out here...
+	m_field.draw(data);
+
 	for (auto obj : m_objects)
 	{
 		obj->draw(data);

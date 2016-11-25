@@ -26,6 +26,7 @@ public:
 	void setScale(const DirectX::XMFLOAT3& _scale) { m_scale = _scale; }
 
 	const DirectX::XMFLOAT3& getPos() const {return m_pos;}
+	static const DirectX::XMFLOAT4X4& getViewProj() { return s_viewProj; }
 protected:
 	DirectX::XMFLOAT3 m_pos;
 	DirectX::XMFLOAT3 m_rot;

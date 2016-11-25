@@ -2,7 +2,7 @@
 #include "DX11Demo.h"
 #include <vector>
 #include <DirectXMath.h>
-
+#include "Field.h"
 class GameObject;
 class Camera;
 class SimpleGrass;
@@ -25,4 +25,5 @@ private:
 	std::vector<GameObject*> m_objects;
 	std::vector<SimpleGrass*> m_grass;
 	Camera* m_cam;
+	Field m_field;
 };
