@@ -14,6 +14,11 @@ public:
 	SimpleGrass();
 	virtual ~SimpleGrass();
 
+	static bool loadShared(ID3D11Device*);
+	static void unloadShared();
+
+	static void beginDraw(const DrawData& _data);
+
 
 	virtual bool load(ID3D11Device*) override;
 	virtual void unload() override;
@@ -29,12 +34,12 @@ protected:
 	/////////////////////////////////////////////////
 	/// Shaders
 	/////////////////////////////////////////////////
-	ID3D11VertexShader*		m_vs;
-	ID3D11PixelShader*		m_ps;
-	ID3D11GeometryShader*	m_gs;
-	ID3D11HullShader*		m_hs;
-	ID3D11DomainShader*		m_ds;
-	ID3D11RasterizerState*	m_rasterizer;
+	static ID3D11VertexShader*		m_vs;
+	static ID3D11PixelShader*		m_ps;
+	static ID3D11GeometryShader*	m_gs;
+	static ID3D11HullShader*		m_hs;
+	static ID3D11DomainShader*		m_ds;
+	static ID3D11RasterizerState*	m_rasterizer;
 	/////////////////////////////////////////////////
 	/// Constant buffers
 	/////////////////////////////////////////////////
@@ -50,7 +55,7 @@ protected:
 	/////////////////////////////////////////////////
 	/// Shader misc
 	/////////////////////////////////////////////////
-	ID3D11InputLayout*		m_inputLayout;
+	static ID3D11InputLayout* m_inputLayout;
 	ID3D11Buffer*			m_vertexBuffer;
 	/////////////////////////////////////////////////
 	/// LOD factors

@@ -124,7 +124,7 @@
     <FxCompile Include="BasicShader.fx">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Field.hlsl">
+    <FxCompile Include="Field.fx">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
