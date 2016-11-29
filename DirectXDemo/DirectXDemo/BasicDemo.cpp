@@ -23,15 +23,17 @@ bool BasicDemo::load()
 	TwDefine(" Wind resizable= true ");
 	TwAddVarRW(GUI, "str", TwType::TW_TYPE_FLOAT, &m_windStr, "step = 0.05");
 	TwAddVarRW(GUI, "dir", TwType::TW_TYPE_DIR3F, &m_wind, "opened = true axisz = -z showval = false");
+	TwAddVarRO(GUI, "FPS", TwType::TW_TYPE_FLOAT, &m_fps, "");
 
 	using namespace DirectX;
 	m_wind = { 0.f, 0.0f, 1.0f };
 	m_windStr = 0.4;
 
+	m_fps = 0;
 
 	Field::loadShared(m_d3dDevice);
 	m_field.m_halfGrassWidth = 0.012f;
-	m_field.load(m_d3dDevice, 10000, { 3,3 }, {-1.5,0,-1.5});
+	m_field.load(m_d3dDevice, 1000000, { 30, 30 }, {-15,0,-15});
 
 	//SimpleGrass::loadShared(m_d3dDevice);
 
@@ -56,15 +58,15 @@ bool BasicDemo::load()
 	//	x += add;
 	//}
 	
-	Plane* plane = new Plane();
-	m_objects.push_back(plane);
-	CHECK_FAIL(plane->load(m_d3dDevice));
-	plane->setPos(XMFLOAT3(0.f, 0.0f, 0.f));
-	plane->setRot({ 0.f,0.f,0.f });
-	plane->setScale({1.f,1.f,1.f});
+	//Plane* plane = new Plane();
+	//m_objects.push_back(plane);
+	//CHECK_FAIL(plane->load(m_d3dDevice));
+	//plane->setPos(XMFLOAT3(0.f, 0.0f, 0.f));
+	//plane->setRot({ 0.f,0.f,0.f });
+	//plane->setScale({1.f,1.f,1.f});
 
-	m_cam = new Camera({0,0.2f,0});
-	m_cam->setPos({ 0.0f, 0.5f, -.5f });
+	m_cam = new Camera({0,0.5f, 3.f});
+	m_cam->setPos({ 0.0f, 1.f, -3.f });
 	m_objects.push_back(m_cam);
 	CHECK_FAIL(m_cam->load(m_d3dDevice));
 
@@ -107,6 +109,11 @@ void BasicDemo::update()
 	}
 	m_field.s_viewproj = GameObject::getViewProj();//move this out onto camera, and call this function in draw instead of out here...
 	m_field.update();
+
+	if (m_time.deltaTime > 0)
+	{
+		m_fps = 1 / m_time.deltaTime;
+	}
 }
 
 void BasicDemo::render()

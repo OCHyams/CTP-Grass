@@ -26,4 +26,5 @@ private:
 	std::vector<SimpleGrass*> m_grass;
 	Camera* m_cam;
 	Field m_field;
+	float m_fps;
 };
