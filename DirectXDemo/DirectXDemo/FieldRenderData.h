@@ -38,11 +38,11 @@ namespace field
 
 		inline void release()
 		{
-			if (m_vs) m_vs->Release();
-			if (m_hs) m_hs->Release();
-			if (m_ds) m_ds->Release();
-			if (m_gs) m_gs->Release();
-			if (m_ps) m_ps->Release();
+			if (m_vs) { m_vs->Release(); m_vs = nullptr; }
+			if (m_hs) { m_hs->Release(); m_hs = nullptr; }
+			if (m_ds) { m_ds->Release(); m_ds = nullptr; }
+			if (m_gs) { m_gs->Release(); m_gs = nullptr; }
+			if (m_ps) { m_ps->Release(); m_ps = nullptr; }
 		}
 	};
 }

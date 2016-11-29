@@ -33,7 +33,7 @@ bool BasicDemo::load()
 
 	Field::loadShared(m_d3dDevice);
 	m_field.m_halfGrassWidth = 0.012f;
-	m_field.load(m_d3dDevice, 1000000, { 30, 30 }, {-15,0,-15});
+	m_field.load(m_d3dDevice, 10000, { 30, 30 }, {-15,0,-15});
 
 	//SimpleGrass::loadShared(m_d3dDevice);
 
@@ -101,8 +101,15 @@ void BasicDemo::update()
 	//	DirectX::XMStoreFloat3(&windf3, windv);
 	//	grass->setWind(windf3);
 
-	//	m_field.setWind(windf3);
+	
 	//}
+
+	using namespace DirectX;
+	XMVECTOR windv = XMVectorScale(XMLoadFloat3(&m_wind), m_windStr);
+	XMFLOAT3 windf3;
+	DirectX::XMStoreFloat3(&windf3, windv);
+	m_field.setWind(windf3);
+
 	for (auto obj : m_objects)
 	{
 		obj->update();

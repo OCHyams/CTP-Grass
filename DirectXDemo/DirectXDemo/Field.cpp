@@ -6,6 +6,7 @@
 #include "Input.h"
 #include "Time.h"
 #include "ServiceLocator.h"
+#include "DDSTextureLoader.h"
 
 //statics
 DirectX::XMFLOAT3		Field::s_cameraPos		= DirectX::XMFLOAT3();
@@ -14,6 +15,8 @@ field::Shaders			Field::s_shaders		= field::Shaders();
 ID3D11RasterizerState*	Field::s_rasterizer		= nullptr;
 ID3D11InputLayout*		Field::s_inputLayout	= nullptr;
 ID3D11Buffer*			Field::s_vertexBuffer	= nullptr;
+ID3D11ShaderResourceView* Field::s_texture		= nullptr;
+ID3D11SamplerState*		Field::s_samplerState	= nullptr;
 
 //ez release
 #define RELEASE(x) if (x) { x->Release(); x = nullptr; }
@@ -191,6 +194,39 @@ bool Field::loadShared(ID3D11Device* _device)
 		return false;
 	}
 
+	//texture... for now don't bother parameterising it
+	// Load the texture in.
+	using namespace DirectX;
+	result = CreateDDSTextureFromFile(_device, L"../Resources/GRASS.dds", nullptr, &s_texture);
+	if (FAILED(result))
+	{
+		MessageBox(0, "Failed to load ../Resources/GRASS.DDS", "Texture loading", MB_OK);
+		//do not return false, as for now there is no grass D:
+	}
+
+	//sampler
+	D3D11_SAMPLER_DESC samplerDesc;
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	samplerDesc.BorderColor[0] = 0;
+	samplerDesc.BorderColor[1] = 0;
+	samplerDesc.BorderColor[2] = 0;
+	samplerDesc.BorderColor[3] = 0;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	// Create the texture sampler state.
+	result = _device->CreateSamplerState(&samplerDesc, &s_samplerState);
+	if (FAILED(result))
+	{
+		MessageBox(0, "Failed to create sampler state", "Texture sampler", MB_OK);
+		return false;
+	}
 
 	return true;
 }
@@ -201,6 +237,8 @@ void Field::unloadShared()
 	RELEASE(s_rasterizer);
 	RELEASE(s_inputLayout);
 	RELEASE(s_vertexBuffer);
+	RELEASE(s_texture);
+	RELEASE(s_samplerState);
 }
 
 
@@ -331,6 +369,10 @@ void Field::draw(const DrawData& _data)
 	_data.m_dc->VSSetConstantBuffers(1, 1, &m_CB_viewproj);
 	_data.m_dc->GSSetConstantBuffers(1, 1, &m_CB_viewproj);
 
+	//sampler
+	_data.m_dc->PSSetSamplers(0, 1, &s_samplerState);
+	//texture
+	_data.m_dc->PSSetShaderResources(0, 1, &s_texture);
 
 	_data.m_dc->DrawInstanced(4, m_instanceCount, 0, 0);
 }
@@ -348,7 +390,7 @@ void Field::updateConstBuffers()
 	XMVECTOR tan = XMVector4Transform(XMLoadFloat4(&XMFLOAT4(m_halfGrassWidth, 0, 0, 0)), rot);
 	XMFLOAT4 tanf4;
 	XMStoreFloat4(&tanf4, tan);
-	m_CBcpu_geometry = { /*m_curDensity*/3, m_halfGrassWidth, (float)t->time, m_wind.x, m_wind.y, m_wind.z, 0, 0, 0, tanf4.x, tanf4.y, tanf4.z, tanf4.w };
+	m_CBcpu_geometry = { /*m_curDensity*/9, m_halfGrassWidth, (float)t->time, m_wind.x, m_wind.y, m_wind.z, 0, 0, 0, tanf4.x, tanf4.y, tanf4.z, tanf4.w };
 
 	//view projection buffer
 	m_CBcpu_viewproj.m_wvp = XMMatrixTranspose(XMLoadFloat4x4(&s_viewproj));

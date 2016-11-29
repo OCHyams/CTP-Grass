@@ -57,6 +57,8 @@ struct DS_OUTPUT
 struct PS_INPUT
 {
 	float4 pos : SV_POSITION;
+	//@putting in texture stuff
+	float2 texcoord : TEXCOORD0;
 };
 
 
@@ -149,6 +151,10 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 	for (uint i = 0; i < 2; i++)
 	{
 		PS_INPUT element;	//vertex for output
+
+		//@putting in texture stuff
+		element.texcoord = float2(0, input[i].tVal);
+
 		float4 tangent = float4(tan_x, tan_y, tan_z, tan_w) * (1 - (input[i].tVal * input[i].tVal)); //parabolic curve for slightly more realistic grass :)
 
 		float4 pos = input[i].position + tangent;
@@ -157,14 +163,21 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 
 		pos = input[i].position - tangent;
 		element.pos = pos;
+
+		//@putting in texture stuff
+		element.texcoord.x = 1;
 		output.Append(element);
 	}
 }
-
+//@putting in texture stuff
+Texture2D TEX_0;
+SamplerState SAMPLER_STATE;
 //PIXEL SHADER-----------------------------------------------------------
-float4 PS_Main(PS_INPUT vertex) : SV_TARGET
+float4 PS_Main(PS_INPUT input) : SV_TARGET
 {
-	return float4(0.0f,1.0f,0.0f,1.0f);
+	//@putting in texture stuff
+	float4 col = TEX_0.Sample(SAMPLER_STATE, input.texcoord);
+	return col;
 }
 
 /*technique11 RenderField

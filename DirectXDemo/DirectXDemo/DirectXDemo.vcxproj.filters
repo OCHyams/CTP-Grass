@@ -19,6 +19,9 @@
     <Filter Include="Templates">
       <UniqueIdentifier>{c4a04a02-459f-4388-b022-b346909a9f4b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Assets">
+      <UniqueIdentifier>{d3aca5fb-b764-49fe-b37e-1005d9d72fa7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -127,5 +130,13 @@
     <FxCompile Include="Field.fx">
       <Filter>Shaders</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Resources\GRASS.dds">
+      <Filter>Assets</Filter>
+    </Image>
   </ItemGroup>
 </Project>

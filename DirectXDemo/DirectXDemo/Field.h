@@ -47,8 +47,10 @@ private:
 	static field::Shaders			s_shaders;
 	static ID3D11RasterizerState*	s_rasterizer;
 	static ID3D11InputLayout*		s_inputLayout;
-	static ID3D11Buffer*			s_vertexBuffer;	//this can be static for now but there should probably be a range of these for different grass positions!
-	
+	static ID3D11Buffer*			s_vertexBuffer;	//this can be static for now but there should probably be a range of these for different grass positions..?
+	static 
+	ID3D11ShaderResourceView*		s_texture; 
+	static ID3D11SamplerState*		s_samplerState;
 	/////////////////////////////////////////////////
 	/// Constant buffers
 	/////////////////////////////////////////////////
