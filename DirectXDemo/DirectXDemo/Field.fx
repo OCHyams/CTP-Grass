@@ -55,6 +55,7 @@ struct PS_INPUT
 	float2 texcoord : TEXCOORD0;
 };
 
+const static float4 translationFrequency = float4(1.975, 0.793, 0.375, 0.193);
 
 //VERTEX SHADER----------------------------------------------------------
 //Orthoman & GPU gems
@@ -72,7 +73,7 @@ inline float4 windForce(float3 p, float3 wind)
 	// the current wind strength and direction
 	float phase = (time * length(wind)) + dot(wind, p);
 	// Compute the four translation strengths.
-	float4 ts = smoothf(trianglef(float4(1.975, 0.793, 0.375, 0.193) * phase));
+	float4 ts = smoothf(trianglef(translationFrequency * phase));
 	// Compute the mean of the four values and
 	// return the translation vector.
 	return float4(wind * dot(ts, 0.25), 0.0f);
