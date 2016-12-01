@@ -21,6 +21,15 @@ struct CBGrassGeometry
 };
 
 __declspec(align(16))
+struct CBField
+{
+	DirectX::XMFLOAT4 binormal;
+	DirectX::XMFLOAT3 wind;
+	float tessDensity;
+	float halfGrassWidth;
+	float time;
+};
+__declspec(align(16))
 struct CBWorldViewProj
 {
 	DirectX::XMMATRIX m_wvp;

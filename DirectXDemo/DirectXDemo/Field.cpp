@@ -290,7 +290,7 @@ bool Field::load(	ID3D11Device*		_device,
 	D3D11_BUFFER_DESC bufferdesc;
 	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
 	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferdesc.ByteWidth = sizeof(CBGrassGeometry);
+	bufferdesc.ByteWidth = sizeof(CBField);
 	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	bufferdesc.CPUAccessFlags = 0;
 	bufferdesc.MiscFlags = 0;
@@ -390,8 +390,13 @@ void Field::updateConstBuffers()
 	XMVECTOR tan = XMVector4Transform(XMLoadFloat4(&XMFLOAT4(m_halfGrassWidth, 0, 0, 0)), rot);
 	XMFLOAT4 tanf4;
 	XMStoreFloat4(&tanf4, tan);
-	m_CBcpu_geometry = { /*m_curDensity*/9, m_halfGrassWidth, (float)t->time, m_wind.x, m_wind.y, m_wind.z, 0, 0, 0, tanf4.x, tanf4.y, tanf4.z, tanf4.w };
 
+	m_CBcpu_geometry.tessDensity = /*m_curDensity*/9;
+	m_CBcpu_geometry.binormal = tanf4;
+	m_CBcpu_geometry.halfGrassWidth = m_halfGrassWidth;
+	m_CBcpu_geometry.time = (float)t->time;
+	m_CBcpu_geometry.wind = m_wind;
+	
 	//view projection buffer
 	m_CBcpu_viewproj.m_wvp = XMMatrixTranspose(XMLoadFloat4x4(&s_viewproj));
 }

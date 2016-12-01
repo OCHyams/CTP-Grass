@@ -1,23 +1,12 @@
 //CONSTANT BUFFERS-----------------------------------------------------------------
+
 cbuffer CONSTS : register(b0)
 {
-	float tessDensity;
-	float halfGrassWidth;
-	//game time
-	float time;
-	//wind vector
-	float wind_x;
-	float wind_y;
-	float wind_z;
-	//used to compute the wind animation (orthoman style)
-	float base_x;
-	float base_y;
-	float base_z;
-	//tangent for mesh generation
-	float tan_x;
-	float tan_y;
-	float tan_z;
-	float tan_w;
+	float4	binormal;
+	float3	wind;
+	float	tessDensity;
+	float	halfGrassWidth;
+	float	time;
 };
 
 cbuffer CBViewProj : register (b1)
@@ -25,6 +14,12 @@ cbuffer CBViewProj : register (b1)
 	matrix view_proj;
 }
 
+cbuffer CBLight : register (b2)
+{
+	float4	camera;
+	float4	light;
+	float	intensity;
+}
 //INPUT/OUTPUT STRUCTS-----------------------------------------------------------------
 struct VS_INPUT
 {
@@ -57,7 +52,6 @@ struct DS_OUTPUT
 struct PS_INPUT
 {
 	float4 pos : SV_POSITION;
-	//@putting in texture stuff
 	float2 texcoord : TEXCOORD0;
 };
 
@@ -84,15 +78,15 @@ inline float4 windForce(float3 p, float3 wind)
 	return float4(wind * dot(ts, 0.25), 0.0f);
 }
 
+
 VS_OUTPUT VS_Main(VS_INPUT vertex)
 {
 	VS_OUTPUT output;
-	
 	float4 pos = float4(vertex.pos, 1.f);
-
+	//position in world space
 	float3 base_pos = float3(vertex.world[3][0], vertex.world[3][1], vertex.world[3][2]);
-
-	pos += (windForce(base_pos, float3(wind_x, wind_y, wind_z)) * vertex.flexibility); //<-orthomans technique.... [removed square, this can be hard coded on cpu side]
+	//orthomans technique.... [removed square, this can be hard coded on cpu side for efficiency]
+	pos += (windForce(base_pos, wind) * vertex.flexibility);
 
 	matrix wvp = mul(vertex.world, view_proj);
 	pos = mul(pos, wvp); 
@@ -133,7 +127,6 @@ DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2
 	DS_OUTPUT output;
 
 	float t = uv.x;
-
 	//cubic bezier curve
 	float4 pos = pow(1.0f - t, 3.0f) * op[0].cpoint + 3.0f * pow(1.0f - t, 2.0f) * t * op[1].cpoint + 3.0f * (1.0f - t) * pow(t, 2.0f) * op[2].cpoint + pow(t, 3.0f) * op[3].cpoint;
 
@@ -152,20 +145,22 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 	{
 		PS_INPUT element;	//vertex for output
 
-		//@putting in texture stuff
+		//texture coords
 		element.texcoord = float2(0, input[i].tVal);
 
-		float4 tangent = float4(tan_x, tan_y, tan_z, tan_w) * (1 - (input[i].tVal * input[i].tVal)); //parabolic curve for slightly more realistic grass :)
+		float4 tangent = binormal * (1 - (input[i].tVal * input[i].tVal)); //parabolic curve for slightly more realistic grass :)
 
 		float4 pos = input[i].position + tangent;
 		element.pos = pos;
+		//output vertex
 		output.Append(element);
 
 		pos = input[i].position - tangent;
 		element.pos = pos;
 
-		//@putting in texture stuff
+		//texture coords
 		element.texcoord.x = 1;
+		//output vertex
 		output.Append(element);
 	}
 }
@@ -175,7 +170,7 @@ SamplerState SAMPLER_STATE;
 //PIXEL SHADER-----------------------------------------------------------
 float4 PS_Main(PS_INPUT input) : SV_TARGET
 {
-	//@putting in texture stuff
+	//apply texture col
 	float4 col = TEX_0.Sample(SAMPLER_STATE, input.texcoord);
 	return col;
 }
