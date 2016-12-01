@@ -24,13 +24,16 @@ cbuffer CBLight : register (b2)
 struct VS_INPUT
 {
 	float3	pos			: SV_POSITION;			//position
+	float3	binormal	: BINORMAL;				//@@To be used for per-vertex binormals soon
 	float	flexibility	: FLEX;					//multiplier for wind deformation
-	matrix	world		: INSTANCE_TRANSFORM;
+	matrix	world		: INSTANCE_WORLD;
+	float3	location	: INSTANCE_LOCATION;
 };
 
 struct VS_OUTPUT
 {
-	float4 pos : POSITION;
+	float4	pos			: POSITION;
+	float4	binormal	: BINORMAL;
 };
 
 struct HS_CONSTANT_OUTPUT
@@ -51,8 +54,8 @@ struct DS_OUTPUT
 
 struct PS_INPUT
 {
-	float4 pos : SV_POSITION;
-	float2 texcoord : TEXCOORD0;
+	float4	pos			: SV_POSITION;
+	float2	texcoord	: TEXCOORD0;
 };
 
 const static float4 translationFrequency = float4(1.975, 0.793, 0.375, 0.193);
@@ -84,13 +87,15 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 {
 	VS_OUTPUT output;
 	float4 pos = float4(vertex.pos, 1.f);
-	//position in world space
-	float3 base_pos = float3(vertex.world[3][0], vertex.world[3][1], vertex.world[3][2]);
+	////position in world space
+	//float3 base_pos = float3(vertex.world[3][0], vertex.world[3][1], vertex.world[3][2]);
 	//orthomans technique.... [removed square, this can be hard coded on cpu side for efficiency]
-	pos += (windForce(base_pos, wind) * vertex.flexibility);
+	pos += (windForce(vertex.location, wind) * vertex.flexibility);
 
 	matrix wvp = mul(vertex.world, view_proj);
 	pos = mul(pos, wvp); 
+
+	
 
 	output.pos = pos;
 	return output;

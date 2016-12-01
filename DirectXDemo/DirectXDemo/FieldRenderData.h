@@ -8,13 +8,15 @@ namespace field
 	struct Vertex
 	{
 		XMFLOAT3	pos;
+		XMFLOAT3	binormal;
 		float		flexibility;
 	};
 
 	__declspec(align(16))
 	struct Instance
 	{
-		XMFLOAT4X4	world;
+		XMFLOAT4X4		world;
+		XMFLOAT3		location;
 	};
 
 

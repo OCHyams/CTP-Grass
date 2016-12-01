@@ -60,11 +60,13 @@ bool Field::loadShared(ID3D11Device* _device)
 	D3D11_INPUT_ELEMENT_DESC vsLayout[] =
 	{
 		{ "SV_POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "FLEX", 0, DXGI_FORMAT_R32_FLOAT ,0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "INSTANCE_TRANSFORM", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_TRANSFORM", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_TRANSFORM", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_TRANSFORM", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "FLEX", 0, DXGI_FORMAT_R32_FLOAT ,0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "INSTANCE_WORLD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "INSTANCE_WORLD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "INSTANCE_WORLD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "INSTANCE_WORLD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "INSTANCE_LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 64, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
 	};
 	unsigned int totalLayoutElements = ARRAYSIZE(vsLayout);
 
@@ -149,10 +151,10 @@ bool Field::loadShared(ID3D11Device* _device)
 	//VERTEX DATA
 	field::Vertex verts[] =
 	{
-		{ DirectX::XMFLOAT3(0.f, 0.f, 0.f), 0.f },
-		{ DirectX::XMFLOAT3(0.f, 0.2f, 0.f), 0.111f },
-		{ DirectX::XMFLOAT3(0.f, 0.4f, 0.f), 0.445f },
-		{ DirectX::XMFLOAT3(0.0f, 0.6f, 0.f), 1.f }
+		{ DirectX::XMFLOAT3(0.f, 0.f, 0.f),   DirectX::XMFLOAT3(1.f, 0.f, 0.f), 0.f },
+		{ DirectX::XMFLOAT3(0.f, 0.2f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), 0.111f },
+		{ DirectX::XMFLOAT3(0.f, 0.4f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), 0.445f },
+		{ DirectX::XMFLOAT3(0.0f, 0.6f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), 1.f }
 	};
 
 	D3D11_BUFFER_DESC vDesc;
@@ -443,7 +445,9 @@ field::Instance* Field::generateInstanceData()
 			XMFLOAT3 position = XMFLOAT3(m_pos.x + xoffset, m_pos.y, m_pos.z + zoffset);
 			XMVECTOR translation = XMLoadFloat3(&position);
 			XMMATRIX world = XMMatrixTranslationFromVector(translation);
-			XMStoreFloat4x4(&data[index++].world, XMMatrixTranspose(world));
+			XMStoreFloat4x4(&data[index].world, XMMatrixTranspose(world));
+
+			data[index++].location = XMFLOAT3(m_pos.x + xoffset, m_pos.y, m_pos.z + zoffset);
 			zoffset += side;
 		}
 		xoffset += side;
