@@ -30,6 +30,7 @@ struct VS_INPUT
 	float	flexibility	: FLEX;					//multiplier for wind deformation
 	//PER-INSTANCE
 	matrix	world		: INSTANCE_WORLD;		//world transform matrix
+	float4	rotation	: INSTANCE_ROTATION;	//quaternion
 	float3	location	: INSTANCE_LOCATION;	//position of grass in world for lighting calc etc
 };
 
@@ -91,6 +92,34 @@ inline float4 windForce(float3 p, float3 wind)
 	return float4(wind * dot(ts, 0.25), 0.0f);
 }
 
+matrix rotationFromAngleAxis(float angle, float3 axis)
+{
+	matrix output;
+	float oneMinusCosTheta = 1 - cos(angle);
+	float sinTheta = sin(angle);
+
+	output[0][0] = oneMinusCosTheta + pow(axis.x, 2) * oneMinusCosTheta;
+	output[0][1] = axis.x * axis.y * oneMinusCosTheta - axis.z *sinTheta;
+	output[0][2] = axis.x * axis.z * oneMinusCosTheta + axis.y * sinTheta;
+	output[0][3] = 0.0f;
+
+	output[1][0] = axis.y * axis.x * oneMinusCosTheta + axis.z * sinTheta;
+	output[1][1] = cos(angle) + pow(axis.y, 2) * oneMinusCosTheta;
+	output[1][2] = axis.y * axis.z * oneMinusCosTheta - axis.x * sinTheta;
+	output[1][3] = 0.0f;
+
+	output[2][0] = axis.z * axis.x * oneMinusCosTheta * axis.y * sinTheta;
+	output[2][1] = axis.z * axis.y * oneMinusCosTheta * axis.x * sinTheta;
+	output[2][2] = cos(angle) + pow(axis.z, 2) * oneMinusCosTheta;
+	output[2][3] = 0.0f;
+
+	output[3][0] = 0.0f;
+	output[3][1] = 0.0f;
+	output[3][2] = 0.0f;
+	output[3][3] = 1.0f;
+
+	return output;
+}
 
 VS_OUTPUT VS_Main(VS_INPUT vertex)
 {
@@ -100,13 +129,16 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 	//Wind displacement [Orthomans technique]
 	output.pos += (windForce(vertex.location, wind) * vertex.flexibility);
 
+	//Rotation matrix
+	matrix rotation = rotationFromAngleAxis(vertex.rotation.w, vertex.rotation.xyz);
+
 	//Normal
-	output.normal = vertex.normal;
+	output.normal = mul(vertex.normal, rotation);
 	/*@when better wind simulation is in, use twisting to manipulate normal*/
 
 	/*@this didn't work :c*/
 	//output.normal = cross(vertex.binormal, normalize(output.pos));
-	output.normal = mul(output.normal, vertex.world);
+	//output.normal = mul(output.normal, vertex.world);
 	output.normal = normalize(output.normal);
 
 
@@ -117,7 +149,6 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 
 	return output;
 }
-
 
 //HULL-DOMAIN SHADERS----------------------------------------------------
 //See http://gpuexperiments.blogspot.co.uk/2010/02/tessellation-example.html

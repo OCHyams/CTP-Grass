@@ -59,15 +59,18 @@ bool Field::loadShared(ID3D11Device* _device)
 	//INPUT LAYOUT
 	D3D11_INPUT_ELEMENT_DESC vsLayout[] =
 	{
+		//PER_VERTEX
 		{ "SV_POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "FLEX", 0, DXGI_FORMAT_R32_FLOAT ,0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		//PER_INSTANCE
 		{ "INSTANCE_WORLD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "INSTANCE_WORLD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "INSTANCE_WORLD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "INSTANCE_WORLD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 64, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+		{ "INSTANCE_ROTATION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 64, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "INSTANCE_LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 80, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
 	};
 	unsigned int totalLayoutElements = ARRAYSIZE(vsLayout);
 
@@ -469,8 +472,10 @@ field::Instance* Field::generateInstanceData()
 			XMVECTOR translation = XMLoadFloat3(&position);
 			XMMATRIX world = XMMatrixTranslationFromVector(translation);
 			XMStoreFloat4x4(&data[index].world, XMMatrixTranspose(world));
+			data[index].rotation = XMFLOAT4(0,1,0, 0);
+			data[index].location = XMFLOAT3(m_pos.x + xoffset, m_pos.y, m_pos.z + zoffset);
 
-			data[index++].location = XMFLOAT3(m_pos.x + xoffset, m_pos.y, m_pos.z + zoffset);
+			index++;
 			zoffset += side;
 		}
 		xoffset += side;
