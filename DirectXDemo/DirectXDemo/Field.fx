@@ -49,12 +49,14 @@ struct HS_CONSTANT_OUTPUT
 struct HS_OUTPUT
 {
 	float4	cpoint		: CPOINT;
+	float4	binormal	: BINORMAL;
 	float3	normal		: NORMAL;
 };
 
 struct DS_OUTPUT
 {
 	float4	position	: SV_Position;
+	float4	binormal	: BINORMAL;
 	float3	normal		: NORMAL;
 	float	tVal		: T_VAL;
 };
@@ -92,6 +94,7 @@ inline float4 windForce(float3 p, float3 wind)
 	return float4(wind * dot(ts, 0.25), 0.0f);
 }
 
+//@can probably be optimised
 matrix rotationFromAngleAxis(float angle, float3 axis)
 {
 	matrix output;
@@ -126,11 +129,12 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 	VS_OUTPUT output;
 	output.pos = float4(vertex.pos, 1.f);
 
-	//Wind displacement [Orthomans technique]
-	output.pos += (windForce(vertex.location, wind) * vertex.flexibility);
-
 	//Rotation matrix
 	matrix rotation = rotationFromAngleAxis(vertex.rotation.w, vertex.rotation.xyz);
+
+	//Wind displacement [Orthomans technique]@not working properly!
+	output.pos += (windForce(vertex.location, wind) * vertex.flexibility);
+
 
 	//Normal
 	output.normal = mul(vertex.normal, rotation);
@@ -141,6 +145,10 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 	//output.normal = mul(output.normal, vertex.world);
 	output.normal = normalize(output.normal);
 
+	//Binormal@ NEXT ISSUE <-MAKE BINROAMLS ROTATE
+	//output.binormal = binormal;
+	output.binormal = mul(binormal, rotation);
+	output.binormal = normalize(output.binormal);
 
 	//World-View-Proj transformation
 	matrix wvp = mul(vertex.world, view_proj);
@@ -172,6 +180,7 @@ HS_OUTPUT HS_Main(InputPatch<VS_OUTPUT, 4> input, uint id : SV_OutputControlPoin
 	HS_OUTPUT output;
 	output.cpoint = input[id].pos;
 	output.normal = input[id].normal;
+	output.binormal = input[id].binormal;
 	return output;
 }
 
@@ -194,6 +203,8 @@ DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2
 						output.tVal * op[1].normal + 3.0f * (1.0f - output.tVal) * pow(output.tVal, 2.0f) *
 						op[2].normal + pow(output.tVal, 3.0f) * op[3].normal;
 
+	/*Binromal - cheating for now@*/
+	output.binormal = op[0].binormal;
 	return output;
 }
 
@@ -217,7 +228,7 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 		that will be used to place the output vertex.*/
 									/*reduce the width of the grass towards
 									the tip in a parabolic fashion.*/
-		float4 offset = binormal * (1 - (input[i].tVal * input[i].tVal)); 
+		float4 offset = input[i].binormal * (1 - (input[i].tVal * input[i].tVal)) * halfGrassWidth; 
 		
 		/*apply offset to input vertex position to 
 		get output vertex position*/

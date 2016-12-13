@@ -7,7 +7,8 @@
 #include "Time.h"
 #include "ServiceLocator.h"
 #include "DDSTextureLoader.h"
-
+#include <random>
+#include <functional>
 //statics
 DirectX::XMFLOAT3		Field::s_cameraPos		= DirectX::XMFLOAT3();
 DirectX::XMFLOAT4X4		Field::s_viewproj		= DirectX::XMFLOAT4X4();
@@ -458,6 +459,11 @@ field::Instance* Field::generateInstanceData()
 	float zoffset = 0;
 	int index = 0;
 
+	//RNG
+	std::default_random_engine generator;
+	std::uniform_real_distribution<float> distribution(0, XM_PIDIV2);
+	auto randAngle = std::bind(distribution, generator);
+
 	for (int x = 0; x < xcount; ++x)
 	{
 		for (int z = 0; z < zcount; ++z)
@@ -466,14 +472,18 @@ field::Instance* Field::generateInstanceData()
 			//scale
 			//
 			//rotation
-			//
+			XMFLOAT4 rotQuat = XMFLOAT4(0,1,0, randAngle());
+			data[index].rotation = rotQuat;
 			//translation
 			XMFLOAT3 position = XMFLOAT3(m_pos.x + xoffset, m_pos.y, m_pos.z + zoffset);
 			XMVECTOR translation = XMLoadFloat3(&position);
-			XMMATRIX world = XMMatrixTranslationFromVector(translation);
-			XMStoreFloat4x4(&data[index].world, XMMatrixTranspose(world));
-			data[index].rotation = XMFLOAT4(0,1,0, 0);
 			data[index].location = XMFLOAT3(m_pos.x + xoffset, m_pos.y, m_pos.z + zoffset);
+
+			//world
+			XMMATRIX world = XMMatrixTranslationFromVector(translation);//XMMatrixRotationY(rotQuat.w); @@FOR NOW IGNORE THE ROTATION
+			//world = XMMatrixMultiply(world, XMMatrixTranslationFromVector(translation));
+			XMStoreFloat4x4(&data[index].world, XMMatrixTranspose(world));
+
 
 			index++;
 			zoffset += side;
