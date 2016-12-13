@@ -156,10 +156,11 @@ bool Field::loadShared(ID3D11Device* _device)
 	//VERTEX DATA
 	field::Vertex verts[] =
 	{
+		//pos, binormal, normal, flex
 		{ DirectX::XMFLOAT3(0.f, 0.f, 0.f),   DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.f },
 		{ DirectX::XMFLOAT3(0.f, 0.2f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.111f },
 		{ DirectX::XMFLOAT3(0.f, 0.4f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.445f },
-		{ DirectX::XMFLOAT3(0.0f, 0.6f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 1.f }
+		{ DirectX::XMFLOAT3(0.0f, 0.6f, 0.08f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 1.f }
 	};
 
 	D3D11_BUFFER_DESC vDesc;
@@ -461,7 +462,7 @@ field::Instance* Field::generateInstanceData()
 
 	//RNG
 	std::default_random_engine generator;
-	std::uniform_real_distribution<float> distribution(0, XM_PIDIV2);
+	std::uniform_real_distribution<float> distribution(0, 2 * XM_PI);
 	auto randAngle = std::bind(distribution, generator);
 
 	for (int x = 0; x < xcount; ++x)
@@ -480,8 +481,11 @@ field::Instance* Field::generateInstanceData()
 			data[index].location = XMFLOAT3(m_pos.x + xoffset, m_pos.y, m_pos.z + zoffset);
 
 			//world
-			XMMATRIX world = XMMatrixTranslationFromVector(translation);//XMMatrixRotationY(rotQuat.w); @@FOR NOW IGNORE THE ROTATION
-			//world = XMMatrixMultiply(world, XMMatrixTranslationFromVector(translation));
+			//XMMATRIX world = XMMatrixTranslationFromVector(translation);//shouldn't work
+
+			XMMATRIX world = XMMatrixRotationY(rotQuat.w); 
+			world = XMMatrixMultiply(world, XMMatrixTranslationFromVector(translation));
+
 			XMStoreFloat4x4(&data[index].world, XMMatrixTranspose(world));
 
 

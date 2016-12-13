@@ -151,6 +151,7 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 	output.binormal = normalize(output.binormal);
 
 	//World-View-Proj transformation
+	//WORKING
 	matrix wvp = mul(vertex.world, view_proj);
 	output.pos = mul(output.pos, wvp);
 
