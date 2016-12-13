@@ -61,7 +61,8 @@ bool Field::loadShared(ID3D11Device* _device)
 	{
 		{ "SV_POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "FLEX", 0, DXGI_FORMAT_R32_FLOAT ,0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "FLEX", 0, DXGI_FORMAT_R32_FLOAT ,0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "INSTANCE_WORLD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "INSTANCE_WORLD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "INSTANCE_WORLD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
@@ -151,10 +152,10 @@ bool Field::loadShared(ID3D11Device* _device)
 	//VERTEX DATA
 	field::Vertex verts[] =
 	{
-		{ DirectX::XMFLOAT3(0.f, 0.f, 0.f),   DirectX::XMFLOAT3(1.f, 0.f, 0.f), 0.f },
-		{ DirectX::XMFLOAT3(0.f, 0.2f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), 0.111f },
-		{ DirectX::XMFLOAT3(0.f, 0.4f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), 0.445f },
-		{ DirectX::XMFLOAT3(0.0f, 0.6f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), 1.f }
+		{ DirectX::XMFLOAT3(0.f, 0.f, 0.f),   DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.f },
+		{ DirectX::XMFLOAT3(0.f, 0.2f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.111f },
+		{ DirectX::XMFLOAT3(0.f, 0.4f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.445f },
+		{ DirectX::XMFLOAT3(0.0f, 0.6f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 1.f }
 	};
 
 	D3D11_BUFFER_DESC vDesc;
@@ -319,6 +320,20 @@ bool Field::load(	ID3D11Device*		_device,
 		return false;
 	}
 
+	//Light
+	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
+	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferdesc.ByteWidth = sizeof(CBFieldLight);
+	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bufferdesc.CPUAccessFlags = 0;
+	bufferdesc.MiscFlags = 0;
+	bufferdesc.StructureByteStride = 0;
+	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_light);
+	if (FAILED(result))
+	{
+		DXTRACE_MSG(L"Error: Couldn't create the light const buffer.");
+		return false;
+	}
 	return true;
 }
 
@@ -361,15 +376,19 @@ void Field::draw(const DrawData& _data)
 	//update subresources
 	_data.m_dc->UpdateSubresource(m_CB_viewproj, 0, 0, &m_CBcpu_viewproj, 0, 0);
 	_data.m_dc->UpdateSubresource(m_CB_geometry, 0, 0, &m_CBcpu_geometry, 0, 0);
+	_data.m_dc->UpdateSubresource(m_CB_light, 0, 0, &m_CBcpu_light, 0, 0);
 
 	//set constant buffers
 	_data.m_dc->HSSetConstantBuffers(0, 1, &m_CB_geometry);
 	_data.m_dc->GSSetConstantBuffers(0, 1, &m_CB_geometry);
 	_data.m_dc->DSSetConstantBuffers(0, 1, &m_CB_geometry);
 	_data.m_dc->VSSetConstantBuffers(0, 1, &m_CB_geometry);
-
+	
 	_data.m_dc->VSSetConstantBuffers(1, 1, &m_CB_viewproj);
 	_data.m_dc->GSSetConstantBuffers(1, 1, &m_CB_viewproj);
+
+	_data.m_dc->GSSetConstantBuffers(2, 1, &m_CB_light);
+	_data.m_dc->PSSetConstantBuffers(2, 1, &m_CB_light);
 
 	//sampler
 	_data.m_dc->PSSetSamplers(0, 1, &s_samplerState);
@@ -393,7 +412,7 @@ void Field::updateConstBuffers()
 	XMFLOAT4 tanf4;
 	XMStoreFloat4(&tanf4, tan);
 
-	m_CBcpu_geometry.tessDensity = /*m_curDensity*/9;
+	m_CBcpu_geometry.tessDensity = /*@m_curDensity*/9;
 	m_CBcpu_geometry.binormal = tanf4;
 	m_CBcpu_geometry.halfGrassWidth = m_halfGrassWidth;
 	m_CBcpu_geometry.time = (float)t->time;
@@ -401,6 +420,11 @@ void Field::updateConstBuffers()
 	
 	//view projection buffer
 	m_CBcpu_viewproj.m_wvp = XMMatrixTranspose(XMLoadFloat4x4(&s_viewproj));
+	
+	/*@unsused right now*/
+	m_CBcpu_light.intensity = 0.5f;
+	m_CBcpu_light.light = XMFLOAT4(0.f,.5f,0.f,1.f);
+	m_CBcpu_light.camera = XMFLOAT4(s_cameraPos.x, s_cameraPos.y, s_cameraPos.z,1.f);
 }
 
 

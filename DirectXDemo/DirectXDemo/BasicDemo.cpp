@@ -34,7 +34,7 @@ bool BasicDemo::load()
 	Field::loadShared(m_d3dDevice);
 	m_field.m_halfGrassWidth = 0.012f;
 	m_field.load(m_d3dDevice, 10000, { 30, 30 }, {-15,0,-15});
-
+	
 	//SimpleGrass::loadShared(m_d3dDevice);
 
 	//float x = -5;
@@ -114,6 +114,8 @@ void BasicDemo::update()
 	{
 		obj->update();
 	}
+
+	Field::updateCameraPosition(m_cam->getPos());
 	m_field.s_viewproj = GameObject::getViewProj();//move this out onto camera, and call this function in draw instead of out here...
 	m_field.update();
 

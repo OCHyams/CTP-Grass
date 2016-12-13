@@ -36,6 +36,14 @@ struct CBWorldViewProj
 };
 
 __declspec(align(16))
+struct CBFieldLight
+{
+	DirectX::XMFLOAT4	camera;//@change to float3s
+	DirectX::XMFLOAT4	light;	//@
+	float				intensity;
+};
+
+__declspec(align(16))
 struct CBLight
 {
 	float pos_x;

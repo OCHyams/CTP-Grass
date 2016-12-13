@@ -16,24 +16,28 @@ cbuffer CBViewProj : register (b1)
 
 cbuffer CBLight : register (b2)
 {
-	float4	camera;
-	float4	light;
+	float4	camera;//@change to float3s
+	float4	light;	//@
 	float	intensity;
 }
 //INPUT/OUTPUT STRUCTS-----------------------------------------------------------------
 struct VS_INPUT
 {
+	//PER_VERTEX
 	float3	pos			: SV_POSITION;			//position
 	float3	binormal	: BINORMAL;				//@@To be used for per-vertex binormals soon
+	float3	normal		: NORMAL;
 	float	flexibility	: FLEX;					//multiplier for wind deformation
-	matrix	world		: INSTANCE_WORLD;
-	float3	location	: INSTANCE_LOCATION;
+	//PER-INSTANCE
+	matrix	world		: INSTANCE_WORLD;		//world transform matrix
+	float3	location	: INSTANCE_LOCATION;	//position of grass in world for lighting calc etc
 };
 
 struct VS_OUTPUT
 {
 	float4	pos			: POSITION;
 	float4	binormal	: BINORMAL;
+	float3	normal		: NORMAL;
 };
 
 struct HS_CONSTANT_OUTPUT
@@ -43,19 +47,24 @@ struct HS_CONSTANT_OUTPUT
 
 struct HS_OUTPUT
 {
-	float4 cpoint : CPOINT;
+	float4	cpoint		: CPOINT;
+	float3	normal		: NORMAL;
 };
 
 struct DS_OUTPUT
 {
-	float4 position : SV_Position;
-	float tVal : T_VAL;
+	float4	position	: SV_Position;
+	float3	normal		: NORMAL;
+	float	tVal		: T_VAL;
 };
 
 struct PS_INPUT
 {
 	float4	pos			: SV_POSITION;
 	float2	texcoord	: TEXCOORD0;
+	float3	normal		: NORMAL;
+	float3  lightVec	: TEXCOORD1;
+	float3	viewVec		: TEXCOORD2;
 };
 
 const static float4 translationFrequency = float4(1.975, 0.793, 0.375, 0.193);
@@ -86,18 +95,26 @@ inline float4 windForce(float3 p, float3 wind)
 VS_OUTPUT VS_Main(VS_INPUT vertex)
 {
 	VS_OUTPUT output;
-	float4 pos = float4(vertex.pos, 1.f);
-	////position in world space
-	//float3 base_pos = float3(vertex.world[3][0], vertex.world[3][1], vertex.world[3][2]);
-	//orthomans technique.... [removed square, this can be hard coded on cpu side for efficiency]
-	pos += (windForce(vertex.location, wind) * vertex.flexibility);
+	output.pos = float4(vertex.pos, 1.f);
 
+	//Wind displacement [Orthomans technique]
+	output.pos += (windForce(vertex.location, wind) * vertex.flexibility);
+
+	//Normal
+	output.normal = vertex.normal;//@this is crap
+	/*@when better wind simulation is in, use twisting to manipulate normal*/
+
+	/*@this didn't work :c*/
+	//output.normal = cross(vertex.binormal, normalize(output.pos));
+	//output.normal = mul(output.normal, vertex.world);
+	//output.normal = normalize(output.normal);
+
+
+	//World-View-Proj transformation
 	matrix wvp = mul(vertex.world, view_proj);
-	pos = mul(pos, wvp); 
+	output.pos = mul(output.pos, wvp);
 
-	
 
-	output.pos = pos;
 	return output;
 }
 
@@ -123,6 +140,7 @@ HS_OUTPUT HS_Main(InputPatch<VS_OUTPUT, 4> input, uint id : SV_OutputControlPoin
 {
 	HS_OUTPUT output;
 	output.cpoint = input[id].pos;
+	output.normal = input[id].normal;
 	return output;
 }
 
@@ -132,12 +150,18 @@ DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2
 {
 	DS_OUTPUT output;
 
-	float t = uv.x;
-	//cubic bezier curve
-	float4 pos = pow(1.0f - t, 3.0f) * op[0].cpoint + 3.0f * pow(1.0f - t, 2.0f) * t * op[1].cpoint + 3.0f * (1.0f - t) * pow(t, 2.0f) * op[2].cpoint + pow(t, 3.0f) * op[3].cpoint;
+	/*Time*/
+	output.tVal = uv.x;
 
-	output.position = pos;
-	output.tVal = t;
+	/*Position = evaluateBezier(output.tVal)*/
+	output.position =	pow(1.0f - output.tVal, 3.0f) * op[0].cpoint + 3.0f * pow(1.0f - output.tVal, 2.0f) * 
+						output.tVal * op[1].cpoint + 3.0f * (1.0f - output.tVal) * pow(output.tVal, 2.0f) * 
+						op[2].cpoint + pow(output.tVal, 3.0f) * op[3].cpoint;
+
+	/*Normal = evaluateBezier(output.tVal)*/
+	output.normal =		pow(1.0f - output.tVal, 3.0f) * op[0].normal + 3.0f * pow(1.0f - output.tVal, 2.0f) *
+						output.tVal * op[1].normal + 3.0f * (1.0f - output.tVal) * pow(output.tVal, 2.0f) *
+						op[2].normal + pow(output.tVal, 3.0f) * op[3].normal;
 
 	return output;
 }
@@ -157,7 +181,7 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 
 		/*texture coords*/
 		element.texcoord = float2(0, input[i].tVal);
-		
+
 		/*calculate an offset to the input vertex
 		that will be used to place the output vertex.*/
 									/*reduce the width of the grass towards
@@ -166,8 +190,13 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 		
 		/*apply offset to input vertex position to 
 		get output vertex position*/
-		float4 pos = input[i].position + offset;
-		element.pos = pos;
+		element.pos = input[i].position + offset;
+
+		/*Lighting*/
+		element.viewVec = normalize(camera - element.pos);
+		element.lightVec = normalize(light - element.pos);
+		element.normal = input[i].normal;
+
 		/*output the vertex*/
 		output.Append(element);
 		
@@ -176,9 +205,13 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 		
 		/*apply negative offset for vertex on  
 		other side of line segment*/
-		pos = input[i].position - offset;
-		element.pos = pos;
+		element.pos = input[i].position - offset;
 		
+		/*Lighting*/
+		element.viewVec = normalize(camera - element.pos);
+		element.lightVec = normalize(light - element.pos);
+		element.normal = input[i].normal;
+
 		/*output the vertex*/
 		output.Append(element);
 	}
@@ -187,15 +220,24 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 
 
 
-//@putting in texture stuff
 Texture2D TEX_0;
 SamplerState SAMPLER_STATE;
 //PIXEL SHADER-----------------------------------------------------------
 float4 PS_Main(PS_INPUT input) : SV_TARGET
 {
-	//apply texture col
-	float4 col = TEX_0.Sample(SAMPLER_STATE, input.texcoord);
-	return col;
+	/*Lighting*/
+	float3 ambientColour	= float3(0.2f,0.2f,0.2f);
+	float3 lightColour		= float3(0.7f, 0.7f, 0.7f);
+	float diffuseTerm = clamp(dot(input.normal, input.lightVec), 0.0f, 1.0f);
+	float specularTerm = 0;
+	//@@for now do this but maybe get rid of the if later!
+	if (diffuseTerm > 0.0f)
+	{
+		specularTerm = pow(saturate(dot(input.normal, normalize(input.lightVec + input.viewVec))), 25);
+	}
+	float3 final = ambientColour + lightColour * diffuseTerm + lightColour * specularTerm;
+	/*NOTE: remove tex coords to test just lighting*/
+	return float4(final * TEX_0.Sample(SAMPLER_STATE, input.texcoord), 1.0f);
 }
 
 /*technique11 RenderField

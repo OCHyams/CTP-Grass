@@ -9,6 +9,7 @@ namespace field
 	{
 		XMFLOAT3	pos;
 		XMFLOAT3	binormal;
+		XMFLOAT3	normal;
 		float		flexibility;
 	};
 
