@@ -426,9 +426,11 @@ void Field::updateConstBuffers()
 	//view projection buffer
 	m_CBcpu_viewproj.m_wvp = XMMatrixTranspose(XMLoadFloat4x4(&s_viewproj));
 	
-	m_CBcpu_light.intensity = 0.7f;
-	m_CBcpu_light.light = XMFLOAT4(0.f,.5f,0.f,1.f);
-	m_CBcpu_light.camera = XMFLOAT4(s_cameraPos.x, s_cameraPos.y, s_cameraPos.z,1.f);
+	m_CBcpu_light.intensity = 1.0f;
+	m_CBcpu_light.camera = XMFLOAT4(s_cameraPos.x, s_cameraPos.y, s_cameraPos.z, 1.f);
+	//stick light to camera
+	m_CBcpu_light.light = m_CBcpu_light.camera;
+	
 }
 
 
