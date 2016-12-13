@@ -144,32 +144,49 @@ DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2
 
 
 //GEOMETRY SHADER--------------------------------------------------------
+
+
 [maxvertexcount(4)]
 void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
-{
+{	
+	/*for each point in the line segment*/
 	for (uint i = 0; i < 2; i++)
 	{
-		PS_INPUT element;	//vertex for output
+		/*create a vertex to output*/
+		PS_INPUT element;
 
-		//texture coords
+		/*texture coords*/
 		element.texcoord = float2(0, input[i].tVal);
-
-		float4 tangent = binormal * (1 - (input[i].tVal * input[i].tVal)); //parabolic curve for slightly more realistic grass :)
-
-		float4 pos = input[i].position + tangent;
+		
+		/*calculate an offset to the input vertex
+		that will be used to place the output vertex.*/
+									/*reduce the width of the grass towards
+									the tip in a parabolic fashion.*/
+		float4 offset = binormal * (1 - (input[i].tVal * input[i].tVal)); 
+		
+		/*apply offset to input vertex position to 
+		get output vertex position*/
+		float4 pos = input[i].position + offset;
 		element.pos = pos;
-		//output vertex
+		/*output the vertex*/
 		output.Append(element);
-
-		pos = input[i].position - tangent;
-		element.pos = pos;
-
-		//texture coords
+		
+		/*texture coords for other side*/
 		element.texcoord.x = 1;
-		//output vertex
+		
+		/*apply negative offset for vertex on  
+		other side of line segment*/
+		pos = input[i].position - offset;
+		element.pos = pos;
+		
+		/*output the vertex*/
 		output.Append(element);
 	}
 }
+
+
+
+
 //@putting in texture stuff
 Texture2D TEX_0;
 SamplerState SAMPLER_STATE;
