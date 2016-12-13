@@ -101,13 +101,13 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 	output.pos += (windForce(vertex.location, wind) * vertex.flexibility);
 
 	//Normal
-	output.normal = vertex.normal;//@this is crap
+	output.normal = vertex.normal;
 	/*@when better wind simulation is in, use twisting to manipulate normal*/
 
 	/*@this didn't work :c*/
 	//output.normal = cross(vertex.binormal, normalize(output.pos));
-	//output.normal = mul(output.normal, vertex.world);
-	//output.normal = normalize(output.normal);
+	output.normal = mul(output.normal, vertex.world);
+	output.normal = normalize(output.normal);
 
 
 	//World-View-Proj transformation
@@ -227,7 +227,7 @@ float4 PS_Main(PS_INPUT input) : SV_TARGET
 {
 	/*Lighting*/
 	float3 ambientColour	= float3(0.2f,0.2f,0.2f);
-	float3 lightColour		= float3(0.7f, 0.7f, 0.7f);
+	float3 lightColour		= intensity;
 	float diffuseTerm = clamp(dot(input.normal, input.lightVec), 0.0f, 1.0f);
 	float specularTerm = 0;
 	//@@for now do this but maybe get rid of the if later!
