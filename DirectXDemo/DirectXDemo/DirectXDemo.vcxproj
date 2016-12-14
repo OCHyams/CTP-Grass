@@ -129,9 +129,11 @@
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="objLoader.cpp" />
     <ClCompile Include="Plane.cpp" />
     <ClCompile Include="SimpleGrass.cpp" />
     <ClCompile Include="Time.cpp" />
+    <ClCompile Include="TokenStream.cpp" />
     <ClCompile Include="Triangle.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -147,10 +149,12 @@
     <ClInclude Include="FieldRenderData.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Input.h" />
+    <ClInclude Include="objLoader.h" />
     <ClInclude Include="Plane.h" />
     <ClInclude Include="ServiceLocator.h" />
     <ClInclude Include="SimpleGrass.h" />
     <ClInclude Include="Time.h" />
+    <ClInclude Include="TokenStream.h" />
     <ClInclude Include="Triangle.h" />
   </ItemGroup>
   <ItemGroup>

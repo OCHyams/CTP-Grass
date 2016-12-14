@@ -5,7 +5,7 @@
 #include <math.h>
 #include "ConstantBuffers.h"
 #include "FieldRenderData.h"
-
+class ObjModel;
 /////////////////////////////////////////////////
 /// Field of grass 
 /////////////////////////////////////////////////
@@ -25,6 +25,8 @@ public:
 	static void unloadShared();
 
 	bool load(ID3D11Device*, int _instanceCount, DirectX::XMFLOAT2 _size, DirectX::XMFLOAT3	_pos);
+	/*Model is only used during set-up*/
+	bool load(ID3D11Device*, ObjModel*, float density);
 
 	void unload();
 
@@ -95,4 +97,5 @@ private:
 	/////////////////////////////////////////////////
 	field::Instance* generateInstanceData();
 	void buildInstanceBuffer();
+	bool loadBuffers(ID3D11Device*);
 };

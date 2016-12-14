@@ -295,53 +295,15 @@ bool Field::load(	ID3D11Device*		_device,
 	instances = nullptr;
 
 
-	//CBUFFER
-	//Geometry buffer
-	D3D11_BUFFER_DESC bufferdesc;
-	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
-	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferdesc.ByteWidth = sizeof(CBField);
-	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	bufferdesc.CPUAccessFlags = 0;
-	bufferdesc.MiscFlags = 0;
-	bufferdesc.StructureByteStride = 0;
-	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_geometry);
-	if (FAILED(result))
-	{
-		DXTRACE_MSG(L"Couldn't create the geometry const buffer.");
-		return false;
-	}
+	return loadBuffers(_device);
+}
 
-	//World view proj
-	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
-	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferdesc.ByteWidth = sizeof(CBWorldViewProj);
-	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	bufferdesc.CPUAccessFlags = 0;
-	bufferdesc.MiscFlags = 0;
-	bufferdesc.StructureByteStride = 0;
-	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_viewproj);
-	if (FAILED(result))
-	{
-		DXTRACE_MSG(L"Error: Couldn't create the world const buffer.");
-		return false;
-	}
+bool Field::load(ID3D11Device* _device, ObjModel* _model, float density)
+{
+	/*build instance buffer...*/
 
-	//Light
-	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
-	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferdesc.ByteWidth = sizeof(CBFieldLight);
-	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	bufferdesc.CPUAccessFlags = 0;
-	bufferdesc.MiscFlags = 0;
-	bufferdesc.StructureByteStride = 0;
-	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_light);
-	if (FAILED(result))
-	{
-		DXTRACE_MSG(L"Error: Couldn't create the light const buffer.");
-		return false;
-	}
-	return true;
+
+	return loadBuffers(_device);
 }
 
 void Field::unload()
@@ -511,6 +473,58 @@ void Field::buildInstanceBuffer()
 
 
 
+}
+
+bool Field::loadBuffers(ID3D11Device* _device)
+{
+	//CBUFFER
+	//Geometry buffer
+	HRESULT result;
+	D3D11_BUFFER_DESC bufferdesc;
+	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
+	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferdesc.ByteWidth = sizeof(CBField);
+	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bufferdesc.CPUAccessFlags = 0;
+	bufferdesc.MiscFlags = 0;
+	bufferdesc.StructureByteStride = 0;
+	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_geometry);
+	if (FAILED(result))
+	{
+		DXTRACE_MSG(L"Couldn't create the geometry const buffer.");
+		return false;
+	}
+
+	//World view proj
+	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
+	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferdesc.ByteWidth = sizeof(CBWorldViewProj);
+	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bufferdesc.CPUAccessFlags = 0;
+	bufferdesc.MiscFlags = 0;
+	bufferdesc.StructureByteStride = 0;
+	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_viewproj);
+	if (FAILED(result))
+	{
+		DXTRACE_MSG(L"Error: Couldn't create the world const buffer.");
+		return false;
+	}
+
+	//Light
+	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
+	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferdesc.ByteWidth = sizeof(CBFieldLight);
+	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bufferdesc.CPUAccessFlags = 0;
+	bufferdesc.MiscFlags = 0;
+	bufferdesc.StructureByteStride = 0;
+	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_light);
+	if (FAILED(result))
+	{
+		DXTRACE_MSG(L"Error: Couldn't create the light const buffer.");
+		return false;
+	}
+	return true;
 }
 
 #undef MAX(x,y)

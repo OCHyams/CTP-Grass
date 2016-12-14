@@ -6,7 +6,6 @@
 class GameObject;
 class Camera;
 class SimpleGrass;
-
 class BasicDemo : public DX11Demo
 {
 public:
