@@ -27,37 +27,15 @@ bool BasicDemo::load()
 
 	using namespace DirectX;
 	m_wind = { 0.f, 0.0f, 1.0f };
-	m_windStr = 0.4;
+	m_windStr = 0.2;
 
 	m_fps = 0;
 
 	Field::loadShared(m_d3dDevice);
 	m_field.m_halfGrassWidth = 0.05f;//0.012f;
 							//100,000
-	m_field.load(m_d3dDevice, 100000, { 30, 30 }, {-15,0,-15});
+	m_field.load(m_d3dDevice, 100000, { 50, 50 }, {-25,0,-25});
 	
-	//SimpleGrass::loadShared(m_d3dDevice);
-
-	//float x = -5;
-	//float add = 0.1;
-
-	//for (int i = 0; i < 100; ++i)
-	//{
-	//	float z = -5;
-	//	for (int j = 0; j < 100; ++j)
-	//	{
-	//		SimpleGrass* grass = new SimpleGrass();
-	//		m_objects.push_back(grass);
-	//		m_grass.push_back(grass);
-	//		CHECK_FAIL(grass->load(m_d3dDevice));
-	//		grass->setPos(XMFLOAT3(x, 0.0f, z));
-	//		grass->setRot(XMFLOAT3(0.f, 1.2 * XM_PIDIV4, 0.f));
-	//		grass->setWind(m_wind);
-
-	//		z += add;
-	//	}
-	//	x += add;
-	//}
 	
 	//Plane* plane = new Plane();
 	//m_objects.push_back(plane);
@@ -77,7 +55,6 @@ bool BasicDemo::load()
 
 void BasicDemo::unload()
 {
-	//SimpleGrass::unloadShared();
 	Field::unloadShared();
 
 	for (auto obj : m_objects)
@@ -92,19 +69,7 @@ void BasicDemo::unload()
 void BasicDemo::update()
 {
 	DX11Demo::update();
-	//SimpleGrass::updateCameraPosition(m_cam->getPos());
-
-	//for (auto grass : m_grass)
-	//{
-	//	using namespace DirectX;
-	//	XMVECTOR windv = XMVectorScale(XMLoadFloat3(&m_wind), m_windStr);
-	//	XMFLOAT3 windf3;
-	//	DirectX::XMStoreFloat3(&windf3, windv);
-	//	grass->setWind(windf3);
-
 	
-	//}
-
 	using namespace DirectX;
 	XMVECTOR windv = XMVectorScale(XMLoadFloat3(&m_wind), m_windStr);
 	XMFLOAT3 windf3;
@@ -136,7 +101,6 @@ void BasicDemo::render()
 
 	DrawData data = { m_cam, m_d3dContext };
 
-	//SimpleGrass::beginDraw(data);
 	using namespace DirectX;
 	m_field.draw(data);
 

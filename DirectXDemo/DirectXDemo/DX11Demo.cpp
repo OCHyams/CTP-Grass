@@ -24,7 +24,6 @@ void DX11Demo::shutdown()
 	OCH::ServiceLocator<Time>::remove(&m_time);
 	if (m_input)
 	{
-
 		OCH::ServiceLocator<Input>::remove(m_input);
 		delete m_input;
 	}

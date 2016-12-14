@@ -156,11 +156,11 @@ bool Field::loadShared(ID3D11Device* _device)
 	//VERTEX DATA
 	field::Vertex verts[] =
 	{
-		//pos, binormal, normal, flex
-		{ DirectX::XMFLOAT3(0.f, 0.f, 0.f),   DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.f },
-		{ DirectX::XMFLOAT3(0.f, 0.2f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.111f },
-		{ DirectX::XMFLOAT3(0.f, 0.4f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.445f },
-		{ DirectX::XMFLOAT3(0.0f, 0.6f, 0.08f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 1.f }
+		//pos, binormal, normal, flex																							//flex
+		{ DirectX::XMFLOAT3(0.f, 0.f, 0.f),   DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.f },		//0
+		{ DirectX::XMFLOAT3(0.f, 0.2f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.1f },	//0.111
+		{ DirectX::XMFLOAT3(0.f, 0.4f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.3f },	//0.445
+		{ DirectX::XMFLOAT3(0.0f, 0.6f, 0.08f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 1.f }		//1
 	};
 
 	D3D11_BUFFER_DESC vDesc;
@@ -268,6 +268,7 @@ bool Field::load(	ID3D11Device*		_device,
 
 	// Create the instance array.
 	instances = generateInstanceData();
+	//@ attempting to rebuild instance buffer...m_instances = generateInstanceData();
 
 	// Set up the description of the instance buffer.
 	instanceBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -277,7 +278,7 @@ bool Field::load(	ID3D11Device*		_device,
 	instanceBufferDesc.MiscFlags = 0;
 	instanceBufferDesc.StructureByteStride = 0;
 	// Give the subresource structure a pointer to the instance data.
-	instanceData.pSysMem = instances;
+	instanceData.pSysMem = instances; //@m_instances;
 	instanceData.SysMemPitch = 0;
 	instanceData.SysMemSlicePitch = 0;
 
@@ -288,6 +289,7 @@ bool Field::load(	ID3D11Device*		_device,
 		MessageBox(0, "Error creating instance buffer.", "Field", MB_OK);
 		return false;
 	}
+
 	// Release the instance array now that the instance buffer has been created and loaded.
 	delete[] instances;
 	instances = nullptr;
@@ -347,6 +349,8 @@ void Field::unload()
 	RELEASE(m_instanceBuffer);
 	RELEASE(m_CB_geometry);
 	RELEASE(m_CB_viewproj);
+	
+	if (m_instances) delete m_instances;
 }
 
 void Field::update()
@@ -382,6 +386,7 @@ void Field::draw(const DrawData& _data)
 	_data.m_dc->UpdateSubresource(m_CB_viewproj, 0, 0, &m_CBcpu_viewproj, 0, 0);
 	_data.m_dc->UpdateSubresource(m_CB_geometry, 0, 0, &m_CBcpu_geometry, 0, 0);
 	_data.m_dc->UpdateSubresource(m_CB_light, 0, 0, &m_CBcpu_light, 0, 0);
+
 
 	//set constant buffers
 	_data.m_dc->HSSetConstantBuffers(0, 1, &m_CB_geometry);
@@ -429,7 +434,7 @@ void Field::updateConstBuffers()
 	m_CBcpu_light.intensity = 1.0f;
 	m_CBcpu_light.camera = XMFLOAT4(s_cameraPos.x, s_cameraPos.y, s_cameraPos.z, 1.f);
 	//stick light to camera
-	m_CBcpu_light.light = m_CBcpu_light.camera;
+	m_CBcpu_light.light = XMFLOAT4(0,2,0,1);//m_CBcpu_light.camera;
 	
 }
 
@@ -499,6 +504,13 @@ field::Instance* Field::generateInstanceData()
 	}
 
 	return data;
+}
+
+void Field::buildInstanceBuffer()
+{
+
+
+
 }
 
 #undef MAX(x,y)

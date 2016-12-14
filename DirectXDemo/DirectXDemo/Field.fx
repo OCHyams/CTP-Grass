@@ -223,13 +223,13 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 		PS_INPUT element;
 
 		/*texture coords*/
-		element.texcoord = float2(0, input[i].tVal);
+		element.texcoord = float2(0, 1-input[i].tVal);
 
 		/*calculate an offset to the input vertex
 		that will be used to place the output vertex.*/
 									/*reduce the width of the grass towards
 									the tip in a parabolic fashion.*/
-		float4 offset = input[i].binormal * (1 - (input[i].tVal * input[i].tVal)) * halfGrassWidth; 
+		float4 offset = input[i].binormal * (1 - (input[i].tVal * input[i].tVal)) * halfGrassWidth;
 		
 		/*apply offset to input vertex position to 
 		get output vertex position*/
@@ -253,7 +253,6 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 		/*Lighting*/
 		element.viewVec = normalize(camera - element.pos);
 		element.lightVec = normalize(light - element.pos);
-		element.normal = input[i].normal;
 
 		/*output the vertex*/
 		output.Append(element);

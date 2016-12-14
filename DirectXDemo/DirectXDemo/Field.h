@@ -66,6 +66,7 @@ private:
 	/////////////////////////////////////////////////
 	/// Instance data
 	/////////////////////////////////////////////////
+	field::Instance*		m_instances = nullptr;
 	ID3D11Buffer*			m_instanceBuffer;
 	int						m_instanceCount;
 	/////////////////////////////////////////////////
@@ -93,4 +94,5 @@ private:
 	///	Allocates m_instanceCount of Instance, don't forget to clear up mem!
 	/////////////////////////////////////////////////
 	field::Instance* generateInstanceData();
+	void buildInstanceBuffer();
 };

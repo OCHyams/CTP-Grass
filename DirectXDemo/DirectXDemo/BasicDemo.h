@@ -23,7 +23,6 @@ private:
 	DirectX::XMFLOAT3 m_wind;
 	float m_windStr;
 	std::vector<GameObject*> m_objects;
-	std::vector<SimpleGrass*> m_grass;
 	Camera* m_cam;
 	Field m_field;
 	float m_fps;
