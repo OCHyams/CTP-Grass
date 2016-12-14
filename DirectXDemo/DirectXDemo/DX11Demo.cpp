@@ -89,6 +89,11 @@ bool DX11Demo::init(HINSTANCE _hInstance, HWND _hwnd)
 	};
 	unsigned int totalFeatureLevels = ARRAYSIZE(featureLevels);
 
+	DXGI_SAMPLE_DESC msaaDesc;
+	ZeroMemory(&msaaDesc, sizeof(msaaDesc));
+	msaaDesc.Count = 8;
+	msaaDesc.Quality = D3D11_STANDARD_MULTISAMPLE_PATTERN;
+
 	DXGI_SWAP_CHAIN_DESC scDesc;
 	ZeroMemory(&scDesc, sizeof(scDesc));
 	scDesc.BufferCount = 1;
@@ -100,8 +105,7 @@ bool DX11Demo::init(HINSTANCE _hInstance, HWND _hwnd)
 	scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	scDesc.OutputWindow = _hwnd;
 	scDesc.Windowed = true;
-	scDesc.SampleDesc.Count = 1;
-	scDesc.SampleDesc.Quality = 0;
+	scDesc.SampleDesc = msaaDesc;
 
 	unsigned int creationFlags = 0;
 
@@ -156,8 +160,7 @@ bool DX11Demo::init(HINSTANCE _hInstance, HWND _hwnd)
 	depthTexDesc.MipLevels = 1;
 	depthTexDesc.ArraySize = 1;
 	depthTexDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthTexDesc.SampleDesc.Count = 1;
-	depthTexDesc.SampleDesc.Quality = 0;
+	depthTexDesc.SampleDesc = msaaDesc;
 	depthTexDesc.Usage = D3D11_USAGE_DEFAULT;
 	depthTexDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	depthTexDesc.CPUAccessFlags = 0;
@@ -172,7 +175,7 @@ bool DX11Demo::init(HINSTANCE _hInstance, HWND _hwnd)
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
 	ZeroMemory(&dsvDesc, sizeof(dsvDesc));
 	dsvDesc.Format = depthTexDesc.Format;
-	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;//D3D11_DSV_DIMENSION_TEXTURE2D; changed when adding MSAA
 	dsvDesc.Texture2D.MipSlice = 0;
 	result = m_d3dDevice->CreateDepthStencilView(m_depthTexture, &dsvDesc, &m_depthStencilView);
 	if (FAILED(result))

@@ -271,20 +271,23 @@ float4 PS_Main(PS_INPUT input) : SV_TARGET
 	/*Lighting*/
 	float3 ambientColour	= float3(0.2f,0.2f,0.2f);
 
+	/*@this stuff is in for crappy two-sided lighting*/
 	//check for which normal to use (front facing, back facing - use highest value)
-	float diffuseTerm1 = clamp(dot(input.normal, input.lightVec), 0.0f, 1.0f);
-	float diffuseTerm2 = clamp(dot(-input.normal, input.lightVec), 0.0f, 1.0f);
-	float diffuseTerm = max(diffuseTerm1, diffuseTerm2);
+	//float diffuseTerm1 = clamp(dot(input.normal, input.lightVec), 0.0f, 1.0f);
+	//float diffuseTerm2 = clamp(dot(-input.normal, input.lightVec), 0.0f, 1.0f);
+	//float diffuseTerm = max(diffuseTerm1, diffuseTerm2);
+	float diffuseTerm = clamp(dot(input.normal, input.lightVec), 0.0f, 1.0f);
 
-	float3 normal = input.normal;
+	/*@this stuff is in for crappy two-sided lighting*/
+	//float3 normal = input.normal;
 	//@Remove if statement later!
-	if (diffuseTerm == diffuseTerm2) normal -= normal;
+	//if (diffuseTerm == diffuseTerm2) normal -= normal;
 
 	float specularTerm = 0;
 	//@@for now do this but maybe get rid of the if later!
 	if (diffuseTerm > 0.0f)
 	{
-		specularTerm = pow(saturate(dot(normal, normalize(input.lightVec + input.viewVec))), 25);
+		specularTerm = pow(saturate(dot(input.normal, normalize(input.lightVec + input.viewVec))), 25);
 	}
 	float3 final = ambientColour + intensity * diffuseTerm + intensity * specularTerm;
 	/*NOTE: remove tex coords to test just lighting*/
