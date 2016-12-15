@@ -442,8 +442,13 @@ field::Instance* Field::generateInstanceData()
 			//scale
 			//
 			//rotation
-			XMFLOAT4 rotQuat = XMFLOAT4(0,1,0, randAngle());
-			data[index].rotation = rotQuat;
+			float angle = randAngle();
+			XMVECTOR euler = XMLoadFloat3(&XMFLOAT3(0, angle,0));
+			XMVECTOR quat = XMQuaternionRotationRollPitchYawFromVector(euler);
+			//XMFLOAT4 quat = XMFLOAT4(0,1,0, randAngle());
+			//data[index].rotation = quat;
+			XMStoreFloat4(&data[index].rotation,quat);
+
 			//translation
 			XMFLOAT3 position = XMFLOAT3(m_pos.x + xoffset, m_pos.y, m_pos.z + zoffset);
 			XMVECTOR translation = XMLoadFloat3(&position);
@@ -452,7 +457,7 @@ field::Instance* Field::generateInstanceData()
 			//world
 			//XMMATRIX world = XMMatrixTranslationFromVector(translation);//shouldn't work
 
-			XMMATRIX world = XMMatrixRotationY(rotQuat.w); 
+			XMMATRIX world = XMMatrixRotationY(angle);
 			world = XMMatrixMultiply(world, XMMatrixTranslationFromVector(translation));
 
 			XMStoreFloat4x4(&data[index].world, XMMatrixTranspose(world));

@@ -94,7 +94,13 @@ inline float4 windForce(float3 p, float3 wind)
 	return float4(wind * dot(ts, 0.25), 0.0f);
 }
 
-//@can probably be optimised
+//http://donw.io/post/dual-quaternion-skinning/
+float3 QuatRotateVector(float4 Qr, float3 v)
+{
+	return v + 2 * cross(Qr.w * v + cross(v, Qr.xyz), Qr.xyz);
+}
+
+//@can probably be optimised -> SEEA ABOVE
 matrix rotationFromAngleAxis(float angle, float3 axis)
 {
 	matrix output;
@@ -137,17 +143,22 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 
 
 	//Normal
-	output.normal = mul(vertex.normal, rotation);
-	/*@when better wind simulation is in, use twisting to manipulate normal*/
-
 	/*@this didn't work :c*/
 	//output.normal = cross(vertex.binormal, normalize(output.pos));
 	//output.normal = mul(output.normal, vertex.world);
+
+	
+	//output.normal = mul(vertex.normal, rotation);
+	//@VTrying out new quat rotation technique 
+	output.normal = QuatRotateVector(vertex.rotation, vertex.normal); //not REALLY sure if this is working but it seems better than before maybe..
+	/*@when better wind simulation is in, use twisting to manipulate normal*/
 	output.normal = normalize(output.normal);
 
 	//Binormal@ NEXT ISSUE <-MAKE BINROAMLS ROTATE
 	//output.binormal = binormal;
-	output.binormal = mul(binormal, rotation);
+	//output.binormal = mul(vertex.binormal, rotation);
+	//@trying out quat rotation, first need to make sure the quat stored is correct
+	output.binormal = float4(QuatRotateVector(vertex.rotation, vertex.binormal),0.f);
 	output.binormal = normalize(output.binormal);
 
 	//World-View-Proj transformation
