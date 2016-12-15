@@ -25,7 +25,7 @@ struct VS_INPUT
 {
 	//PER_VERTEX
 	float3	pos			: SV_POSITION;			//position
-	float3	binormal	: BINORMAL;				//@@To be used for per-vertex binormals soon
+	float3	binormal	: BINORMAL;				//Helps place the quad verts
 	float3	normal		: NORMAL;
 	float	flexibility	: FLEX;					//multiplier for wind deformation
 	//PER-INSTANCE
@@ -38,6 +38,8 @@ struct VS_OUTPUT
 {
 	float4	pos			: POSITION;
 	float4	binormal	: BINORMAL;
+	float4	b1			: BINORMAL_WORLDPOS0;
+	float4	b2			: BINORMAL_WORLDPOS1;
 	float3	normal		: NORMAL;
 };
 
@@ -50,6 +52,8 @@ struct HS_OUTPUT
 {
 	float4	cpoint		: CPOINT;
 	float4	binormal	: BINORMAL;
+	float4	b1			: BINORMAL_WORLDPOS0;
+	float4	b2			: BINORMAL_WORLDPOS1;
 	float3	normal		: NORMAL;
 };
 
@@ -57,6 +61,8 @@ struct DS_OUTPUT
 {
 	float4	position	: SV_Position;
 	float4	binormal	: BINORMAL;
+	float4	b1			: BINORMAL_WORLDPOS0;
+	float4	b2			: BINORMAL_WORLDPOS1;
 	float3	normal		: NORMAL;
 	float	tVal		: T_VAL;
 };
@@ -135,30 +141,29 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 	VS_OUTPUT output;
 	output.pos = float4(vertex.pos, 1.f);
 
-	//Wind displacement [Orthomans technique]@not working properly!
+	/*Wind displacement*/ //[Orthomans technique]
 	output.pos += (windForce(vertex.location, wind) * vertex.flexibility);
 
-
-	//Normal
-	/*@this didn't work :c*/
-	//output.normal = cross(vertex.binormal, normalize(output.pos));
-	//output.normal = mul(output.normal, vertex.world);
-	//@VTrying out new quat rotation technique 
-	output.normal = QuatRotateVector(vertex.rotation, vertex.normal); //not REALLY sure if this is working but it seems better than before maybe..
-	/*@when better wind simulation is in, use twisting to manipulate normal*/
+	//@when better wind simulation is in, use twisting to manipulate normal
+	/*Normals*/
+	output.normal = QuatRotateVector(vertex.rotation, vertex.normal);
 	output.normal = normalize(output.normal);
 
-	//Binormal@ NEXT ISSUE <-MAKE BINROAMLS ROTATE
-	//@trying out quat rotation, first need to make sure the quat stored is correct
+	/*Binormals*/
 	output.binormal = float4(QuatRotateVector(vertex.rotation, vertex.binormal),0.f);
 	output.binormal = normalize(output.binormal);
 
+	/*Quad verts*/
+	output.b1 = output.pos + binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
+	output.b2 = output.pos - binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
 
-
-	//World-View-Proj transformation
+	/*World-View-Proj transformation*/
 	matrix wvp = mul(vertex.world, view_proj);
 	output.pos = mul(output.pos, wvp);
 
+	/*Put quad verts into world space*/
+	output.b1 = mul(output.b1, wvp);
+	output.b2 = mul(output.b2, wvp);
 
 	return output;
 }
@@ -186,11 +191,13 @@ HS_OUTPUT HS_Main(InputPatch<VS_OUTPUT, 4> input, uint id : SV_OutputControlPoin
 	output.cpoint = input[id].pos;
 	output.normal = input[id].normal;
 	output.binormal = input[id].binormal;
+	output.b1 = input[id].b1;//@
+	output.b2 = input[id].b2;//@
 	return output;
 }
 
 //@Need to find some optimisation here...
-//can probably vectorise this!
+//can probably vectorise this?
 [domain("isoline")]
 DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2 uv : SV_DomainLocation)
 {
@@ -199,27 +206,31 @@ DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2
 	/*Time*/
 	output.tVal = uv.x;
 
+	/*Coefficents*/
+	float4 co = float4(	pow(1.0f - output.tVal, 3.0f),
+						3.0f * pow(1.0f - output.tVal, 2.0f) * output.tVal,
+						3.0f * (1.0f - output.tVal) * pow(output.tVal, 2.0f),
+						pow(output.tVal, 3.0f));
+
+	
 	/*Position = evaluateBezier(output.tVal)*/
-	output.position =	pow(1.0f - output.tVal, 3.0f) * op[0].cpoint + 3.0f * pow(1.0f - output.tVal, 2.0f) * 
-						output.tVal * op[1].cpoint + 3.0f * (1.0f - output.tVal) * pow(output.tVal, 2.0f) * 
-						op[2].cpoint + pow(output.tVal, 3.0f) * op[3].cpoint;
+	output.position = co[0] * op[0].cpoint + co[1] * op[1].cpoint + co[2] * op[2].cpoint + co[3] * op[3].cpoint;
 
 	/*Normal = evaluateBezier(output.tVal)*/
-	output.normal =		pow(1.0f - output.tVal, 3.0f) * op[0].normal + 3.0f * pow(1.0f - output.tVal, 2.0f) *
-						output.tVal * op[1].normal + 3.0f * (1.0f - output.tVal) * pow(output.tVal, 2.0f) *
-						op[2].normal + pow(output.tVal, 3.0f) * op[3].normal;
+	output.normal = co[0] * op[0].normal + co[1] * op[1].normal + co[2] * op[2].normal + co[3] * op[3].normal;
 
 	/*Biormal = evaluateBezier(output.tVal)*/
-	output.binormal =	pow(1.0f - output.tVal, 3.0f) * op[0].binormal + 3.0f * pow(1.0f - output.tVal, 2.0f) *
-						output.tVal * op[1].binormal + 3.0f * (1.0f - output.tVal) * pow(output.tVal, 2.0f) *
-						op[2].binormal + pow(output.tVal, 3.0f) * op[3].binormal;
+	output.binormal = co[0] * op[0].binormal + co[1] * op[1].binormal + co[2] * op[2].binormal + co[3] * op[3].binormal;
+
+	/*Quad verts*/
+	output.b1 = co[0] * op[0].b1 + co[1] * op[1].b1 + co[2] * op[2].b1 + co[3] * op[3].b1; //<<@@VECTORIZING potential, that's a 4-vector dot, matrix?
+	output.b2 = co[0] * op[0].b2 + co[1] * op[1].b2 + co[2] * op[2].b2 + co[3] * op[3].b2;
+
 	return output;
 }
 
 
 //GEOMETRY SHADER--------------------------------------------------------
-
-
 [maxvertexcount(4)]
 void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 {	
@@ -231,16 +242,9 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 
 		/*texture coords*/
 		element.texcoord = float2(0, 1-input[i].tVal);
-
-		/*calculate an offset to the input vertex
-		that will be used to place the output vertex.*/
-									/*reduce the width of the grass towards
-									the tip in a parabolic fashion.*/
-		float4 offset = input[i].binormal * (1 - (input[i].tVal * input[i].tVal)) * halfGrassWidth;
 		
-		/*apply offset to input vertex position to 
-		get output vertex position*/
-		element.pos = input[i].position + offset;
+		/*Element position*/
+		element.pos = input[i].b1;
 
 		/*Lighting*/
 		element.viewVec = normalize(camera - element.pos);
@@ -253,10 +257,9 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 		/*texture coords for other side*/
 		element.texcoord.x = 1;
 		
-		/*apply negative offset for vertex on  
-		other side of line segment*/
-		element.pos = input[i].position - offset;
-		
+		/*Element position*/
+		element.pos = input[i].b2;
+
 		/*Lighting*/
 		element.viewVec = normalize(camera - element.pos);
 		element.lightVec = normalize(light - element.pos);
@@ -277,17 +280,7 @@ float4 PS_Main(PS_INPUT input) : SV_TARGET
 	/*Lighting*/
 	float3 ambientColour	= float3(0.2f,0.2f,0.2f);
 
-	/*@this stuff is in for crappy two-sided lighting*/
-	//check for which normal to use (front facing, back facing - use highest value)
-	//float diffuseTerm1 = clamp(dot(input.normal, input.lightVec), 0.0f, 1.0f);
-	//float diffuseTerm2 = clamp(dot(-input.normal, input.lightVec), 0.0f, 1.0f);
-	//float diffuseTerm = max(diffuseTerm1, diffuseTerm2);
 	float diffuseTerm = clamp(dot(input.normal, input.lightVec), 0.0f, 1.0f);
-
-	/*@this stuff is in for crappy two-sided lighting*/
-	//float3 normal = input.normal;
-	//@Remove if statement later!
-	//if (diffuseTerm == diffuseTerm2) normal -= normal;
 
 	float specularTerm = 0;
 	//@@for now do this but maybe get rid of the if later!
