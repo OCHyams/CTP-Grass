@@ -135,9 +135,6 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 	VS_OUTPUT output;
 	output.pos = float4(vertex.pos, 1.f);
 
-	//Rotation matrix
-	matrix rotation = rotationFromAngleAxis(vertex.rotation.w, vertex.rotation.xyz);
-
 	//Wind displacement [Orthomans technique]@not working properly!
 	output.pos += (windForce(vertex.location, wind) * vertex.flexibility);
 
@@ -146,23 +143,19 @@ VS_OUTPUT VS_Main(VS_INPUT vertex)
 	/*@this didn't work :c*/
 	//output.normal = cross(vertex.binormal, normalize(output.pos));
 	//output.normal = mul(output.normal, vertex.world);
-
-	
-	//output.normal = mul(vertex.normal, rotation);
 	//@VTrying out new quat rotation technique 
 	output.normal = QuatRotateVector(vertex.rotation, vertex.normal); //not REALLY sure if this is working but it seems better than before maybe..
 	/*@when better wind simulation is in, use twisting to manipulate normal*/
 	output.normal = normalize(output.normal);
 
 	//Binormal@ NEXT ISSUE <-MAKE BINROAMLS ROTATE
-	//output.binormal = binormal;
-	//output.binormal = mul(vertex.binormal, rotation);
 	//@trying out quat rotation, first need to make sure the quat stored is correct
 	output.binormal = float4(QuatRotateVector(vertex.rotation, vertex.binormal),0.f);
 	output.binormal = normalize(output.binormal);
 
+
+
 	//World-View-Proj transformation
-	//WORKING
 	matrix wvp = mul(vertex.world, view_proj);
 	output.pos = mul(output.pos, wvp);
 

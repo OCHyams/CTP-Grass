@@ -37,13 +37,6 @@ bool BasicDemo::load()
 	m_field.load(m_d3dDevice, 1000000, { 50, 50 }, {-25,0,-25});
 	
 	
-	//Plane* plane = new Plane();
-	//m_objects.push_back(plane);
-	//CHECK_FAIL(plane->load(m_d3dDevice));
-	//plane->setPos(XMFLOAT3(0.f, 0.0f, 0.f));
-	//plane->setRot({ 0.f,0.f,0.f });
-	//plane->setScale({1.f,1.f,1.f});
-
 	m_cam = new Camera({0,0.5f, 3.f});
 	m_cam->setPos({ 0.0f, 1.f, -3.f });
 	m_objects.push_back(m_cam);
