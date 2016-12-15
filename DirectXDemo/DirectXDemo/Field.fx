@@ -189,7 +189,8 @@ HS_OUTPUT HS_Main(InputPatch<VS_OUTPUT, 4> input, uint id : SV_OutputControlPoin
 	return output;
 }
 
-
+//@Need to find some optimisation here...
+//can probably vectorise this!
 [domain("isoline")]
 DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2 uv : SV_DomainLocation)
 {
@@ -208,8 +209,10 @@ DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2
 						output.tVal * op[1].normal + 3.0f * (1.0f - output.tVal) * pow(output.tVal, 2.0f) *
 						op[2].normal + pow(output.tVal, 3.0f) * op[3].normal;
 
-	/*Binromal - cheating for now@*/
-	output.binormal = op[0].binormal;
+	/*Biormal = evaluateBezier(output.tVal)*/
+	output.binormal =	pow(1.0f - output.tVal, 3.0f) * op[0].binormal + 3.0f * pow(1.0f - output.tVal, 2.0f) *
+						output.tVal * op[1].binormal + 3.0f * (1.0f - output.tVal) * pow(output.tVal, 2.0f) *
+						op[2].binormal + pow(output.tVal, 3.0f) * op[3].binormal;
 	return output;
 }
 
