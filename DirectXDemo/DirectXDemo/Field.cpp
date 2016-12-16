@@ -385,7 +385,7 @@ void Field::updateConstBuffers()
 	XMStoreFloat4(&tanf4, tan);
 
 	m_CBcpu_geometry.tessDensity = /*@m_curDensity*/6;
-	m_CBcpu_geometry.binormal = tanf4;
+	//m_CBcpu_geometry.binormal = tanf4;
 	m_CBcpu_geometry.halfGrassWidth = m_halfGrassWidth;
 	m_CBcpu_geometry.time = (float)t->time;
 	m_CBcpu_geometry.wind = m_wind;

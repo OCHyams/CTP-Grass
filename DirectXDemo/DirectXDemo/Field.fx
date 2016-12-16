@@ -2,7 +2,6 @@
 
 cbuffer CONSTS : register(b0)
 {
-	float4	binormal;
 	float3	wind;
 	float	tessDensity;
 	float	halfGrassWidth;
@@ -59,7 +58,7 @@ struct HS_CONSTANT_OUTPUT
 
 struct GS_INPUT
 {
-	float4	position	: SV_Position;
+	//float4	position	: SV_Position;
 	float4	binormal	: BINORMAL;
 	float4	b1			: BINORMAL_WORLDPOS0;
 	float4	b2			: BINORMAL_WORLDPOS1;
@@ -166,8 +165,8 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 {
 	HS_DS_INPUT output;
 
-	output.cpoint = float4(vertex.pos, 1.f);//@working
-	//output.cpoint = mul(float4(vertex.pos, 1.f), vertex.world);//@new
+	//output.cpoint = float4(vertex.pos, 1.f);//@working
+	output.cpoint = float4(quatRotateVector(vertex.rotation, vertex.pos), 1.0f);//@new
 
 	/*Wind displacement*/ //[Orthomans technique]
 	output.cpoint += (windForce(vertex.location, wind) * vertex.flexibility);
@@ -184,23 +183,26 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	output.binormal = float4(quatRotateVector(vertex.rotation, vertex.binormal),0.f);
 	output.binormal = normalize(output.binormal);
 
-	/*Quad verts*/
-	output.b1 = output.cpoint + binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
-	output.b2 = output.cpoint - binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
+	///*Quad verts*///@working
+	//output.b1 = output.cpoint + binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
+	//output.b2 = output.cpoint - binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
 
-	///*View-Proj transformation*///@new
-	//output.cpoint = mul(output.cpoint, view_proj);
+	/*Quad verts*///@new
+	output.b1 = float4(vertex.location, 0.0f) + output.cpoint + output.binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
+	output.b2 = float4(vertex.location, 0.0f) + output.cpoint - output.binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
+
+	/*View-Proj transformation*///@new
+	output.cpoint = mul(output.cpoint, view_proj);
+	output.b1 = mul(output.b1, view_proj);
+	output.b2 = mul(output.b2, view_proj);
+
+	///*World-View-Proj transformation*///@working
 	//matrix wvp = mul(vertex.world, view_proj);
-	//output.b1 = mul(output.b1, view_proj);
-	//output.b2 = mul(output.b2, view_proj);
+	//output.cpoint = mul(output.cpoint, wvp);
 
-	/*World-View-Proj transformation*///@working
-	matrix wvp = mul(vertex.world, view_proj);
-	output.cpoint = mul(output.cpoint, wvp);
-
-	/*Put quad verts into world space*/
-	output.b1 = mul(output.b1, wvp);
-	output.b2 = mul(output.b2, wvp);
+	///*Put quad verts into world space*/
+	//output.b1 = mul(output.b1, wvp);
+	//output.b2 = mul(output.b2, wvp);
 
 	return output;
 }
@@ -245,7 +247,7 @@ GS_INPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_DS_INPUT, 4> op, float
 
 	
 	/*Position = evaluateBezier(output.tVal)*/
-	output.position = co[0] * op[0].cpoint + co[1] * op[1].cpoint + co[2] * op[2].cpoint + co[3] * op[3].cpoint;
+	//output.position = co[0] * op[0].cpoint + co[1] * op[1].cpoint + co[2] * op[2].cpoint + co[3] * op[3].cpoint;
 
 	/*Normal = evaluateBezier(output.tVal)*/
 	output.normal = co[0] * op[0].normal + co[1] * op[1].normal + co[2] * op[2].normal + co[3] * op[3].normal;
