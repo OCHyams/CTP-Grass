@@ -116,6 +116,12 @@ inline float4 quatFromTwoVec(float3 v0, float3 v1)
 	return normalize(q);
 }
 
+inline float3 project(float3 v0, float3 v1)
+{
+	return v1* dot(v0, v1) / pow(length(v1), 2);
+}
+
+
 //@can probably be optimised -> SEEA ABOVE
 matrix rotationFromAngleAxis(float angle, float3 axis)
 {

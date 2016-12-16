@@ -33,8 +33,8 @@ bool BasicDemo::load()
 
 	Field::loadShared(m_d3dDevice);
 	m_field.m_halfGrassWidth = 0.1f;//0.012f;
-							//x,000,000
-	m_field.load(m_d3dDevice, 1000000, { 50, 50 }, {-25,0,-25});
+							//x,000,00
+	m_field.load(m_d3dDevice, 100000, { 50, 50 }, {-25,0,-25});
 	
 	
 	m_cam = new Camera({0,0.5f, 3.f});

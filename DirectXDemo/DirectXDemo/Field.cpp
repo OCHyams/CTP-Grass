@@ -19,10 +19,6 @@ ID3D11Buffer*			Field::s_vertexBuffer	= nullptr;
 ID3D11ShaderResourceView* Field::s_texture		= nullptr;
 ID3D11SamplerState*		Field::s_samplerState	= nullptr;
 
-//ez release
-#define RELEASE(x) if (x) { x->Release(); x = nullptr; }
-
-
 Field::Field()
 {
 }
@@ -384,7 +380,7 @@ void Field::updateConstBuffers()
 	XMFLOAT4 tanf4;
 	XMStoreFloat4(&tanf4, tan);
 
-	m_CBcpu_geometry.tessDensity = /*@m_curDensity*/9;
+	m_CBcpu_geometry.tessDensity = /*@m_curDensity*/6;
 	m_CBcpu_geometry.binormal = tanf4;
 	m_CBcpu_geometry.halfGrassWidth = m_halfGrassWidth;
 	m_CBcpu_geometry.time = (float)t->time;

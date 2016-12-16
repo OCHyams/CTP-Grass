@@ -3,6 +3,7 @@
 #include "ServiceLocator.h" 
 #include "Input.h"
 #include "AntTweakBar.h"
+#include "DXHelper.h"
 DX11Demo::DX11Demo() :	m_driverType(D3D_DRIVER_TYPE_NULL), 
 						m_featureLevel(D3D_FEATURE_LEVEL_11_1),
 						m_d3dDevice(nullptr), 
@@ -28,20 +29,12 @@ void DX11Demo::shutdown()
 		delete m_input;
 	}
 
-
-	if (m_depthTexture) m_depthTexture->Release();
-	if (m_depthStencilView) m_depthStencilView->Release();
-	if (m_backBufferTarget) m_backBufferTarget->Release();
-	if (m_swapChain) m_swapChain->Release();
-	if (m_d3dContext) m_d3dContext->Release();
-	if (m_d3dDevice) m_d3dDevice->Release();
-	
-	m_d3dDevice = nullptr;
-	m_d3dContext = nullptr;
-	m_swapChain = nullptr;
-	m_backBufferTarget = nullptr;
-	m_depthStencilView = nullptr;
-	m_depthTexture = nullptr;
+	RELEASE(m_depthTexture);
+	RELEASE(m_depthStencilView);
+	RELEASE(m_backBufferTarget);
+	RELEASE(m_swapChain);
+	RELEASE(m_d3dContext);
+	RELEASE(m_d3dDevice);
 
 	TwTerminate();
 }
