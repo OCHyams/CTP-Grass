@@ -165,17 +165,19 @@ float4 quatMul(float4 q1, float4 q2)
 HS_DS_INPUT VS_Main(VS_INPUT vertex)
 {
 	HS_DS_INPUT output;
-	output.cpoint = float4(vertex.pos, 1.f);
+
+	output.cpoint = float4(vertex.pos, 1.f);//@working
+	//output.cpoint = mul(float4(vertex.pos, 1.f), vertex.world);//@new
 
 	/*Wind displacement*/ //[Orthomans technique]
 	output.cpoint += (windForce(vertex.location, wind) * vertex.flexibility);
 
-	/*Rotation of vectors under wind force*/
+	/*Rotation of vectors under wind force*/ //-@->NOT WORKING ATM
 	float4 rot = quatFromTwoVec(vertex.pos, output.cpoint);
 
 	//@when better wind simulation is in, use twisting to manipulate normal
 	/*Normals*/
-	output.normal = quatRotateVector(/*quatMul(rot, */vertex.rotation/*)*/, vertex.normal);//@trying out normal rotation,  quatMul(vertex.rotation, rot) == vertex.rotation
+	output.normal = quatRotateVector(/*@quatMul(rot, */vertex.rotation/*)*/, vertex.normal);
 	output.normal = normalize(output.normal);
 
 	/*Binormals*/
@@ -186,7 +188,13 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	output.b1 = output.cpoint + binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
 	output.b2 = output.cpoint - binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
 
-	/*World-View-Proj transformation*/
+	///*View-Proj transformation*///@new
+	//output.cpoint = mul(output.cpoint, view_proj);
+	//matrix wvp = mul(vertex.world, view_proj);
+	//output.b1 = mul(output.b1, view_proj);
+	//output.b2 = mul(output.b2, view_proj);
+
+	/*World-View-Proj transformation*///@working
 	matrix wvp = mul(vertex.world, view_proj);
 	output.cpoint = mul(output.cpoint, wvp);
 
@@ -314,7 +322,7 @@ float4 PS_Main(PS_INPUT input) : SV_TARGET
 	{
 		normal *= -1;
 		diffuseTerm = diffuseTerm2;
-		ambientColour = 0.15;
+		ambientColour = 0.2;
 	}
 	
 	float specularTerm = 0;

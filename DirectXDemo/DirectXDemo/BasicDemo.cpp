@@ -6,6 +6,11 @@
 #include "Plane.h"
 #include "Field.h"
 #include "AntTweakBar.h"
+
+/*Make large INTs easier to read in code*/
+#define NUM(x0, x1) x0 ## x1
+#define NUM(x0, x1, x2) x0 ## x1 ## x2
+
 BasicDemo::BasicDemo()
 {}
 
@@ -33,8 +38,8 @@ bool BasicDemo::load()
 
 	Field::loadShared(m_d3dDevice);
 	m_field.m_halfGrassWidth = 0.1f;//0.012f;
-							//x,00,000
-	m_field.load(m_d3dDevice, 100000, { 50, 50 }, {-25,0,-25});
+
+	m_field.load(m_d3dDevice, NUM(50,000), { 50, 50 }, {-25,0,-25});
 	
 	
 	m_cam = new Camera({0,0.5f, 3.f});
