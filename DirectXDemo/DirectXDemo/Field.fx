@@ -34,9 +34,9 @@ struct VS_INPUT
 	float3	location	: INSTANCE_LOCATION;	//position of grass in world for lighting calc etc
 };
 
-struct VS_OUTPUT
+struct HS_DS_INPUT
 {
-	float4	pos			: POSITION;
+	float4	cpoint		: POSITION;
 	float4	binormal	: BINORMAL;
 	float4	b1			: BINORMAL_WORLDPOS0;
 	float4	b2			: BINORMAL_WORLDPOS1;
@@ -48,16 +48,16 @@ struct HS_CONSTANT_OUTPUT
 	float edges[2] : SV_TessFactor;
 };
 
-struct HS_OUTPUT
-{
-	float4	cpoint		: CPOINT;
-	float4	binormal	: BINORMAL;
-	float4	b1			: BINORMAL_WORLDPOS0;
-	float4	b2			: BINORMAL_WORLDPOS1;
-	float3	normal		: NORMAL;
-};
+//struct HS_OUTPUT
+//{
+//	float4	cpoint		: CPOINT;
+//	float4	binormal	: BINORMAL;
+//	float4	b1			: BINORMAL_WORLDPOS0;
+//	float4	b2			: BINORMAL_WORLDPOS1;
+//	float3	normal		: NORMAL;
+//};
 
-struct DS_OUTPUT
+struct GS_INPUT
 {
 	float4	position	: SV_Position;
 	float4	binormal	: BINORMAL;
@@ -101,9 +101,19 @@ inline float4 windForce(float3 p, float3 wind)
 }
 
 //http://donw.io/post/dual-quaternion-skinning/
-float3 QuatRotateVector(float4 Qr, float3 v)
+inline float3 quatRotateVector(float4 Qr, float3 v)
 {
 	return v + 2 * cross(Qr.w * v + cross(v, Qr.xyz), Qr.xyz);
+}
+
+//http://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
+inline float4 quatFromTwoVec(float3 v0, float3 v1)
+{
+	float4 q;
+	v0 = cross(v0, v1);
+	q.xyz = v0;
+	q.w = sqrt(pow(length(v0) , 2) * pow(length(v1),2)) + dot(v0, v1);
+	return normalize(q);
 }
 
 //@can probably be optimised -> SEEA ABOVE
@@ -136,30 +146,30 @@ matrix rotationFromAngleAxis(float angle, float3 axis)
 	return output;
 }
 
-VS_OUTPUT VS_Main(VS_INPUT vertex)
+HS_DS_INPUT VS_Main(VS_INPUT vertex)
 {
-	VS_OUTPUT output;
-	output.pos = float4(vertex.pos, 1.f);
+	HS_DS_INPUT output;
+	output.cpoint = float4(vertex.pos, 1.f);
 
 	/*Wind displacement*/ //[Orthomans technique]
-	output.pos += (windForce(vertex.location, wind) * vertex.flexibility);
+	output.cpoint += (windForce(vertex.location, wind) * vertex.flexibility);
 
 	//@when better wind simulation is in, use twisting to manipulate normal
 	/*Normals*/
-	output.normal = QuatRotateVector(vertex.rotation, vertex.normal);
+	output.normal = quatRotateVector(vertex.rotation, vertex.normal);
 	output.normal = normalize(output.normal);
 
 	/*Binormals*/
-	output.binormal = float4(QuatRotateVector(vertex.rotation, vertex.binormal),0.f);
+	output.binormal = float4(quatRotateVector(vertex.rotation, vertex.binormal),0.f);
 	output.binormal = normalize(output.binormal);
 
 	/*Quad verts*/
-	output.b1 = output.pos + binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
-	output.b2 = output.pos - binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
+	output.b1 = output.cpoint + binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
+	output.b2 = output.cpoint - binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
 
 	/*World-View-Proj transformation*/
 	matrix wvp = mul(vertex.world, view_proj);
-	output.pos = mul(output.pos, wvp);
+	output.cpoint = mul(output.cpoint, wvp);
 
 	/*Put quad verts into world space*/
 	output.b1 = mul(output.b1, wvp);
@@ -185,23 +195,17 @@ HS_CONSTANT_OUTPUT HSConst()
 [outputtopology("line")]
 [outputcontrolpoints(4)]
 [patchconstantfunc("HSConst")]
-HS_OUTPUT HS_Main(InputPatch<VS_OUTPUT, 4> input, uint id : SV_OutputControlPointID)
+HS_DS_INPUT HS_Main(InputPatch<HS_DS_INPUT, 4> input, uint id : SV_OutputControlPointID)
 {
-	HS_OUTPUT output;
-	output.cpoint = input[id].pos;
-	output.normal = input[id].normal;
-	output.binormal = input[id].binormal;
-	output.b1 = input[id].b1;//@
-	output.b2 = input[id].b2;//@
-	return output;
+	return input[id];
 }
 
 //@Need to find some optimisation here...
 //can probably vectorise this?
 [domain("isoline")]
-DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2 uv : SV_DomainLocation)
+GS_INPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_DS_INPUT, 4> op, float2 uv : SV_DomainLocation)
 {
-	DS_OUTPUT output;
+	GS_INPUT output;
 
 	/*Time*/
 	output.tVal = uv.x;
@@ -226,13 +230,14 @@ DS_OUTPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_OUTPUT, 4> op, float2
 	output.b1 = co[0] * op[0].b1 + co[1] * op[1].b1 + co[2] * op[2].b1 + co[3] * op[3].b1; //<<@@VECTORIZING potential, that's a 4-vector dot, matrix?
 	output.b2 = co[0] * op[0].b2 + co[1] * op[1].b2 + co[2] * op[2].b2 + co[3] * op[3].b2;
 
+
 	return output;
 }
 
 
 //GEOMETRY SHADER--------------------------------------------------------
 [maxvertexcount(4)]
-void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
+void GS_Main(line GS_INPUT input[2], inout TriangleStream<PS_INPUT> output)
 {	
 	/*for each point in the line segment*/
 	for (uint i = 0; i < 2; i++)
