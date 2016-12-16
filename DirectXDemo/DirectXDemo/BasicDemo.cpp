@@ -33,7 +33,7 @@ bool BasicDemo::load()
 
 	Field::loadShared(m_d3dDevice);
 	m_field.m_halfGrassWidth = 0.1f;//0.012f;
-							//x,000,00
+							//x,00,000
 	m_field.load(m_d3dDevice, 100000, { 50, 50 }, {-25,0,-25});
 	
 	

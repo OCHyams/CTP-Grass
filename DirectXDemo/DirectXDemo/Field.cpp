@@ -338,6 +338,10 @@ void Field::draw(const DrawData& _data)
 	_data.m_dc->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, NULL);
 	_data.m_dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
 
+	//update rasterizer
+	_data.m_dc->RSSetState(s_rasterizer);
+
+	//apply shaders
 	s_shaders.apply(_data.m_dc);
 
 	//update subresources

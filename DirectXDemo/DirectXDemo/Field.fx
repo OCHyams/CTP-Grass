@@ -152,6 +152,16 @@ matrix rotationFromAngleAxis(float angle, float3 axis)
 	return output;
 }
 
+float4 quatMul(float4 q1, float4 q2)
+{
+	float4 result;
+	result.x = q1.x * q2.w + q1.y * q2.z - q1.z * q2.y + q1.w * q2.x;
+	result.y = -q1.x * q2.z + q1.y * q2.w + q1.z * q2.x + q1.w * q2.y;
+	result.z = q1.x * q2.y - q1.y * q2.x + q1.z * q2.w + q1.w * q2.z;
+	result.w = -q1.x * q2.x - q1.y * q2.y - q1.z * q2.z + q1.w * q2.w;
+	return result;
+}
+
 HS_DS_INPUT VS_Main(VS_INPUT vertex)
 {
 	HS_DS_INPUT output;
@@ -160,9 +170,12 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	/*Wind displacement*/ //[Orthomans technique]
 	output.cpoint += (windForce(vertex.location, wind) * vertex.flexibility);
 
+	/*Rotation of vectors under wind force*/
+	float4 rot = quatFromTwoVec(vertex.pos, output.cpoint);
+
 	//@when better wind simulation is in, use twisting to manipulate normal
 	/*Normals*/
-	output.normal = quatRotateVector(vertex.rotation, vertex.normal);
+	output.normal = quatRotateVector(/*quatMul(rot, */vertex.rotation/*)*/, vertex.normal);//@trying out normal rotation,  quatMul(vertex.rotation, rot) == vertex.rotation
 	output.normal = normalize(output.normal);
 
 	/*Binormals*/
@@ -289,15 +302,26 @@ SamplerState SAMPLER_STATE;
 float4 PS_Main(PS_INPUT input) : SV_TARGET
 {
 	/*Lighting*/
-	float3 ambientColour	= float3(0.2f,0.2f,0.2f);
+	float3 ambientColour = 0.2f;
 
-	float diffuseTerm = clamp(dot(input.normal, input.lightVec), 0.0f, 1.0f);
+	//@Trying to do twoside shading
+	float diffuseTerm1 = clamp(dot(input.normal, input.lightVec), 0.0f, 1.0f);
+	float diffuseTerm2 = clamp(dot(-input.normal, input.lightVec), 0.0f, 1.0f);
+	float diffuseTerm = diffuseTerm1;
+	float3 normal = input.normal;
 
+	if (diffuseTerm1 < diffuseTerm2)
+	{
+		normal *= -1;
+		diffuseTerm = diffuseTerm2;
+		ambientColour = 0.15;
+	}
+	
 	float specularTerm = 0;
 	//@@for now do this but maybe get rid of the if later!
 	if (diffuseTerm > 0.0f)
 	{
-		specularTerm = pow(saturate(dot(input.normal, normalize(input.lightVec + input.viewVec))), 25);
+		specularTerm = pow(saturate(dot(/*input.*/normal, normalize(input.lightVec + input.viewVec))), 25);
 	}
 	float3 final = ambientColour + intensity * diffuseTerm + intensity * specularTerm;
 	/*NOTE: remove tex coords to test just lighting*/
