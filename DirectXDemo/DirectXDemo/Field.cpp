@@ -375,21 +375,16 @@ void Field::updateConstBuffers()
 	using namespace DirectX;
 	Time* t = OCH::ServiceLocator<Time>::get();
 
-	//Geometry generation buffer
-	//for now just use 0 rotation...
-	XMFLOAT3 rotation = { 0,0,0 };
-	XMMATRIX rot = XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&rotation));
-	rot = XMMatrixMultiply(rot, XMLoadFloat4x4(&s_viewproj)); 
-	XMVECTOR tan = XMVector4Transform(XMLoadFloat4(&XMFLOAT4(m_halfGrassWidth, 0, 0, 0)), rot);
-	XMFLOAT4 tanf4;
-	XMStoreFloat4(&tanf4, tan);
 
-	m_CBcpu_geometry.tessDensity = /*@m_curDensity*/6;
-	//m_CBcpu_geometry.binormal = tanf4;
+	//m_CBcpu_geometry.tessDensity = /*@m_curDensity*/6;
 	m_CBcpu_geometry.halfGrassWidth = m_halfGrassWidth;
 	m_CBcpu_geometry.time = (float)t->time;
 	m_CBcpu_geometry.wind = m_wind;
-	
+	m_CBcpu_geometry.farTess = 5.0f;
+	m_CBcpu_geometry.nearTess = 0.4f;
+	m_CBcpu_geometry.minTessDensity = 3.0f;
+	m_CBcpu_geometry.maxTessDensity = 9.0f;
+
 	//view projection buffer
 	m_CBcpu_viewproj.m_wvp = XMMatrixTranspose(XMLoadFloat4x4(&s_viewproj));
 	

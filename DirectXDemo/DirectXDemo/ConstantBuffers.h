@@ -24,9 +24,12 @@ __declspec(align(16))
 struct CBField
 {
 	DirectX::XMFLOAT3 wind;
-	float tessDensity;
-	float halfGrassWidth;
-	float time;
+	float	halfGrassWidth;
+	float	time;
+	float	minTessDensity;
+	float	maxTessDensity;
+	float	nearTess;
+	float	farTess;
 };
 __declspec(align(16))
 struct CBWorldViewProj

@@ -2,10 +2,13 @@
 
 cbuffer CONSTS : register(b0)
 {
-	float3	wind;
-	float	tessDensity;
-	float	halfGrassWidth;
+	float3	wind;		
+	float	halfGrassWidth; //this should be in another buffer that never needs to be updated....
 	float	time;
+	float	minTessDensity;//this should be in another buffer that never needs to be updated....
+	float	maxTessDensity;//this should be in another buffer that never needs to be updated....
+	float	nearTess;//this should be in another buffer that never needs to be updated....
+	float	farTess;//this should be in another buffer that never needs to be updated....
 };
 
 cbuffer CBViewProj : register (b1)
@@ -28,8 +31,8 @@ struct VS_INPUT
 	float3	normal		: NORMAL;
 	float	flexibility	: FLEX;					//multiplier for wind deformation
 	//PER-INSTANCE
-	matrix	world		: INSTANCE_WORLD;		//world transform matrix
-	float4	rotation	: INSTANCE_ROTATION;	//quaternion
+	matrix	world		: INSTANCE_WORLD;		//world transform matrix - Not in use atm, might be required later...
+	float4	rotation	: INSTANCE_ROTATION;	//quaternion rotation
 	float3	location	: INSTANCE_LOCATION;	//position of grass in world for lighting calc etc
 };
 
@@ -40,6 +43,7 @@ struct HS_DS_INPUT
 	float4	b1			: BINORMAL_WORLDPOS0;
 	float4	b2			: BINORMAL_WORLDPOS1;
 	float3	normal		: NORMAL;
+	float	tessDensity : TESS_DENSITY;
 };
 
 struct HS_CONSTANT_OUTPUT
@@ -204,17 +208,22 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	//output.b1 = mul(output.b1, wvp);
 	//output.b2 = mul(output.b2, wvp);
 
+	/*Tess factor*/
+	float distance = length(camera - vertex.location);
+	distance = (distance- nearTess)/(farTess - nearTess);
+	output.tessDensity = maxTessDensity - distance * (maxTessDensity - minTessDensity);
+
 	return output;
 }
 
 //HULL-DOMAIN SHADERS----------------------------------------------------
 //See http://gpuexperiments.blogspot.co.uk/2010/02/tessellation-example.html
-HS_CONSTANT_OUTPUT HSConst()
+HS_CONSTANT_OUTPUT HSConst(InputPatch<HS_DS_INPUT, 4> input, uint id : SV_PrimitiveID)
 {
 	HS_CONSTANT_OUTPUT output;
 
 	output.edges[0] = 1.0f;				// Detail factor
-	output.edges[1] = tessDensity;		// tess density
+	output.edges[1] = input[id].tessDensity;		// tess density
 	return output;
 }
 

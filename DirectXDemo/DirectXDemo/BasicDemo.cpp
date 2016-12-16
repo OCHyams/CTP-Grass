@@ -39,7 +39,7 @@ bool BasicDemo::load()
 	Field::loadShared(m_d3dDevice);
 	m_field.m_halfGrassWidth = 0.02f;//0.012f;
 
-	m_field.load(m_d3dDevice, NUM(50,000), { 50, 50 }, {-25,0,-25});
+	m_field.load(m_d3dDevice, NUM(1,000,000), { 50, 50 }, {-25,0,-25});
 	
 	
 	m_cam = new Camera({0,0.5f, 3.f});
@@ -69,7 +69,7 @@ void BasicDemo::update()
 	DX11Demo::update();
 	
 	using namespace DirectX;
-	XMVECTOR windv = XMVectorScale(XMLoadFloat3(&m_wind), m_windStr);
+	XMVECTOR windv = XMVectorScale(XMVector3Normalize(XMLoadFloat3(&m_wind)), m_windStr);
 	XMFLOAT3 windf3;
 	DirectX::XMStoreFloat3(&windf3, windv);
 	m_field.setWind(windf3);
