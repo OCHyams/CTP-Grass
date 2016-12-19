@@ -25,9 +25,9 @@ class ObjModel
       int    GetTotalVerts() { return totalVerts_; }
 
    private:
-      float *vertices_;
-      float *normals_;
-      float *texCoords_;
+      float *vertices_ = nullptr;
+      float *normals_ = nullptr;
+      float *texCoords_ = nullptr;
       int totalVerts_;
 };
 

@@ -310,6 +310,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 
 	float truncationAccumulator = 0;
 	float* vertElementPtr = _model->GetVertices();
+	float* normElementPtr = _model->GetNormals();
 	int numVerts = _model->GetTotalVerts();
 	/*For every triangle...*/
 	for (int i = 0; i < numVerts; i +=3)
@@ -317,8 +318,14 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		/*Get vert positions*/
 		XMFLOAT3 triVerts[3];
 		memcpy(triVerts, vertElementPtr + i, sizeof(float)*9);
+		XMFLOAT3 triNorms[3];
+		/*Get vert normals*/
+		if (normElementPtr)
+		{
+			memcpy(triNorms, normElementPtr + i, sizeof(float) * 9);
+		}
 		/*Store vert positions & calc surface area*/
-		Triangle triangle = Triangle(triVerts, _density);
+		Triangle triangle = Triangle(triVerts, triNorms, _density);
 		/*Calc number of blades*/
 		int numBlades = std::truncf(triangle.m_surfaceArea * _density);
 		/*Deal with trunc rounding accumulation*/
@@ -635,4 +642,3 @@ void Field::addPatch(std::vector<field::Instance>& _field, const Triangle& _tri,
 }
 
 #undef MAX(x,y)
-#undef DELETE(x)

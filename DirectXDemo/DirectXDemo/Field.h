@@ -36,7 +36,7 @@ public:
 
 	static void updateCameraPosition(const DirectX::XMFLOAT3& _pos) { s_cameraPos = _pos; }
 	void setWind(const DirectX::XMFLOAT3& _wind) { m_wind = _wind; }
-
+	int getNumBlades() { return m_instanceCount; }
 	//public for now cus lazy
 	static DirectX::XMFLOAT4X4		s_viewproj;
 	float							m_length;
@@ -104,13 +104,17 @@ private:
 	struct Triangle
 	{
 		DirectX::XMFLOAT3	m_verts[3];
+		DirectX::XMFLOAT3	m_norms[3];
+		//Normals?
 		float				m_surfaceArea;
 
-		Triangle(const DirectX::XMFLOAT3* verts, float _density)
+		Triangle(const DirectX::XMFLOAT3* _verts, const DirectX::XMFLOAT3* _norms, float _density)
 		{
 			using namespace DirectX;
-			/*Get verts*/
-			memcpy(m_verts, verts, sizeof(DirectX::XMFLOAT3)*3);
+			/*Get verts & norms*/
+			memcpy(m_verts, _verts, sizeof(DirectX::XMFLOAT3) * 3);
+			if (_norms) memcpy(m_norms, _norms, sizeof(DirectX::XMFLOAT3) * 3);
+			else m_norms[0] = m_norms[1] = m_norms[2] = { 0,1,0 };
 
 			/*Calc surface area*/
 			XMVECTOR a = XMLoadFloat3(&m_verts[0]);

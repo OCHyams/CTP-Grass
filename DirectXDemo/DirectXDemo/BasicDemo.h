@@ -25,4 +25,5 @@ private:
 	Camera* m_cam;
 	Field m_field;
 	float m_fps;
+	int m_numBlades;
 };
