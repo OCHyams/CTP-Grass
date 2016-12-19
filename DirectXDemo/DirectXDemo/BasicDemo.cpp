@@ -6,7 +6,7 @@
 #include "Plane.h"
 #include "Field.h"
 #include "AntTweakBar.h"
-
+#include "objLoader.h"
 /*Make large INTs easier to read in code*/
 #define NUM(x0, x1) x0 ## x1
 #define NUM(x0, x1, x2) x0 ## x1 ## x2
@@ -33,16 +33,26 @@ bool BasicDemo::load()
 	using namespace DirectX;
 	m_wind = { 0.f, 0.0f, 1.0f };
 	m_windStr = 0.2;
-
 	m_fps = 0;
 
+	/*Load data shared by all fields*/
 	Field::loadShared(m_d3dDevice);
+
+	/*Set up demo field*/
 	m_field.m_halfGrassWidth = 0.02f;//0.012f;
 
-	m_field.load(m_d3dDevice, NUM(1,000,000), { 50, 50 }, {-25,0,-25});
+	/*Load hills model for grass*/
+	ObjModel model;
+	CHECK_FAIL(model.LoadOBJ("../Resources/ball.obj"));
+	m_field.load(m_d3dDevice, &model, 100, XMFLOAT3(0, 0, 0));
+
+	//@Original load function
+	//m_field.load(m_d3dDevice, NUM(100,000), { 50, 50 }, {-25,0,-25});
 	
-	
-	m_cam = new Camera({0,0.5f, 3.f});
+	/*Only needed the hill model to place the grass (FOR NOW ANYWAY)*/
+	model.Release();
+
+	m_cam = new Camera({ 0,0.5f, 3.f });
 	m_cam->setPos({ 0.0f, 1.f, -3.f });
 	m_objects.push_back(m_cam);
 	CHECK_FAIL(m_cam->load(m_d3dDevice));

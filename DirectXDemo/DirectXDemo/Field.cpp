@@ -9,6 +9,10 @@
 #include "DDSTextureLoader.h"
 #include <random>
 #include <functional>
+#include <vector>
+#include "objLoader.h"
+#include <stdlib.h>
+
 //statics
 DirectX::XMFLOAT3		Field::s_cameraPos		= DirectX::XMFLOAT3();
 DirectX::XMFLOAT4X4		Field::s_viewproj		= DirectX::XMFLOAT4X4();
@@ -294,9 +298,64 @@ bool Field::load(	ID3D11Device*		_device,
 	return loadBuffers(_device);
 }
 
-bool Field::load(ID3D11Device* _device, ObjModel* _model, float density)
+bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, DirectX::XMFLOAT3 _pos)
 {
+	m_pos = _pos;
+
+	using namespace DirectX;
+	HRESULT result;
+	
+	/*Procedurally generate grass positions*/
+	std::vector<field::Instance> instances;
+
+	float truncationAccumulator = 0;
+	float* vertElementPtr = _model->GetVertices();
+	int numVerts = _model->GetTotalVerts();
+	/*For every triangle...*/
+	for (int i = 0; i < numVerts; i +=3)
+	{
+		/*Get vert positions*/
+		XMFLOAT3 triVerts[3];
+		memcpy(triVerts, vertElementPtr + i, sizeof(float)*9);
+		/*Store vert positions & calc surface area*/
+		Triangle triangle = Triangle(triVerts, _density);
+		/*Calc number of blades*/
+		int numBlades = std::truncf(triangle.m_surfaceArea * _density);
+		/*Deal with trunc rounding accumulation*/
+		truncationAccumulator += std::fmodf(triangle.m_surfaceArea, _density);
+		if (truncationAccumulator >= 1.0f)
+		{
+			++numBlades;
+			--truncationAccumulator;
+		}
+		/*Add the patch to the field*/
+		addPatch(instances, triangle, numBlades);
+	}
+
 	/*build instance buffer...*/
+	D3D11_BUFFER_DESC instanceBufferDesc;
+	D3D11_SUBRESOURCE_DATA instanceData;
+	m_instanceCount = instances.size();
+
+	// Set up the description of the instance buffer.
+	instanceBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	instanceBufferDesc.ByteWidth = sizeof(field::Instance) * m_instanceCount;
+	instanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	instanceBufferDesc.CPUAccessFlags = 0;
+	instanceBufferDesc.MiscFlags = 0;
+	instanceBufferDesc.StructureByteStride = 0;
+	// Give the subresource structure a pointer to the instance data.
+	instanceData.pSysMem = instances.data();
+	instanceData.SysMemPitch = 0;
+	instanceData.SysMemSlicePitch = 0;
+
+	// Create the instance buffer.
+	result = _device->CreateBuffer(&instanceBufferDesc, &instanceData, &m_instanceBuffer);
+	if (FAILED(result))
+	{
+		MessageBox(0, "Error creating instance buffer.", "Field", MB_OK);
+		return false;
+	}
 
 
 	return loadBuffers(_device);
@@ -390,7 +449,6 @@ void Field::updateConstBuffers()
 	
 	m_CBcpu_light.intensity = 1.0f;
 	m_CBcpu_light.camera = XMFLOAT4(s_cameraPos.x, s_cameraPos.y, s_cameraPos.z, 1.f);
-	//stick light to camera
 	m_CBcpu_light.light = XMFLOAT4(0,2,0,1);//m_CBcpu_light.camera;
 	
 }
@@ -452,7 +510,7 @@ field::Instance* Field::generateInstanceData()
 			//world
 			//XMMATRIX world = XMMatrixTranslationFromVector(translation);//shouldn't work
 
-			XMMATRIX world = XMMatrixRotationY(angle);
+			XMMATRIX world = DirectX::XMMatrixRotationY(angle);
 			world = XMMatrixMultiply(world, XMMatrixTranslationFromVector(translation));
 
 			XMStoreFloat4x4(&data[index].world, XMMatrixTranspose(world));
@@ -525,6 +583,55 @@ bool Field::loadBuffers(ID3D11Device* _device)
 		return false;
 	}
 	return true;
+}
+
+void Field::addPatch(std::vector<field::Instance>& _field, const Triangle& _tri, int _numBlades)
+{
+	using namespace DirectX;
+	
+	//RNG
+	std::default_random_engine generator;
+	std::uniform_real_distribution<float> distribution(0, 1);
+	std::uniform_real_distribution<float> angleDistribution(0, 2 * XM_PI);
+	auto rand = std::bind(distribution, generator);
+	auto randAngle = std::bind(angleDistribution, generator);
+
+	//Use barycentric coordinates [Orthmann] to place grass
+	for (int i = 0; i < _numBlades; ++i)
+	{
+		field::Instance instance;
+
+		/*Barycentric coords*/ //See paper and orthman for barycentric sampling
+		float u = rand();
+		float v = rand();
+
+		XMVECTOR a = DirectX::XMLoadFloat3(&_tri.m_verts[0]);
+		XMVECTOR b = DirectX::XMLoadFloat3(&_tri.m_verts[1]);
+		XMVECTOR c = DirectX::XMLoadFloat3(&_tri.m_verts[2]);
+
+		//http://chrischoy.github.io/research/barycentric-coordinate-for-mesh-sampling/
+		XMVECTOR translation =	( 1- sqrt ( u ) ) * a +
+								sqrt( u ) * ( 1 - v ) * b + 
+								sqrt( u ) * v * c;
+		a = XMLoadFloat3(&m_pos);
+		translation += a;
+
+		/*Rotation*/
+		float angle = randAngle();
+		XMVECTOR euler = XMLoadFloat3(&XMFLOAT3(0, angle, 0));
+		XMVECTOR quat = XMQuaternionRotationRollPitchYawFromVector(euler);
+		XMStoreFloat4(&instance.rotation, quat);
+
+		/*Translation*/
+		XMStoreFloat3(&instance.location, translation);
+
+		/*World*/
+		XMMATRIX world = DirectX::XMMatrixRotationY(angle);
+		world = XMMatrixMultiply(world, XMMatrixTranslationFromVector(translation));
+		XMStoreFloat4x4(&instance.world, XMMatrixTranspose(world));
+
+		_field.push_back(instance);
+	}
 }
 
 #undef MAX(x,y)

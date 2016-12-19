@@ -5,6 +5,7 @@
 #include <math.h>
 #include "ConstantBuffers.h"
 #include "FieldRenderData.h"
+#include <vector>
 class ObjModel;
 /////////////////////////////////////////////////
 /// Field of grass 
@@ -26,7 +27,7 @@ public:
 
 	bool load(ID3D11Device*, int _instanceCount, DirectX::XMFLOAT2 _size, DirectX::XMFLOAT3	_pos);
 	/*Model is only used during set-up*/
-	bool load(ID3D11Device*, ObjModel*, float density);
+	bool load(ID3D11Device*, ObjModel*, float density, DirectX::XMFLOAT3 _pos);
 
 	void unload();
 
@@ -98,4 +99,29 @@ private:
 	field::Instance* generateInstanceData();
 	void buildInstanceBuffer();
 	bool loadBuffers(ID3D11Device*);
+
+	/*Stuff for proc gen grass*/
+	struct Triangle
+	{
+		DirectX::XMFLOAT3	m_verts[3];
+		float				m_surfaceArea;
+
+		Triangle(const DirectX::XMFLOAT3* verts, float _density)
+		{
+			using namespace DirectX;
+			/*Get verts*/
+			memcpy(m_verts, verts, sizeof(DirectX::XMFLOAT3)*3);
+
+			/*Calc surface area*/
+			XMVECTOR a = XMLoadFloat3(&m_verts[0]);
+			XMVECTOR b = XMLoadFloat3(&m_verts[1]);
+			XMVECTOR c = XMLoadFloat3(&m_verts[2]);
+			XMVECTOR sa = 0.5 * XMVector3Length(XMVector3Cross((a - c), (b - c)));
+			m_surfaceArea = sa.m128_f32[0];
+		}
+
+	};
+	void addPatch(std::vector<field::Instance>& _field, const Triangle& _tri, int _numBlades);
 };
+
+
