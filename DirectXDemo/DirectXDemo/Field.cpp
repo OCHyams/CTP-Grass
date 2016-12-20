@@ -313,7 +313,8 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	float* normElementPtr = _model->GetNormals();
 	int numVerts = _model->GetTotalVerts();
 	/*For every triangle...*/
-	for (int i = 0; i < numVerts; i +=3)
+
+	for (int i = 0; i < numVerts; i +=9)
 	{
 		/*Get vert positions*/
 		XMFLOAT3 triVerts[3];
@@ -337,6 +338,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		}
 		/*Add the patch to the field*/
 		addPatch(instances, triangle, numBlades);
+		
 	}
 
 	/*build instance buffer...*/
