@@ -12,7 +12,7 @@
 #include <vector>
 #include "objLoader.h"
 #include <stdlib.h>
-
+#include "Shorthand.h"
 //statics
 DirectX::XMFLOAT3		Field::s_cameraPos		= DirectX::XMFLOAT3();
 DirectX::XMFLOAT4X4		Field::s_viewproj		= DirectX::XMFLOAT4X4();
@@ -314,16 +314,18 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	int numVerts = _model->GetTotalVerts();
 	/*For every triangle...*/
 
-	for (int i = 0; i < numVerts; i +=9)
+	for (int i = 0; i < numVerts; i +=3)
 	{
 		/*Get vert positions*/
 		XMFLOAT3 triVerts[3];
-		memcpy(triVerts, vertElementPtr + i, sizeof(float)*9);
+		memcpy(triVerts, vertElementPtr, sizeof(float)*9);
+		vertElementPtr += 9;
 		XMFLOAT3 triNorms[3];
 		/*Get vert normals*/
 		if (normElementPtr)
 		{
-			memcpy(triNorms, normElementPtr + i, sizeof(float) * 9);
+			memcpy(triNorms, normElementPtr, sizeof(float) * 9);
+			normElementPtr += 9;
 		}
 		/*Store vert positions & calc surface area*/
 		Triangle triangle = Triangle(triVerts, triNorms, _density);
@@ -621,6 +623,7 @@ void Field::addPatch(std::vector<field::Instance>& _field, const Triangle& _tri,
 		XMVECTOR translation =	( 1- sqrt ( u ) ) * a +
 								sqrt( u ) * ( 1 - v ) * b + 
 								sqrt( u ) * v * c;
+
 		a = XMLoadFloat3(&m_pos);
 		translation += a;
 
