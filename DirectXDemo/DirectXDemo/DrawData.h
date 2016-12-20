@@ -1,10 +1,10 @@
 #pragma once
-class Camera; 
+class ArcCamera; 
 class ID3D11DeviceContext;
 
 struct DrawData
 {
-	const Camera* m_cam;
+	const ArcCamera* m_cam;
 	ID3D11DeviceContext*  m_dc;
 
 };

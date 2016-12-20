@@ -4,7 +4,8 @@
 #include "Input.h"
 #include "Time.h"
 #include "AntTweakBar.h"
-bool Camera::load(ID3D11Device*)
+#include "Shorthand.h"
+bool ArcCamera::load(ID3D11Device*)
 {
 	//Tweak bar
 	TwBar* GUI = TwNewBar("Cam");
@@ -16,23 +17,22 @@ bool Camera::load(ID3D11Device*)
 	TwAddVarRW(GUI, "y", TwType::TW_TYPE_FLOAT, &(m_pos.y), "");
 	TwAddVarRW(GUI, "z", TwType::TW_TYPE_FLOAT, &(m_pos.z), "");
 
-
+	m_rot = { 0,0,0 };
 
 	using namespace DirectX;
 	XMStoreFloat4x4(&m_view, XMMatrixLookAtLH(XMLoadFloat3(&m_pos), XMLoadFloat3(&m_target), XMLoadFloat3(&m_up)));
 	XMStoreFloat4x4(&m_proj, DirectX::XMMatrixPerspectiveFovLH(XM_PIDIV4, 640 /480 , 0.1f, 50));
 
-
 	updateViewProjForGO();
 	return true;
 }
 
-void Camera::unload()
+void ArcCamera::unload()
 {
 
 }
 
-void Camera::update()
+void ArcCamera::update()
 {
 	//panning for testing grass - this should all get ripped out into it's own class
 	using namespace DirectX;
@@ -40,30 +40,41 @@ void Camera::update()
 	using INPUT = OCH::ServiceLocator<Input>;
 	float speed = 0.3 * TIME::get()->deltaTime;
 
+	XMFLOAT3 euler = m_rot;
+
 	if (INPUT::get()->getKey(DIK_A))
 	{
-		m_pos.x -= speed;
+		euler.y += speed;
+		
 	}
 	else if (INPUT::get()->getKey(DIK_D))
 	{
-		m_pos.x += speed;
+		euler.y -= speed;
+
 	}
-	else if (INPUT::get()->getKey(DIK_W))
+
+	if (INPUT::get()->getKey(DIK_W))
 	{
-		m_pos.y += speed;
+		euler.x += speed;
+	
 	}
 	else if (INPUT::get()->getKey(DIK_S))
 	{
-		m_pos.y -= speed;
+		euler.x -= speed;
 	}
-	else if (INPUT::get()->getKey(DIK_Q))
+
+	if (INPUT::get()->getKey(DIK_Q))
 	{
-		m_pos.z += speed;
+		//m_pos.z += speed;//zoom
 	}
 	else if (INPUT::get()->getKey(DIK_E))
 	{
-		m_pos.z -= speed;
+		//m_pos.z -= speed;//zoom
 	}
+
+	XMVECTOR offset = XMVector3Rotate(LF3(&m_offset), QUAT(LF3(&euler)));
+	XMStoreFloat3(&m_pos, LF3(&m_target) + offset);
+	m_rot = euler;
 
 	XMVECTOR eye = XMLoadFloat3(&m_pos);
 	XMVECTOR target = XMLoadFloat3(&m_target);
@@ -75,22 +86,22 @@ void Camera::update()
 	return;
 }
 
-void Camera::draw(const DrawData&)
+void ArcCamera::draw(const DrawData&)
 {
 	return;
 }
 
-const DirectX::XMFLOAT4X4& Camera::getViewMatrix()
+const DirectX::XMFLOAT4X4& ArcCamera::getViewMatrix()
 {
 	return m_view;
 }
 
-const DirectX::XMFLOAT4X4& Camera::getProjMatrix()
+const DirectX::XMFLOAT4X4& ArcCamera::getProjMatrix()
 {
 	return m_proj;
 }
 
-void Camera::updateViewProjForGO()
+void ArcCamera::updateViewProjForGO()
 {
 	using namespace DirectX;
 	XMMATRIX view = XMLoadFloat4x4(&m_view);

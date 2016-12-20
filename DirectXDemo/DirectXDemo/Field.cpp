@@ -460,7 +460,6 @@ void Field::updateConstBuffers()
 	
 }
 
-
 #define MAX(x,y)    (x)>(y)?(x):(y)
 field::Instance* Field::generateInstanceData()
 {

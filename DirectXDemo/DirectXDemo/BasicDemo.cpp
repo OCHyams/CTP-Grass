@@ -43,17 +43,17 @@ bool BasicDemo::load()
 	m_field.m_halfGrassWidth = 0.02f;//0.012f;
 
 	/*Load hills model for grass*/
-	//ObjModel model;
-	//CHECK_FAIL(model.LoadOBJ("../Resources/Ball.obj"));
-	//m_field.load(m_d3dDevice, &model, NUM(1,000), XMFLOAT3(0, 0, 0));
+	ObjModel model;
+	CHECK_FAIL(model.LoadOBJ("../Resources/Ball.obj"));
+	m_field.load(m_d3dDevice, &model, NUM(1,000), XMFLOAT3(0, 0, 0));
 	//@Original load function
-	m_field.load(m_d3dDevice, NUM(500,000), { 50, 50 }, {-25,0,-25});
+	//m_field.load(m_d3dDevice, NUM(500,000), { 50, 50 }, {-25,0,-25});
 	m_numBlades = m_field.getNumBlades();
 	/*Only needed the hill model to place the grass (FOR NOW ANYWAY)*/
-	//model.Release();
+	model.Release();
 
-	m_cam = new Camera({ 0.f, 0.f, 0.f });//0, .5, 3
-	m_cam->setPos({ 0.0f, 1.f, -3.f });
+	m_cam = new ArcCamera({ 0.f, 0.f, 0.f });//0, .5, 3
+	//m_cam->setPos({ 0.0f, 1.f, -3.f });
 	m_objects.push_back(m_cam);
 	CHECK_FAIL(m_cam->load(m_d3dDevice));
 

@@ -4,7 +4,7 @@
 #include <DirectXMath.h>
 #include "Field.h"
 class GameObject;
-class Camera;
+class ArcCamera;
 class SimpleGrass;
 class BasicDemo : public DX11Demo
 {
@@ -22,7 +22,7 @@ private:
 	DirectX::XMFLOAT3 m_wind;
 	float m_windStr;
 	std::vector<GameObject*> m_objects;
-	Camera* m_cam;
+	ArcCamera* m_cam;
 	Field m_field;
 	float m_fps;
 	int m_numBlades;

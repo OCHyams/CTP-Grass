@@ -152,6 +152,7 @@
     <ClInclude Include="objLoader.h" />
     <ClInclude Include="Plane.h" />
     <ClInclude Include="ServiceLocator.h" />
+    <ClInclude Include="Shorthand.h" />
     <ClInclude Include="SimpleGrass.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="TokenStream.h" />
