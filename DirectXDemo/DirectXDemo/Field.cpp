@@ -66,12 +66,12 @@ bool Field::loadShared(ID3D11Device* _device)
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "FLEX", 0, DXGI_FORMAT_R32_FLOAT ,0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		//PER_INSTANCE
-		{ "INSTANCE_WORLD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+	/*	{ "INSTANCE_WORLD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "INSTANCE_WORLD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "INSTANCE_WORLD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_WORLD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_ROTATION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 64, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 80, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+		{ "INSTANCE_WORLD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },*/
+		{ "INSTANCE_ROTATION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, /*64*/0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "INSTANCE_LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, /*80*/16, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
 	};
 	unsigned int totalLayoutElements = ARRAYSIZE(vsLayout);
 
@@ -516,13 +516,13 @@ field::Instance* Field::generateInstanceData()
 			XMVECTOR translation = XMLoadFloat3(&position);
 			data[index].location = XMFLOAT3(m_pos.x + xoffset, m_pos.y, m_pos.z + zoffset);
 
-			//world
-			//XMMATRIX world = XMMatrixTranslationFromVector(translation);//shouldn't work
+			////world
+			////XMMATRIX world = XMMatrixTranslationFromVector(translation);//shouldn't work
 
-			XMMATRIX world = DirectX::XMMatrixRotationY(angle);
-			world = XMMatrixMultiply(world, XMMatrixTranslationFromVector(translation));
+			//XMMATRIX world = DirectX::XMMatrixRotationY(angle);
+			//world = XMMatrixMultiply(world, XMMatrixTranslationFromVector(translation));
 
-			XMStoreFloat4x4(&data[index].world, XMMatrixTranspose(world));
+			//XMStoreFloat4x4(&data[index].world, XMMatrixTranspose(world));
 
 
 			index++;
@@ -635,10 +635,10 @@ void Field::addPatch(std::vector<field::Instance>& _field, const Triangle& _tri,
 		/*Translation*/
 		XMStoreFloat3(&instance.location, translation);
 
-		/*World*/
-		XMMATRIX world = DirectX::XMMatrixRotationY(angle);
-		world = XMMatrixMultiply(world, XMMatrixTranslationFromVector(translation));
-		XMStoreFloat4x4(&instance.world, XMMatrixTranspose(world));
+		///*World*/
+		//XMMATRIX world = DirectX::XMMatrixRotationY(angle);
+		//world = XMMatrixMultiply(world, XMMatrixTranslationFromVector(translation));
+		//XMStoreFloat4x4(&instance.world, XMMatrixTranspose(world));
 
 		_field.push_back(instance);
 	}

@@ -31,7 +31,7 @@ struct VS_INPUT
 	float3	normal		: NORMAL;
 	float	flexibility	: FLEX;					//multiplier for wind deformation
 	//PER-INSTANCE
-	matrix	world		: INSTANCE_WORLD;		//world transform matrix - Not in use atm, might be required later...
+	//matrix	world		: INSTANCE_WORLD;		//world transform matrix - Not in use atm, might be required later...
 	float4	rotation	: INSTANCE_ROTATION;	//quaternion rotation
 	float3	location	: INSTANCE_LOCATION;	//position of grass in world for lighting calc etc
 };
@@ -122,37 +122,6 @@ inline float4 quatFromTwoVec(float3 v0, float3 v1)
 inline float3 project(float3 v0, float3 v1)
 {
 	return v1* dot(v0, v1) / pow(length(v1), 2);
-}
-
-
-//@can probably be optimised -> SEEA ABOVE
-matrix rotationFromAngleAxis(float angle, float3 axis)
-{
-	matrix output;
-	float oneMinusCosTheta = 1 - cos(angle);
-	float sinTheta = sin(angle);
-
-	output[0][0] = oneMinusCosTheta + pow(axis.x, 2) * oneMinusCosTheta;
-	output[0][1] = axis.x * axis.y * oneMinusCosTheta - axis.z *sinTheta;
-	output[0][2] = axis.x * axis.z * oneMinusCosTheta + axis.y * sinTheta;
-	output[0][3] = 0.0f;
-
-	output[1][0] = axis.y * axis.x * oneMinusCosTheta + axis.z * sinTheta;
-	output[1][1] = cos(angle) + pow(axis.y, 2) * oneMinusCosTheta;
-	output[1][2] = axis.y * axis.z * oneMinusCosTheta - axis.x * sinTheta;
-	output[1][3] = 0.0f;
-
-	output[2][0] = axis.z * axis.x * oneMinusCosTheta * axis.y * sinTheta;
-	output[2][1] = axis.z * axis.y * oneMinusCosTheta * axis.x * sinTheta;
-	output[2][2] = cos(angle) + pow(axis.z, 2) * oneMinusCosTheta;
-	output[2][3] = 0.0f;
-
-	output[3][0] = 0.0f;
-	output[3][1] = 0.0f;
-	output[3][2] = 0.0f;
-	output[3][3] = 1.0f;
-
-	return output;
 }
 
 float4 quatMul(float4 q1, float4 q2)
@@ -338,10 +307,10 @@ float4 PS_Main(PS_INPUT input) : SV_TARGET
 	
 	float specularTerm = 0;
 	//@@for now do this but maybe get rid of the if later!
-	if (diffuseTerm > 0.0f)
-	{
+	//if (diffuseTerm > 0.0f)
+	//{
 		specularTerm = pow(saturate(dot(/*input.*/normal, normalize(input.lightVec + input.viewVec))), 25);
-	}
+	//}
 	float3 final = ambientColour + intensity * diffuseTerm + intensity * specularTerm;
 	/*NOTE: remove tex coords to test just lighting*/
 	return float4(final * TEX_0.Sample(SAMPLER_STATE, input.texcoord), 1.0f);

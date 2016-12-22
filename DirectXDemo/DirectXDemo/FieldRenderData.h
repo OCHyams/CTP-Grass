@@ -16,7 +16,7 @@ namespace field
 	__declspec(align(16))
 	struct Instance
 	{
-		XMFLOAT4X4		world;
+		//XMFLOAT4X4		world;
 		XMFLOAT4		rotation;
 		XMFLOAT3		location;
 	};
