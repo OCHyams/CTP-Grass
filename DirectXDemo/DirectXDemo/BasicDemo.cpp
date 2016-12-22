@@ -44,7 +44,7 @@ bool BasicDemo::load()
 
 	/*Load hills model for grass*/
 	ObjModel model;
-	CHECK_FAIL(model.LoadOBJ("../Resources/Ball.obj"));
+	CHECK_FAIL(model.LoadOBJ("../Resources/box.obj"));
 	m_field.load(m_d3dDevice, &model, NUM(1,000), XMFLOAT3(0, 0, 0));
 	//@Original load function
 	//m_field.load(m_d3dDevice, NUM(500,000), { 50, 50 }, {-25,0,-25});

@@ -5,9 +5,9 @@
 class ArcCamera : public GameObject
 {
 public:
-	ArcCamera() : m_target(0.f, 0.f, 0.f), m_up(0.f, 1.f, 0.f), m_offset(0.f, 1.f, -2.f) {}
-	ArcCamera(const DirectX::XMFLOAT3& _target) : m_target(_target), m_up(0.f,1.f,0.f), m_offset(0.f, 1.f, -2.f) {}
-	ArcCamera(const DirectX::XMFLOAT3& _target, const DirectX::XMFLOAT3& _up) : m_target(_target), m_up(_up), m_offset(0.f, 1.f, -2.f) {}
+	ArcCamera() : m_target(0.f, 0.f, 0.f), m_up(0.f, 1.f, 0.f), m_offset(0.f, 0.f, -2.f) {}
+	ArcCamera(const DirectX::XMFLOAT3& _target) : m_target(_target), m_up(0.f,1.f,0.f), m_offset(0.f, 0.f, -2.f) {}
+	ArcCamera(const DirectX::XMFLOAT3& _target, const DirectX::XMFLOAT3& _up) : m_target(_target), m_up(_up), m_offset(0.f, 0.f, -2.f) {}
 	ArcCamera(const DirectX::XMFLOAT3& _target, const DirectX::XMFLOAT3& _up, const DirectX::XMFLOAT3& _offset) : m_target(_target), m_up(_up), m_offset(_offset) {}
 	virtual ~ArcCamera() {}
 

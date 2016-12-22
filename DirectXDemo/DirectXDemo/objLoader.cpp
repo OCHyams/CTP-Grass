@@ -132,7 +132,7 @@ bool ObjModel::LoadOBJ( char *fileName )
                 faceStream.GetNextToken( &faceIndex, faceTokens, 3 );
                 faces.push_back( ( int )atoi( faceIndex.c_str( ) ) );
 
-                faceStream.GetNextToken( &faceIndex, faceTokens, 3 );
+				faceStream.GetNextToken( &faceIndex, faceTokens, 3 );
                 faces.push_back( ( int )atoi( faceIndex.c_str( ) ) );
 
                 faceStream.GetNextToken( &faceIndex, faceTokens, 3 );
@@ -183,9 +183,10 @@ bool ObjModel::LoadOBJ( char *fileName )
 
         if(normals_)
         {
-            normals_[nIndex + 0] = norms[( faces[f + 2] - 1 ) * 3 + 0];
-            normals_[nIndex + 1] = norms[( faces[f + 2] - 1 ) * 3 + 1];
-            normals_[nIndex + 2] = norms[( faces[f + 2] - 1 ) * 3 + 2];
+			int index = (faces[f + 2] - 1) * 3;
+            normals_[nIndex + 0] = norms[index + 0];
+            normals_[nIndex + 1] = norms[index + 1];
+            normals_[nIndex + 2] = norms[index + 2];
             nIndex += 3;
         }
     }
