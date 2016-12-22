@@ -1,5 +1,6 @@
 #pragma once
 #include <DirectXMath.h>
+#include <d3d11_2.h>
 namespace field
 {
 	using namespace DirectX;

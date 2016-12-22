@@ -19,10 +19,10 @@ class ObjModel
       void Release( );
       bool LoadOBJ( char *fileName );
 
-      float *GetVertices()   { return vertices_; }
-      float *GetNormals()    { return normals_; }
-      float *GetTexCoords()  { return texCoords_; }
-      int    GetTotalVerts() { return totalVerts_; }
+      float *GetVertices()		const { return vertices_; }
+      float *GetNormals()		const { return normals_; }
+      float *GetTexCoords()		const { return texCoords_; }
+      int    GetTotalVerts()	const { return totalVerts_; } 
 
    private:
       float *vertices_ = nullptr;
