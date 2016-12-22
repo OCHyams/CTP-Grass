@@ -2,37 +2,43 @@
 #include "objLoader.h"
 #include <memory>
 #include "Shorthand.h"
-Octree::Node* Octree::build(const ObjModel& _model, const DirectX::XMFLOAT2 & _minSize, field::Instance * _instances, int _numInstances)
+Octree::Node* Octree::build(const ObjModel& _model, const DirectX::XMFLOAT3& _position, const DirectX::XMFLOAT3 & _minSize, field::Instance * _instances, int _numInstances)
 {
 	using namespace DirectX;
 
 	/*Calculate the size of the bounding box of the model*/
-	float* vtxElePtr = _model.GetVertices();
+	float* vtxElePtr	= _model.GetVertices();
 	//Set the first vertex as the largest and smallest to begin with
-	XMFLOAT3 current = { *vtxElePtr, *(vtxElePtr + 1), *(vtxElePtr + 2) };
-	XMVECTOR smallest = LF3(&current);
-	XMVECTOR largest = LF3 (&current);
+	XMFLOAT3 current	= { *vtxElePtr, *(vtxElePtr + 1), *(vtxElePtr + 2) };
+	XMVECTOR smallest	= LF3(&current);
+	XMVECTOR largest	= LF3(&current);
 	
 	for (int i = 0; i < _model.GetTotalVerts(); ++i)
 	{
 		//Get next three floats, store in XMFLOAT3 current
 		memcpy(&current, vtxElePtr, sizeof(float)*3);
 		vtxElePtr += 3;
-
+		//Component-wise compare and store
 		largest = XMVectorMax(LF3(&current), largest);
 		smallest = XMVectorMin(LF3(&current), smallest);
 	}
 
-	XMFLOAT3 smallf3;
-	XMFLOAT3 largef3;
+	/*Calculate data for root node*/
+	Node* root = new Node();
+	XMStoreFloat3(&root->m_halfSize, ( largest - smallest ) / 2 );
+	XMStoreFloat3(&root->m_pos, largest - LF3(&root->m_halfSize)  + LF3(&_position));
 
-	XMStoreFloat3(&smallf3, smallest);
-	XMStoreFloat3(&largef3, largest);
+	/*return if the the bounding box ( size / 2 ) < ( _minSize * 8 / 2 ) 
+	because the tree cannot be broken up any further*/
+	if (XMVector3Length(LF3(&root->m_halfSize)).m128_f32[0] <= XMVector3Length(LF3(&_minSize) * LF3(&XMFLOAT3(4, 4, 4))).m128_f32[0]) return root;
+
+	/*@Generate children*/
 
 
-	return nullptr;
+	return root;
 }
 
 void Octree::cleanup(Node * _head)
 {
+	/*@Depth first traversal through children to remove them*/
 }

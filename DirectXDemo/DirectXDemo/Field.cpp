@@ -344,7 +344,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	}
 
 	/*Build the octree*/
-	Octree::build(*_model, { 0,0 }, nullptr, 0);
+	Octree::Node* root = Octree::build(*_model, { 0, 0, 0 }, { 1, 1, 1 }, nullptr, 0);
 
 
 	/*build instance buffer...*/
