@@ -3,6 +3,7 @@
 #include <DirectXCollision.h>
 #include "FieldRenderData.h"
 #include <vector>
+#include "Shorthand.h"
 class ObjModel;
 namespace Octree
 {
@@ -14,34 +15,18 @@ namespace Octree
 		DirectX::BoundingBox	m_AABB;
 		std::vector
 			<field::Instance>	m_instances;
-		Node*					m_children[8];
-		bool					m_leaf;
-		Node()
-		{
-			memset(m_children, (int)nullptr, 8);
-			m_leaf			= false;
-		}
+		std::vector<Node*>		m_children;
 
-		Node(	const DirectX::XMFLOAT3& _min, 
-				const DirectX::XMFLOAT3& _max,
-				Node** _children,
-				int _numChildren = 8)
+		Node() = delete;
+		Node(	DirectX::XMVECTOR _min, 
+				DirectX::XMVECTOR _max)
 		{
-			m_AABB = DirectX::BoundingBox(_min, _max);
-			if (_numChildren = 0)
-			{
-				m_leaf = true;
-			}
-			else
-			{
-				//Copy child addresses
-				memcpy(m_children, _children, _numChildren);
-			}
+			DirectX::BoundingBox::CreateFromPoints(m_AABB, _min, _max);
 		}
 
 		~Node()
 		{
-			m_instances.empty();
+			m_instances.clear();
 		}
 	};
 

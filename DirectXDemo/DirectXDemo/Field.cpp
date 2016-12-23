@@ -343,7 +343,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	}
 
 	/*Build the octree*/
-	m_octeeRoot = Octree::build(*_model, { 0, 0, 0 }, { 1, 1, 1 }, nullptr, 0);
+	m_octeeRoot = Octree::build(*_model, { 0, 0, 0 }, { 1, 1, 1 }, nullptr, 0, 1.0f);
 
 	/*build instance buffer...*/
 	D3D11_BUFFER_DESC instanceBufferDesc;

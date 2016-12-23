@@ -29,12 +29,8 @@ Octree::Node* Octree::build(const ObjModel& _model, const DirectX::XMFLOAT3& _po
 	//Increase height of bounding box to encompass all the grass
 	largest += VEC3(0, _minGrassLength, 0);
 
-	XMFLOAT3 min, max;
-	XMStoreFloat3(&min, smallest);
-	XMStoreFloat3(&max, largest);
-
-	/*Root starts as a leaf*/
-	Node* root = new Node(min, max, nullptr, 0);
+	/*Root starts as a leaf with no children*/
+	Node* root = new Node(smallest, largest);
 
 	/*return if the the bounding box ( size ) < ( _minSize * 8 ) 
 	because the tree cannot be broken up any further*/
@@ -68,17 +64,16 @@ void Octree::cleanup(Node* _root)
 	tree.push(_root);
 
 	/*Depth first traversal of nodes*/
-	while (tree.size())
+	while (!tree.empty())
 	{
 		//Pop top node
 		Node* current = tree.top();
 		tree.pop();
 
 		//Store child nodes
-		for (int i = 0; i < 8; ++i)
+		for (Node* child : current->m_children)
 		{
-			Node* child = current->m_children[i];
-			if (child) tree.push(child);
+			tree.push(child);
 		}
 
 		//Delete the current node
@@ -106,17 +101,16 @@ bool Octree::addGrass(Node* _root, const field::Instance& _instance)
 		if (current->m_AABB.Contains(LF3(&_instance.location)))
 		{
 			//If this is a leaf node
-			if (current->m_leaf)
+			if (current->m_children.empty())
 			{
 				//Add the grass instance
 				current->m_instances.push_back(_instance);
 				return true;
 			}
-			//Else push child nodes
-			for (int i = 0; i < 8; ++i)
+			//Store push nodes
+			for (Node* child : current->m_children)
 			{
-				Node* child = current->m_children[i];
-				if (child) tree.push(child);
+				tree.push(child);
 			}
 		}
 	}
