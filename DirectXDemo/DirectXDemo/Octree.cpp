@@ -1,6 +1,9 @@
 #include "Octree.h"
 #include "objLoader.h"
 #include <memory>
+#include <vector>
+#include <algorithm>
+#include <stack>
 #include "Shorthand.h"
 Octree::Node* Octree::build(const ObjModel& _model, const DirectX::XMFLOAT3& _position, const DirectX::XMFLOAT3 & _minSize, field::Instance * _instances, int _numInstances)
 {
@@ -38,7 +41,36 @@ Octree::Node* Octree::build(const ObjModel& _model, const DirectX::XMFLOAT3& _po
 	return root;
 }
 
-void Octree::cleanup(Node * _head)
+static int numChildren(Octree::Node* _node)
 {
-	/*@Depth first traversal through children to remove them*/
+	int result = 0;
+	for (int i = 0; i < 8; ++i)
+	{
+		result += static_cast<int>(static_cast<bool>(_node->m_children[i]));
+	}
+	return result;
+}
+
+void Octree::cleanup(Node* _head)
+{
+	std::stack<Node*>	tree;
+	tree.push(_head);
+
+	/*Depth first traversal of nodes*/
+	while (tree.size())
+	{
+		//Pop top node
+		Node* current = tree.top();
+		tree.pop();
+
+		//Store child nodes
+		for (int i = 0; i < 8; ++i)
+		{
+			Node* child = current->m_children[i];
+			if (child) tree.push(child);
+		}
+
+		//Delete the current node
+		delete current;
+	}
 }
