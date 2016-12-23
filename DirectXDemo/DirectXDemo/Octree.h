@@ -16,10 +16,13 @@ namespace Octree
 		std::vector
 			<field::Instance>	m_instances;
 		std::vector<Node*>		m_children;
+		Node*					m_parent;
 
 		Node() = delete;
-		Node(	DirectX::XMVECTOR _min, 
-				DirectX::XMVECTOR _max)
+		Node(	DirectX::XMVECTOR _min,
+				DirectX::XMVECTOR _max,
+				Node* _parent)
+			:	m_parent(_parent)
 		{
 			DirectX::BoundingBox::CreateFromPoints(m_AABB, _min, _max);
 		}

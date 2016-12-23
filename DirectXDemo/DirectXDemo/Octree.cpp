@@ -83,10 +83,64 @@ void Octree::cleanup(Node* _root)
 
 void Octree::prune(Node* _root)
 {
+	/*Early out if _root ptr is null*/
+	if (_root == nullptr) return;
+
+	std::stack<Node*> tree;
+	tree.push(_root);
+
+	bool complete = false;
+
+	/*Iterate until comepletly pruned*/
+	while (!complete)
+	{
+		complete = true;
+		/*Depth first traversal of nodes*/
+		while (!tree.empty())
+		{
+			//Pop top node
+			Node* current = tree.top();
+			tree.pop();
+
+			//If node is a leaf
+			if (current->m_children.empty())
+			{
+				//If there are no instances of grass
+				if (current->m_instances.empty())
+				{
+					//Iterate at least once more
+					complete = false;
+					//Remove node from parent, delete it
+					std::remove_if(	current->m_parent->m_children.begin(),
+									current->m_parent->m_children.end(),
+									[current](Node* node)
+									{
+										if (node == current)
+										{
+											delete current;
+											return true;
+										}
+										return false;
+									});
+				}
+			}
+			else //If node is not leaf
+			{
+				//Push children
+				for (Node* child : current->m_children)
+				{
+					tree.push(child);
+				}
+			}
+		}
+	}
 }
 
 bool Octree::addGrass(Node* _root, const field::Instance& _instance)
 {
+	/*Early out if _root ptr is null*/
+	if (_root == nullptr) return;
+
 	std::stack<Node*> tree;
 	tree.push(_root);
 
@@ -107,7 +161,7 @@ bool Octree::addGrass(Node* _root, const field::Instance& _instance)
 				current->m_instances.push_back(_instance);
 				return true;
 			}
-			//Store push nodes
+			//Else push child nodes
 			for (Node* child : current->m_children)
 			{
 				tree.push(child);
