@@ -130,7 +130,7 @@ private:
 		}
 
 	};
-	void addPatch(std::vector<field::Instance>& _field, const Triangle& _tri, int _numBlades);
+	void addPatch(std::vector<field::Instance>& _field, const Triangle& _tri, int _numBlade);
 };
 
 

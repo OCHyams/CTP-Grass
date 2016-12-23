@@ -27,7 +27,7 @@ Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position,
 		smallest = XMVectorMin(LF3(&current), smallest);
 	}
 
-	//Increase height of bounding box to encompass all the grass
+	//Increase height of bounding box to encompass all the grass @Possibly just adjust the extents so the AABB is a little larger than the model all round? Seems ok for now :)
 	largest += VEC3(0, _minGrassLength, 0);
 
 	/*Root starts as a leaf with no children. Translate AABB points.*/
@@ -134,7 +134,8 @@ void Octree::prune(Node* _root)
 			if (current->m_children.empty())
 			{
 				//If there are no instances of grass
-				if (current->m_instances.empty())
+				//&& it has a parent
+				if (current->m_instances.empty() && current->m_parent)
 				{
 					//Iterate at least once more
 					complete = false;
@@ -190,7 +191,8 @@ bool Octree::addGrass(Node* _root, const field::Instance& _instance)
 				current->m_instances.push_back(_instance);
 				return true;
 			}
-			//Else push child nodes
+			//Else if not leaf 
+			//Push child nodes
 			for (Node* child : current->m_children)
 			{
 				tree.push(child);

@@ -305,6 +305,9 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	using namespace DirectX;
 	HRESULT result;
 	
+	/*Build the octree*/ //@Min size needs to be calculated, not hardcoded
+	m_octeeRoot = Octree::build(*_model, LF3(&_pos), { 0.25f, 0.25f, 0.25f }, nullptr, 0, 1.0f);
+
 	/*Procedurally generate grass positions*/
 	std::vector<field::Instance> instances;
 
@@ -338,12 +341,13 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 			++numBlades;
 			--truncationAccumulator;
 		}
-		/*Add the patch to the field*/
+
+		/*Add the patch to the field and octree*/
 		addPatch(instances, triangle, numBlades);
 	}
 
-	/*Build the octree*/ //@Min size needs to be calculated, not hardcoded
-	m_octeeRoot = Octree::build(*_model, LF3(&_pos), { 0.25f, 0.25f, 0.25f }, nullptr, 0, 1.0f);
+	/*Prune the octree to remove unused leaves*/
+	Octree::prune(m_octeeRoot);
 
 	/*build instance buffer...*/
 	D3D11_BUFFER_DESC instanceBufferDesc;
@@ -645,7 +649,11 @@ void Field::addPatch(std::vector<field::Instance>& _field, const Triangle& _tri,
 		//world = XMMatrixMultiply(world, XMMatrixTranslationFromVector(translation));
 		//XMStoreFloat4x4(&instance.world, XMMatrixTranspose(world));
 
+		//@SOON WILL NOT USE THIS, ONLY OCTREE
 		_field.push_back(instance);
+
+		/*Add the grace instance to the Octree*/
+		//if (!Octree::addGrass(m_octeeRoot, instance)) MessageBox(0, "Grass out of octree bounds", "Implementation Bug", MB_OK);;
 	}
 }
 
