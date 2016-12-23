@@ -5,7 +5,8 @@
 #include <algorithm>
 #include <stack>
 #include "Shorthand.h"
-Octree::Node* Octree::build(const ObjModel& _model, const DirectX::XMFLOAT3& _position, const DirectX::XMFLOAT3 & _minSize, field::Instance* _instances, int _numInstances, float _minGrassLength)
+
+Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position, const DirectX::XMFLOAT3 & _minSize, field::Instance* _instances, int _numInstances, float _minGrassLength)
 {
 	using namespace DirectX;
 
@@ -29,12 +30,8 @@ Octree::Node* Octree::build(const ObjModel& _model, const DirectX::XMFLOAT3& _po
 	//Increase height of bounding box to encompass all the grass
 	largest += VEC3(0, _minGrassLength, 0);
 
-	/*Root starts as a leaf with no children*/
-	Node* root = new Node(smallest, largest);
-
-	/*return if the the bounding box ( size ) < ( _minSize * 8 ) 
-	because the tree cannot be broken up any further*/
-	if (XMVector3Length(largest - smallest).m128_f32[0] <= XMVector3Length(LF3(&_minSize) * LF3(&XMFLOAT3(8, 8, 8))).m128_f32[0]) return root;
+	/*Root starts as a leaf with no children. Translate AABB points.*/
+	Node* root = new Node(smallest + _position, largest + _position, nullptr);
 
 	/*Octree segments*/
 	XMFLOAT3 oct[8] =
@@ -50,7 +47,27 @@ Octree::Node* Octree::build(const ObjModel& _model, const DirectX::XMFLOAT3& _po
 	};
 	
 	/*Build child nodes*/
+	std::stack<Node*> stack;
+	stack.push(root);
+	
+	XMVECTOR minSize = LF3(&_minSize); 
+	while (!stack.empty())
+	{
+		//Pop top node
+		Node* current = stack.top();
+		stack.pop();
 
+		//Copy AABB
+		BoundingBox childSize = current->m_AABB;
+		//Move to origin
+		childSize.Center = { 0, 0, 0 };
+		//If node is large enough to contain children
+		if (childSize.Contains(minSize))
+		{
+			//Create children
+
+		}
+	}
 
 	return root;
 }
@@ -111,7 +128,8 @@ void Octree::prune(Node* _root)
 					//Iterate at least once more
 					complete = false;
 					//Remove node from parent, delete it
-					std::remove_if(	current->m_parent->m_children.begin(),
+					current->m_parent->m_children.erase(std::remove_if(
+									current->m_parent->m_children.begin(),
 									current->m_parent->m_children.end(),
 									[current](Node* node)
 									{
@@ -121,7 +139,7 @@ void Octree::prune(Node* _root)
 											return true;
 										}
 										return false;
-									});
+									}));
 				}
 			}
 			else //If node is not leaf
@@ -139,7 +157,7 @@ void Octree::prune(Node* _root)
 bool Octree::addGrass(Node* _root, const field::Instance& _instance)
 {
 	/*Early out if _root ptr is null*/
-	if (_root == nullptr) return;
+	if (_root == nullptr) return false;
 
 	std::stack<Node*> tree;
 	tree.push(_root);

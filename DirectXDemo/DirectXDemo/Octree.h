@@ -37,7 +37,7 @@ namespace Octree
 	///	Builds an octree and returns a ptr to the root.
 	/////////////////////////////////////////////////
 	Node* build(const ObjModel&				_model, 
-				const DirectX::XMFLOAT3&	_position, 
+				DirectX::XMVECTOR			_position,
 				const DirectX::XMFLOAT3&	_minSize, 
 				field::Instance*			_instances, 
 				int							_numInstances,
