@@ -342,8 +342,8 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		addPatch(instances, triangle, numBlades);
 	}
 
-	/*Build the octree*/
-	m_octeeRoot = Octree::build(*_model, { 0, 0, 0 }, { 1, 1, 1 }, nullptr, 0, 1.0f);
+	/*Build the octree*/ //@Min size needs to be calculated, not hardcoded
+	m_octeeRoot = Octree::build(*_model, LF3(&_pos), { 0.25f, 0.25f, 0.25f }, nullptr, 0, 1.0f);
 
 	/*build instance buffer...*/
 	D3D11_BUFFER_DESC instanceBufferDesc;

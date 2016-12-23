@@ -19,12 +19,12 @@ namespace Octree
 		Node*					m_parent;
 
 		Node() = delete;
-		Node(	DirectX::XMVECTOR _min,
-				DirectX::XMVECTOR _max,
+		Node(	DirectX::XMVECTOR _point0,
+				DirectX::XMVECTOR _point1,
 				Node* _parent)
 			:	m_parent(_parent)
 		{
-			DirectX::BoundingBox::CreateFromPoints(m_AABB, _min, _max);
+			DirectX::BoundingBox::CreateFromPoints(m_AABB, _point0, _point1);
 		}
 
 		~Node()
