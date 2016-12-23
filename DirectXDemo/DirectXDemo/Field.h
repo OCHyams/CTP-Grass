@@ -5,6 +5,7 @@
 #include <math.h>
 #include "ConstantBuffers.h"
 #include "FieldRenderData.h"
+#include "Octree.h"
 #include <vector>
 class ObjModel;
 /////////////////////////////////////////////////
@@ -78,6 +79,10 @@ private:
 	float					m_maxDensity;
 	float					m_minDensity;
 	float					m_curDensity;
+	/////////////////////////////////////////////////
+	/// Octree root node
+	/////////////////////////////////////////////////
+	Octree::Node*			m_octeeRoot = nullptr;
 	/////////////////////////////////////////////////
 	/// Wind data stored here for testing!
 	/////////////////////////////////////////////////

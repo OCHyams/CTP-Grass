@@ -12,7 +12,6 @@
 #include <vector>
 #include "objLoader.h"
 #include <stdlib.h>
-#include "Octree.h"
 #include "Shorthand.h"
 //statics
 DirectX::XMFLOAT3		Field::s_cameraPos		= DirectX::XMFLOAT3();
@@ -344,8 +343,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	}
 
 	/*Build the octree*/
-	Octree::Node* root = Octree::build(*_model, { 0, 0, 0 }, { 1, 1, 1 }, nullptr, 0);
-
+	m_octeeRoot = Octree::build(*_model, { 0, 0, 0 }, { 1, 1, 1 }, nullptr, 0);
 
 	/*build instance buffer...*/
 	D3D11_BUFFER_DESC instanceBufferDesc;
@@ -383,6 +381,8 @@ void Field::unload()
 	RELEASE(m_CB_viewproj);
 	
 	if (m_instances) delete m_instances;
+	/*Clean up octree*/
+	Octree::cleanup(m_octeeRoot);
 }
 
 void Field::update()

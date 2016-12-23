@@ -5,6 +5,9 @@
 class ObjModel;
 namespace Octree
 {
+	/////////////////////////////////////////////////
+	///	Octree node. Use with Octree::build() & Octree::cleanup(Node*).
+	/////////////////////////////////////////////////
 	struct Node
 	{
 		DirectX::XMFLOAT3		m_pos;
@@ -37,9 +40,14 @@ namespace Octree
 		}
 	};
 
+	/////////////////////////////////////////////////
+	///	Builds an octree and returns a ptr to the root.
+	/////////////////////////////////////////////////
 	Node* build(const ObjModel& _model, const DirectX::XMFLOAT3& _position, const DirectX::XMFLOAT3& _minSize, field::Instance* _instances, int _numInstances);
 
-	/*Delete _head and all children*/
-	void cleanup(Node* _head);
+	/////////////////////////////////////////////////
+	///	Deletes all nodes including root.
+	/////////////////////////////////////////////////
+	void cleanup(Node* _root);
 
 }

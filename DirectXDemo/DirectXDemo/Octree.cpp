@@ -41,20 +41,13 @@ Octree::Node* Octree::build(const ObjModel& _model, const DirectX::XMFLOAT3& _po
 	return root;
 }
 
-static int numChildren(Octree::Node* _node)
+void Octree::cleanup(Node* _root)
 {
-	int result = 0;
-	for (int i = 0; i < 8; ++i)
-	{
-		result += static_cast<int>(static_cast<bool>(_node->m_children[i]));
-	}
-	return result;
-}
+	/*Early out if _root ptr is null*/
+	if (_root == nullptr) return;
 
-void Octree::cleanup(Node* _head)
-{
-	std::stack<Node*>	tree;
-	tree.push(_head);
+	std::stack<Node*> tree;
+	tree.push(_root);
 
 	/*Depth first traversal of nodes*/
 	while (tree.size())
