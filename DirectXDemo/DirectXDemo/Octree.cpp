@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <stack>
 #include "Shorthand.h"
-Octree::Node* Octree::build(const ObjModel& _model, const DirectX::XMFLOAT3& _position, const DirectX::XMFLOAT3 & _minSize, field::Instance * _instances, int _numInstances)
+Octree::Node* Octree::build(const ObjModel& _model, const DirectX::XMFLOAT3& _position, const DirectX::XMFLOAT3 & _minSize, field::Instance* _instances, int _numInstances, float _minGrassLength)
 {
 	using namespace DirectX;
 
@@ -26,16 +26,34 @@ Octree::Node* Octree::build(const ObjModel& _model, const DirectX::XMFLOAT3& _po
 		smallest = XMVectorMin(LF3(&current), smallest);
 	}
 
-	/*Calculate data for root node*/
-	Node* root = new Node();
-	XMStoreFloat3(&root->m_halfSize, ( largest - smallest ) / 2 );
-	XMStoreFloat3(&root->m_pos, largest - LF3(&root->m_halfSize)  + LF3(&_position));
+	//Increase height of bounding box to encompass all the grass
+	largest += VEC3(0, _minGrassLength, 0);
 
-	/*return if the the bounding box ( size / 2 ) < ( _minSize * 8 / 2 ) 
+	XMFLOAT3 min, max;
+	XMStoreFloat3(&min, smallest);
+	XMStoreFloat3(&max, largest);
+
+	/*Root starts as a leaf*/
+	Node* root = new Node(min, max, nullptr, 0);
+
+	/*return if the the bounding box ( size ) < ( _minSize * 8 ) 
 	because the tree cannot be broken up any further*/
-	if (XMVector3Length(LF3(&root->m_halfSize)).m128_f32[0] <= XMVector3Length(LF3(&_minSize) * LF3(&XMFLOAT3(4, 4, 4))).m128_f32[0]) return root;
+	if (XMVector3Length(largest - smallest).m128_f32[0] <= XMVector3Length(LF3(&_minSize) * LF3(&XMFLOAT3(8, 8, 8))).m128_f32[0]) return root;
 
-	/*@Generate children*/
+	/*Octree segments*/
+	XMFLOAT3 oct[8] =
+	{
+		{  0.5 ,  0.5 ,  0.5 },
+		{ -0.5 ,  0.5 ,  0.5 },
+		{ -0.5 ,  0.5 , -0.5 },
+		{  0.5 ,  0.5 , -0.5 },
+		{  0.5 , -0.5 ,  0.5 },
+		{ -0.5 , -0.5 ,  0.5 },
+		{ -0.5 , -0.5 , -0.5 },
+		{ 0.5 ,  -0.5 , -0.5 }
+	};
+	
+	/*Build child nodes*/
 
 
 	return root;
@@ -66,4 +84,42 @@ void Octree::cleanup(Node* _root)
 		//Delete the current node
 		delete current;
 	}
+}
+
+void Octree::prune(Node* _root)
+{
+}
+
+bool Octree::addGrass(Node* _root, const field::Instance& _instance)
+{
+	std::stack<Node*> tree;
+	tree.push(_root);
+
+	/*Depth first traversal of nodes*/
+	while (tree.size())
+	{
+		//Pop top node
+		Node* current = tree.top();
+		tree.pop();
+
+		//If this node contains the grass
+		if (current->m_AABB.Contains(LF3(&_instance.location)))
+		{
+			//If this is a leaf node
+			if (current->m_leaf)
+			{
+				//Add the grass instance
+				current->m_instances.push_back(_instance);
+				return true;
+			}
+			//Else push child nodes
+			for (int i = 0; i < 8; ++i)
+			{
+				Node* child = current->m_children[i];
+				if (child) tree.push(child);
+			}
+		}
+	}
+
+	return false;
 }
