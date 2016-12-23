@@ -58,5 +58,4 @@ namespace Octree
 	///	Returns false if the grass couldn't be added.
 	/////////////////////////////////////////////////
 	bool addGrass(Node* _root, const field::Instance& _instance);
-
 }
