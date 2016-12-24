@@ -28,7 +28,8 @@ Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position,
 	}
 
 	//Increase height of bounding box to encompass all the grass @Possibly just adjust the extents so the AABB is a little larger than the model all round? Seems ok for now :)
-	largest += VEC3(0, _minGrassLength, 0);
+	largest += VEC3(0.1f, _minGrassLength, 0.1f);
+	smallest -= VEC3(0.1f, 0.1f, 0.1f);
 
 	/*Root starts as a leaf with no children. Translate AABB points.*/
 	Node* root = new Node(smallest + _position, largest + _position, nullptr);
@@ -73,13 +74,13 @@ Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position,
 			/*Create new children and push onto stack*/
 			for (int i = 0; i < 8; ++i)
 			{
-				XMVECTOR outer = center + oct[i] * childSize;
+				XMVECTOR outer = center + oct[i] * LF3(&current->m_AABB.Extents);
 				Node* child = new Node(center, outer, current);
+				current->m_children.push_back(child);
 				stack.push(child);
 			}	
 		}
 	}
-
 	return root;
 }
 

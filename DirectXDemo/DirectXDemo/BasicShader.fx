@@ -25,5 +25,5 @@ PS_INPUT VS_Main(VS_INPUT vert)
 
 float4 PS_Main(PS_INPUT vert) : SV_TARGET
 {
-	return float4(0.1f,0.1f,0.1f,1.0f);
+	return float4(0.5f,0.5f,0.5f,1.0f);
 }

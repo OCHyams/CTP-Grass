@@ -2,6 +2,7 @@
 
 #define LF3(_x) XMLoadFloat3(_x)
 #define LF4(_x) XMLoadFloat4(_x)
+#define LF44(_x) XMLoadFloat4x4(_x)
 
 #define VEC3(x, y, z) XMVECTOR(LF3(&XMFLOAT3(x, y , z)))
 
@@ -11,3 +12,4 @@
 #define MUL(_vec, _matrix) XMMatrixMultiply(_vec, _matrix)
 #define QUAT(_euler) XMQuaternionRotationRollPitchYawFromVector(_euler)
 
+#define TRANSPOSE(_matrix) XMMatrixTranspose(_matrix)

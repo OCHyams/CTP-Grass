@@ -304,9 +304,12 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 
 	using namespace DirectX;
 	HRESULT result;
-	
+
+	/*Set up octree debugger*/
+	m_octreeDebugger.loadShared(_device);
+
 	/*Build the octree*/ //@Min size needs to be calculated, not hardcoded
-	m_octeeRoot = Octree::build(*_model, LF3(&_pos), { 0.25f, 0.25f, 0.25f }, nullptr, 0, 1.0f);
+	m_octreeRoot = Octree::build(*_model, LF3(&_pos), { 0.15f, 0.15f, 0.15f }, nullptr, 0, 1.0f);
 
 	/*Procedurally generate grass positions*/
 	std::vector<field::Instance> instances;
@@ -347,7 +350,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	}
 
 	/*Prune the octree to remove unused leaves*/
-	Octree::prune(m_octeeRoot);
+	//Octree::prune(m_octreeRoot);
 
 	/*build instance buffer...*/
 	D3D11_BUFFER_DESC instanceBufferDesc;
@@ -386,7 +389,7 @@ void Field::unload()
 	
 	if (m_instances) delete m_instances;
 	/*Clean up octree*/
-	Octree::cleanup(m_octeeRoot);
+	Octree::cleanup(m_octreeRoot);
 }
 
 void Field::update()
@@ -396,6 +399,10 @@ void Field::update()
 
 void Field::draw(const DrawData& _data)
 {
+	/*Draw octree*/
+	m_octreeDebugger.draw(_data.m_dc, s_viewproj, m_octreeRoot);
+
+	/*Draw field*/
 	unsigned int strides[2];
 	unsigned int offsets[2];
 	ID3D11Buffer* bufferPointers[2];
@@ -653,7 +660,7 @@ void Field::addPatch(std::vector<field::Instance>& _field, const Triangle& _tri,
 		_field.push_back(instance);
 
 		/*Add the grace instance to the Octree*/
-		//if (!Octree::addGrass(m_octeeRoot, instance)) MessageBox(0, "Grass out of octree bounds", "Implementation Bug", MB_OK);;
+		//if (!Octree::addGrass(m_octeeRoot, instance)) MessageBox(0, "Grass out of octree bounds", "Implementation Bug", MB_OK);
 	}
 }
 

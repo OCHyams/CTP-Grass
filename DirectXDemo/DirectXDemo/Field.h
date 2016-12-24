@@ -7,6 +7,7 @@
 #include "FieldRenderData.h"
 #include "Octree.h"
 #include <vector>
+#include "OctreeDebugger.h"
 class ObjModel;
 /////////////////////////////////////////////////
 /// Field of grass 
@@ -82,7 +83,8 @@ private:
 	/////////////////////////////////////////////////
 	/// Octree root node
 	/////////////////////////////////////////////////
-	Octree::Node*			m_octeeRoot = nullptr;
+	Octree::Node*			m_octreeRoot = nullptr;
+	OctreeDebugger			m_octreeDebugger;
 	/////////////////////////////////////////////////
 	/// Wind data stored here for testing!
 	/////////////////////////////////////////////////
