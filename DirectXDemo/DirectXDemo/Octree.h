@@ -50,6 +50,7 @@ namespace Octree
 
 	/////////////////////////////////////////////////
 	///	Removes child nodes who contain no grass.
+	/// Call after adding all grass to tree.
 	/////////////////////////////////////////////////
 	void prune(Node* _root);
 
@@ -58,4 +59,10 @@ namespace Octree
 	///	Returns false if the grass couldn't be added.
 	/////////////////////////////////////////////////
 	bool addGrass(Node* _root, const field::Instance& _instance);
+
+	/////////////////////////////////////////////////
+	///	Coppies a grass instances that are in view 
+	///	into a buffer. @If there is time etc, implement this as a compute shader
+	/////////////////////////////////////////////////
+	void frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, field::Instance* _buffer, int _bufferSize, OUT int& _numInstances);
 }

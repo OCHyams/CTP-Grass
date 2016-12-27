@@ -195,7 +195,7 @@ bool Octree::addGrass(Node* _root, const field::Instance& _instance)
 				current->m_instances.push_back(_instance);
 				return true;
 			}
-			//Else if not leaf 
+			//Else if not leaf node
 			//Push child nodes
 			for (Node* child : current->m_children)
 			{
@@ -205,4 +205,41 @@ bool Octree::addGrass(Node* _root, const field::Instance& _instance)
 	}
 
 	return false;
+}
+
+void Octree::frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, field::Instance* _buffer, int _bufferSize, OUT int& _numInstances)
+{
+	/*Early out if _root ptr is null*/
+	if (_root == nullptr) return;
+
+	std::stack<Node*> tree;
+	tree.push(_root);
+
+	_numInstances = 0;
+
+	/*Depth first traversal of nodes*/
+	while (tree.size())
+	{
+		//Pop top node
+		Node* current = tree.top();
+		tree.pop();
+
+		//If this node is within the frustum
+		if (_frustum.Contains(current->m_AABB))
+		{
+			//If this is a leaf node
+			if (current->m_children.empty())
+			{
+				//Add the grass instances to the buffer
+				memcpy(_buffer + _numInstances, current->m_instances.data(), current->m_instances.size());
+				_numInstances += current->m_instances.size();
+			}
+			//Else if not leaf node
+			//Push child nodes
+			for (Node* child : current->m_children)
+			{
+				tree.push(child);
+			}
+		}
+	}
 }
