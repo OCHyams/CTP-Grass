@@ -140,19 +140,21 @@ void Octree::prune(Node* _root)
 				{
 					//Iterate at least once more
 					complete = false;
+
+					Node* parent = current->m_parent;
 					//Remove node from parent, delete it
-					current->m_parent->m_children.erase(std::remove_if(
-									current->m_parent->m_children.begin(),
-									current->m_parent->m_children.end(),
-									[current](Node* node)
-									{
-										if (node == current)
-										{
-											delete current;
-											return true;
-										}
-										return false;
-									}));
+					parent->m_children.erase(std::remove_if(
+											parent->m_children.begin(),
+											parent->m_children.end(),
+											[current](Node* node)
+											{
+												if (node == current)
+												{
+													delete current;
+													return true;
+												}
+												return false;
+											}));
 				}
 			}
 			else //If node is not leaf
@@ -165,6 +167,7 @@ void Octree::prune(Node* _root)
 			}
 		}
 	}
+	return;
 }
 
 bool Octree::addGrass(Node* _root, const field::Instance& _instance)

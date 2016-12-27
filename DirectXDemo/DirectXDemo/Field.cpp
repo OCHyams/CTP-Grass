@@ -268,7 +268,6 @@ bool Field::load(	ID3D11Device*		_device,
 
 	// Create the instance array.
 	instances = generateInstanceData();
-	//@ attempting to rebuild instance buffer...m_instances = generateInstanceData();
 
 	// Set up the description of the instance buffer.
 	instanceBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -278,7 +277,7 @@ bool Field::load(	ID3D11Device*		_device,
 	instanceBufferDesc.MiscFlags = 0;
 	instanceBufferDesc.StructureByteStride = 0;
 	// Give the subresource structure a pointer to the instance data.
-	instanceData.pSysMem = instances; //@m_instances;
+	instanceData.pSysMem = instances; 
 	instanceData.SysMemPitch = 0;
 	instanceData.SysMemSlicePitch = 0;
 
@@ -309,7 +308,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	m_octreeDebugger.loadShared(_device);
 
 	/*Build the octree*/ //@Min size needs to be calculated, not hardcoded
-	m_octreeRoot = Octree::build(*_model, LF3(&_pos), { 0.15f, 0.15f, 0.15f }, nullptr, 0, 1.0f);
+	m_octreeRoot = Octree::build(*_model, LF3(&_pos), { 0.1f, 0.1f, 0.1f }, nullptr, 0, 1.0f);
 
 	/*Procedurally generate grass positions*/
 	std::vector<field::Instance> instances;
@@ -350,7 +349,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	}
 
 	/*Prune the octree to remove unused leaves*/
-	//Octree::prune(m_octreeRoot);
+	Octree::prune(m_octreeRoot);
 
 	/*build instance buffer...*/
 	D3D11_BUFFER_DESC instanceBufferDesc;
@@ -460,8 +459,6 @@ void Field::updateConstBuffers()
 	using namespace DirectX;
 	Time* t = OCH::ServiceLocator<Time>::get();
 
-
-	//m_CBcpu_geometry.tessDensity = /*@m_curDensity*/6;
 	m_CBcpu_geometry.halfGrassWidth = m_halfGrassWidth;
 	m_CBcpu_geometry.time = (float)t->time;
 	m_CBcpu_geometry.wind = m_wind;
@@ -660,7 +657,7 @@ void Field::addPatch(std::vector<field::Instance>& _field, const Triangle& _tri,
 		_field.push_back(instance);
 
 		/*Add the grace instance to the Octree*/
-		//if (!Octree::addGrass(m_octeeRoot, instance)) MessageBox(0, "Grass out of octree bounds", "Implementation Bug", MB_OK);
+		if (!Octree::addGrass(m_octreeRoot, instance)) MessageBox(0, "Grass out of octree bounds", "Implementation Bug", MB_OK);
 	}
 }
 
