@@ -230,6 +230,10 @@ void Octree::frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, 
 			//If this is a leaf node
 			if (current->m_children.empty())
 			{
+				//If the buffer is full, exit function
+				int distanceToSize = _bufferSize - _numInstances - current->m_instances.size();
+				if (distanceToSize < 0) return;
+				
 				//Add the grass instances to the buffer
 				memcpy(_buffer + _numInstances, current->m_instances.data(), current->m_instances.size());
 				_numInstances += current->m_instances.size();

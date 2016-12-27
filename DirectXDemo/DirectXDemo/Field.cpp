@@ -8,6 +8,7 @@
 #include "ServiceLocator.h"
 #include "DDSTextureLoader.h"
 #include <random>
+#include "Camera.h"
 #include <functional>
 #include <vector>
 #include "objLoader.h"
@@ -308,7 +309,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	m_octreeDebugger.loadShared(_device);
 
 	/*Build the octree*/ //@Min size needs to be calculated, not hardcoded
-	m_octreeRoot = Octree::build(*_model, LF3(&_pos), { 0.1f, 0.1f, 0.1f }, nullptr, 0, 1.0f);
+	m_octreeRoot = Octree::build(*_model, LF3(&_pos), { 0.2f, 0.2f, 0.2f }, nullptr, 0, 1.0f);
 
 	/*Procedurally generate grass positions*/
 	std::vector<field::Instance> instances;
@@ -376,6 +377,8 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		return false;
 	}
 
+	/*Create the cpu side instance buffer*/
+	m_instances = new field::Instance[instances.size()];
 
 	return loadBuffers(_device);
 }
@@ -398,6 +401,10 @@ void Field::update()
 
 void Field::draw(const DrawData& _data)
 {
+	/*Build instance buffer*/ //@right now just testing speed.
+	//int numInstances;
+	//Octree::frustumCull(m_octreeRoot, DirectX::BoundingFrustum(LF44(&_data.m_cam->getProjMatrix())), m_instances, m_instanceCount, numInstances);
+
 	/*Draw octree*/
 	m_octreeDebugger.draw(_data.m_dc, s_viewproj, m_octreeRoot);
 

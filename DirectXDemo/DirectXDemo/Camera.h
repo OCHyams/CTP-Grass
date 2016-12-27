@@ -17,8 +17,8 @@ public:
 	virtual void update() override;
 	virtual void draw(const DrawData&) override;
 
-	const DirectX::XMFLOAT4X4& getViewMatrix();
-	const DirectX::XMFLOAT4X4& getProjMatrix();
+	const DirectX::XMFLOAT4X4& getViewMatrix() const;
+	const DirectX::XMFLOAT4X4& getProjMatrix() const;
 
 private:
 	DirectX::XMFLOAT3 m_target;

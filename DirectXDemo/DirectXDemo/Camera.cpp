@@ -91,12 +91,12 @@ void ArcCamera::draw(const DrawData&)
 	return;
 }
 
-const DirectX::XMFLOAT4X4& ArcCamera::getViewMatrix()
+const DirectX::XMFLOAT4X4& ArcCamera::getViewMatrix() const
 {
 	return m_view;
 }
 
-const DirectX::XMFLOAT4X4& ArcCamera::getProjMatrix()
+const DirectX::XMFLOAT4X4& ArcCamera::getProjMatrix() const
 {
 	return m_proj;
 }
