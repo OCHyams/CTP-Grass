@@ -38,7 +38,10 @@ public:
 
 	static void updateCameraPosition(const DirectX::XMFLOAT3& _pos) { s_cameraPos = _pos; }
 	void setWind(const DirectX::XMFLOAT3& _wind) { m_wind = _wind; }
-	int getNumBlades() { return m_instanceCount; }
+
+	int getMaxNumBlades() { return m_maxInstanceCount; }
+	int getCurNumBlades() { return m_curInstanceCount; }
+
 	//public for now cus lazy
 	static DirectX::XMFLOAT4X4		s_viewproj;
 	float							m_length;
@@ -73,7 +76,8 @@ private:
 	/////////////////////////////////////////////////
 	field::Instance*		m_instances = nullptr;
 	ID3D11Buffer*			m_instanceBuffer;
-	int						m_instanceCount;
+	int						m_maxInstanceCount;
+	int						m_curInstanceCount;
 	/////////////////////////////////////////////////
 	/// LOD factors
 	/////////////////////////////////////////////////

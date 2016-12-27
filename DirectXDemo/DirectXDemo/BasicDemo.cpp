@@ -46,7 +46,7 @@ bool BasicDemo::load()
 	ObjModel model;
 	CHECK_FAIL(model.LoadOBJ("../Resources/box.obj"));
 	m_field.load(m_d3dDevice, &model, NUM(1,000), XMFLOAT3(0, 0, 0));
-	m_numBlades = m_field.getNumBlades();
+	m_numBlades = m_field.getMaxNumBlades();
 	/*Only needed the hill model to place the grass (FOR NOW ANYWAY)*/
 	model.Release();
 	//@Original load function

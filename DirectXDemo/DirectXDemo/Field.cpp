@@ -256,7 +256,7 @@ bool Field::load(	ID3D11Device*		_device,
 					DirectX::XMFLOAT2	_size, 
 					DirectX::XMFLOAT3	_pos)
 {
-	m_instanceCount = _instanceCount;
+	m_maxInstanceCount = _instanceCount;
 	m_size = _size;
 	m_pos = _pos;
 
@@ -272,7 +272,7 @@ bool Field::load(	ID3D11Device*		_device,
 
 	// Set up the description of the instance buffer.
 	instanceBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	instanceBufferDesc.ByteWidth = sizeof(field::Instance) * m_instanceCount;
+	instanceBufferDesc.ByteWidth = sizeof(field::Instance) * m_maxInstanceCount;
 	instanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	instanceBufferDesc.CPUAccessFlags = 0;
 	instanceBufferDesc.MiscFlags = 0;
@@ -355,11 +355,11 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	/*build instance buffer...*/
 	D3D11_BUFFER_DESC instanceBufferDesc;
 	D3D11_SUBRESOURCE_DATA instanceData;
-	m_instanceCount = instances.size();
+	m_maxInstanceCount = instances.size();
 
 	// Set up the description of the instance buffer.
 	instanceBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	instanceBufferDesc.ByteWidth = sizeof(field::Instance) * m_instanceCount;
+	instanceBufferDesc.ByteWidth = sizeof(field::Instance) * m_maxInstanceCount;
 	instanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	instanceBufferDesc.CPUAccessFlags = 0;
 	instanceBufferDesc.MiscFlags = 0;
@@ -401,9 +401,8 @@ void Field::update()
 
 void Field::draw(const DrawData& _data)
 {
-	/*Build instance buffer*/ //@right now just testing speed.
-	//int numInstances;
-	//Octree::frustumCull(m_octreeRoot, DirectX::BoundingFrustum(LF44(&_data.m_cam->getProjMatrix())), m_instances, m_instanceCount, numInstances);
+	/*Build instance buffer*/ //@still implementing
+	Octree::frustumCull(m_octreeRoot, DirectX::BoundingFrustum(LF44(&_data.m_cam->getProjMatrix())), m_instances, m_maxInstanceCount, m_curInstanceCount);
 
 	/*Draw octree*/
 	m_octreeDebugger.draw(_data.m_dc, s_viewproj, m_octreeRoot);
@@ -458,7 +457,7 @@ void Field::draw(const DrawData& _data)
 	//texture
 	_data.m_dc->PSSetShaderResources(0, 1, &s_texture);
 
-	_data.m_dc->DrawInstanced(4, m_instanceCount, 0, 0);
+	_data.m_dc->DrawInstanced(4, m_maxInstanceCount, 0, 0);
 }
 
 void Field::updateConstBuffers()
@@ -487,10 +486,10 @@ void Field::updateConstBuffers()
 field::Instance* Field::generateInstanceData()
 {
 	using namespace DirectX;
-	field::Instance* data = new field::Instance[m_instanceCount];
+	field::Instance* data = new field::Instance[m_maxInstanceCount];
 
 //http://math.stackexchange.com/questions/466198/algorithm-to-get-the-maximum-size-of-n-squares-that-fit-into-a-rectangle-with-a
-	double x = m_size.x, y = m_size.y, n = m_instanceCount;
+	double x = m_size.x, y = m_size.y, n = m_maxInstanceCount;
 	double px = ceil(sqrt(n*x / y));
 	double sx, sy;
 	if (floor(px*y / x)*px<n)  //does not fit, y/(x/px)=px*y/x
@@ -520,7 +519,7 @@ field::Instance* Field::generateInstanceData()
 	{
 		for (int z = 0; z < zcount; ++z)
 		{
-			if (index >= m_instanceCount) break;
+			if (index >= m_maxInstanceCount) break;
 			//scale
 			//
 			//rotation
