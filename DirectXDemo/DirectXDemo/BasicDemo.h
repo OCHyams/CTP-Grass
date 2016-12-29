@@ -26,4 +26,5 @@ private:
 	Field m_field;
 	float m_fps;
 	int m_numBlades;
+	int m_numDrawnBlades;
 };

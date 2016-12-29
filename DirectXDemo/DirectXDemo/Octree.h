@@ -39,8 +39,6 @@ namespace Octree
 	Node* build(const ObjModel&				_model, 
 				DirectX::XMVECTOR			_position,
 				const DirectX::XMFLOAT3&	_minSize, 
-				field::Instance*			_instances, 
-				int							_numInstances,
 				float						_minGrassLength);
 
 	/////////////////////////////////////////////////
@@ -64,5 +62,5 @@ namespace Octree
 	///	Coppies a grass instances that are in view 
 	///	into a buffer. @If there is time etc, implement this as a compute shader
 	/////////////////////////////////////////////////
-	void frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, field::Instance* _buffer, int _bufferSize, OUT int& _numInstances);
+	void frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, field::Instance* _buffer, int _bufferSize, int& _numInstances);
 }

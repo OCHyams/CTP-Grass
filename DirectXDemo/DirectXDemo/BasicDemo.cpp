@@ -30,7 +30,9 @@ bool BasicDemo::load()
 	TwAddVarRW(GUI, "str", TwType::TW_TYPE_FLOAT, &m_windStr, "step = 0.05");
 	TwAddVarRW(GUI, "dir", TwType::TW_TYPE_DIR3F, &m_wind, "opened = true axisz = -z showval = false");
 	TwAddVarRO(GUI, "FPS", TwType::TW_TYPE_FLOAT, &m_fps, "");
-	TwAddVarRO(GUI, "Blade count", TwType::TW_TYPE_INT32, &m_numBlades, "");
+	TwAddVarRO(GUI, "Total Blade count", TwType::TW_TYPE_INT32, &m_numBlades, "");
+	TwAddVarRO(GUI, "Blades Drawn", TwType::TW_TYPE_INT32, &m_numDrawnBlades, "");
+
 	using namespace DirectX;
 	m_wind = { 0.f, 0.0f, 1.0f };
 	m_windStr = 0.2;
@@ -97,6 +99,7 @@ void BasicDemo::update()
 	{
 		m_fps = 1 / m_time.deltaTime;
 	}
+	m_numDrawnBlades = m_field.getCurNumBlades();
 }
 
 void BasicDemo::render()

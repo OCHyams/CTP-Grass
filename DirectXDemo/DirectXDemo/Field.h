@@ -116,10 +116,9 @@ private:
 	{
 		DirectX::XMFLOAT3	m_verts[3];
 		DirectX::XMFLOAT3	m_norms[3];
-		//Normals?
 		float				m_surfaceArea;
 
-		Triangle(const DirectX::XMFLOAT3* _verts, const DirectX::XMFLOAT3* _norms, float _density)
+		Triangle(const DirectX::XMFLOAT3* _verts, const DirectX::XMFLOAT3* _norms)
 		{
 			using namespace DirectX;
 			/*Get verts & norms*/
@@ -136,7 +135,7 @@ private:
 		}
 
 	};
-	void addPatch(std::vector<field::Instance>& _field, const Triangle& _tri, int _numBlade);
+	void addPatch(/*std::vector<field::Instance>& _field,*/ const Triangle& _tri, int _numBlade);
 };
 
 

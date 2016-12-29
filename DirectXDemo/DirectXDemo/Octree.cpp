@@ -6,7 +6,7 @@
 #include <stack>
 #include "Shorthand.h"
 
-Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position, const DirectX::XMFLOAT3 & _minSize, field::Instance* _instances, int _numInstances, float _minGrassLength)
+Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position, const DirectX::XMFLOAT3 & _minSize, float _minGrassLength)
 {
 	using namespace DirectX;
 
@@ -207,7 +207,7 @@ bool Octree::addGrass(Node* _root, const field::Instance& _instance)
 	return false;
 }
 
-void Octree::frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, field::Instance* _buffer, int _bufferSize, OUT int& _numInstances)
+void Octree::frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, field::Instance* _buffer, int _bufferSize, int& _numInstances)
 {
 	/*Early out if _root ptr is null*/
 	if (_root == nullptr) return;
@@ -224,18 +224,18 @@ void Octree::frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, 
 		Node* current = tree.top();
 		tree.pop();
 
-		//If this node is within the frustum
-		if (_frustum.Contains(current->m_AABB))
+		//If this node is within the frustum //@Changed from contains to intersects
+		if (_frustum.Intersects(current->m_AABB))
 		{
 			//If this is a leaf node
 			if (current->m_children.empty())
 			{
-				//If the buffer is full, exit function
-				int distanceToSize = _bufferSize - _numInstances - current->m_instances.size();
-				if (distanceToSize < 0) return;
+				//If the buffer is full, exit function//@not the most elegant solution
+				//int distanceToSize = _bufferSize - _numInstances - current->m_instances.size();
+				//if (distanceToSize < 0) return;
 				
 				//Add the grass instances to the buffer
-				memcpy(_buffer + _numInstances, current->m_instances.data(), current->m_instances.size());
+				memcpy(_buffer + _numInstances, current->m_instances.data(), current->m_instances.size() * sizeof(field::Instance));
 				_numInstances += current->m_instances.size();
 			}
 			//Else if not leaf node

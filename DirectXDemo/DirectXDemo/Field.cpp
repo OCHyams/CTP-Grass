@@ -309,15 +309,16 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	m_octreeDebugger.loadShared(_device);
 
 	/*Build the octree*/ //@Min size needs to be calculated, not hardcoded
-	m_octreeRoot = Octree::build(*_model, LF3(&_pos), { 0.2f, 0.2f, 0.2f }, nullptr, 0, 1.0f);
+	m_octreeRoot = Octree::build(*_model, LF3(&_pos), { 0.2f, 0.2f, 0.2f }, 1.0f);
 
 	/*Procedurally generate grass positions*/
-	std::vector<field::Instance> instances;
+	//std::vector<field::Instance> instances;//@trying to phase this out with the frustum culling & Octree stuff
 
 	float truncationAccumulator = 0;
 	float* vertElementPtr = _model->GetVertices();
 	float* normElementPtr = _model->GetNormals();
 	int numVerts = _model->GetTotalVerts();
+	m_maxInstanceCount = 0;//@
 
 	/*For every triangle...*/
 	for (int i = 0; i < numVerts; i +=3)
@@ -334,7 +335,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 			normElementPtr += 9;
 		}
 		/*Store vert positions & calc surface area*/
-		Triangle triangle = Triangle(triVerts, triNorms, _density);
+		Triangle triangle = Triangle(triVerts, triNorms);
 		/*Calc number of blades*/
 		int numBlades = std::truncf(triangle.m_surfaceArea * _density);
 		/*Deal with trunc rounding accumulation*/
@@ -346,26 +347,31 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		}
 
 		/*Add the patch to the field and octree*/
-		addPatch(instances, triangle, numBlades);
+		addPatch(triangle, numBlades);
+		m_maxInstanceCount += numBlades;//@
 	}
 
 	/*Prune the octree to remove unused leaves*/
 	Octree::prune(m_octreeRoot);
 
+	/*Create the cpu side instance buffer*/
+	m_instances = new field::Instance[m_maxInstanceCount];
+
 	/*build instance buffer...*/
 	D3D11_BUFFER_DESC instanceBufferDesc;
 	D3D11_SUBRESOURCE_DATA instanceData;
-	m_maxInstanceCount = instances.size();
+	//m_maxInstanceCount = instances.size();//@
 
 	// Set up the description of the instance buffer.
-	instanceBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	instanceBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	instanceBufferDesc.ByteWidth = sizeof(field::Instance) * m_maxInstanceCount;
 	instanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	instanceBufferDesc.CPUAccessFlags = 0;
+	instanceBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	instanceBufferDesc.MiscFlags = 0;
 	instanceBufferDesc.StructureByteStride = 0;
 	// Give the subresource structure a pointer to the instance data.
-	instanceData.pSysMem = instances.data();
+	//instanceData.pSysMem = instances.data();
+	instanceData.pSysMem = m_instances;
 	instanceData.SysMemPitch = 0;
 	instanceData.SysMemSlicePitch = 0;
 
@@ -376,9 +382,6 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		MessageBox(0, "Error creating instance buffer.", "Field", MB_OK);
 		return false;
 	}
-
-	/*Create the cpu side instance buffer*/
-	m_instances = new field::Instance[instances.size()];
 
 	return loadBuffers(_device);
 }
@@ -401,8 +404,13 @@ void Field::update()
 
 void Field::draw(const DrawData& _data)
 {
-	/*Build instance buffer*/ //@still implementing
-	Octree::frustumCull(m_octreeRoot, DirectX::BoundingFrustum(LF44(&_data.m_cam->getProjMatrix())), m_instances, m_maxInstanceCount, m_curInstanceCount);
+	using namespace DirectX;
+	/*Build instance buffer after frustum culling*/
+	XMMATRIX transform = XMMatrixMultiply(XMMatrixRotationRollPitchYawFromVector(LF3(&_data.m_cam->getRot())), XMMatrixTranslationFromVector(LF3(&_data.m_cam->getPos())));
+	BoundingFrustum frustum(LF44(&_data.m_cam->getProjMatrix()));
+	frustum.Transform(frustum, transform);
+	//cull
+	Octree::frustumCull(m_octreeRoot, frustum, m_instances, m_maxInstanceCount, m_curInstanceCount);
 
 	/*Draw octree*/
 	m_octreeDebugger.draw(_data.m_dc, s_viewproj, m_octreeRoot);
@@ -439,6 +447,13 @@ void Field::draw(const DrawData& _data)
 	_data.m_dc->UpdateSubresource(m_CB_geometry, 0, 0, &m_CBcpu_geometry, 0, 0);
 	_data.m_dc->UpdateSubresource(m_CB_light, 0, 0, &m_CBcpu_light, 0, 0);
 
+	//Update instance buffer
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
+	HRESULT result = _data.m_dc->Map(m_instanceBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, m_instances, m_curInstanceCount * sizeof(field::Instance));
+	_data.m_dc->Unmap(m_instanceBuffer, 0);
+	assert(!FAILED(result));
 
 	//set constant buffers
 	_data.m_dc->HSSetConstantBuffers(0, 1, &m_CB_geometry);
@@ -457,7 +472,9 @@ void Field::draw(const DrawData& _data)
 	//texture
 	_data.m_dc->PSSetShaderResources(0, 1, &s_texture);
 
-	_data.m_dc->DrawInstanced(4, m_maxInstanceCount, 0, 0);
+	//@trying dynamic instance buffer
+	//_data.m_dc->DrawInstanced(4, m_maxInstanceCount, 0, 0);
+	_data.m_dc->DrawInstanced(4, m_curInstanceCount, 0, 0);
 }
 
 void Field::updateConstBuffers()
@@ -613,7 +630,7 @@ bool Field::loadBuffers(ID3D11Device* _device)
 	return true;
 }
 
-void Field::addPatch(std::vector<field::Instance>& _field, const Triangle& _tri, int _numBlades)
+void Field::addPatch(/*std::vector<field::Instance>& _field, */const Triangle& _tri, int _numBlades)
 {
 	using namespace DirectX;
 	
@@ -660,7 +677,7 @@ void Field::addPatch(std::vector<field::Instance>& _field, const Triangle& _tri,
 		//XMStoreFloat4x4(&instance.world, XMMatrixTranspose(world));
 
 		//@SOON WILL NOT USE THIS, ONLY OCTREE
-		_field.push_back(instance);
+		//_field.push_back(instance);
 
 		/*Add the grace instance to the Octree*/
 		if (!Octree::addGrass(m_octreeRoot, instance)) MessageBox(0, "Grass out of octree bounds", "Implementation Bug", MB_OK);
