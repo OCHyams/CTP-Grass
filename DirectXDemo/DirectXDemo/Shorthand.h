@@ -15,8 +15,10 @@
 
 #define TRANSPOSE(_matrix) XMMatrixTranspose(_matrix)
 
-
+#define RELEASE(x) if (x) { x->Release(); x = nullptr; }
 
 //C++ generic shorthand
 #define ERASE_REMOVE(_container, _element) _container.erase(std::remove(_container.begin(), _container.end(), _element))
 #define ERASE_REMOVE_IF(_container, _pred) _container.erase(std::remove_if(_container.begin(), _container.end(), _pred))
+#define CHECK_FAIL(x) if (!x) return false
+

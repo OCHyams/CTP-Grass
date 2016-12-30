@@ -9,10 +9,12 @@ class WindManager
 {
 public:
 	/////////////////////////////////////////////////
-	/// Updates shader resources, doesn't need to be 
-	///	called if all the wind zones are immobile.
+	/// Should be called once per frame after all 
+	///	wind zones have been modified. No need to call 
+	///	if all zones are immobile and none are created
+	/// or destroyed.
 	/////////////////////////////////////////////////
-	void updateResources();
+	void updateResources(ID3D11DeviceContext*);
 
 	/////////////////////////////////////////////////
 	/// Call once to initalise resources.
@@ -29,7 +31,7 @@ public:
 	/// No memory management required. Returns nullptr
 	/// if there are already too many WindRects.
 	/////////////////////////////////////////////////
-	WindRect* CreateWindRect();
+	WindCuboid* CreateWindCuboid();
 
 	/////////////////////////////////////////////////
 	/// No memory management required. Returns nullptr
@@ -40,7 +42,7 @@ public:
 	/////////////////////////////////////////////////
 	/// Remove a specific wind zone.
 	/////////////////////////////////////////////////
-	void remove(WindRect*);
+	void remove(WindCuboid*);
 
 	/////////////////////////////////////////////////
 	/// Remove a specific wind zone.
@@ -52,15 +54,19 @@ public:
 	/////////////////////////////////////////////////
 	void removeAll();
 
-	ID3D11ShaderResourceView* getRectSRV() { return m_rectSRV;  }
+	ID3D11ShaderResourceView* getRectSRV() { return m_cuboidSRV;  }
 	ID3D11ShaderResourceView* getSphereSRV() { return m_sphereSRV; }
+	const std::vector<WindCuboid>& getCuboids() const { return m_cuboids; }
+	const std::vector<WindSphere>& getSpheres() const { return m_spheres; }
 protected:
 private:
-	std::vector<WindRect>	m_rects;
+	std::vector<WindCuboid>	m_cuboids;
 	std::vector<WindSphere> m_spheres;
-	int m_maxRects;
+	int m_maxCuboids;
 	int m_maxSpheres;
 
-	ID3D11ShaderResourceView* m_rectSRV;
-	ID3D11ShaderResourceView* m_sphereSRV;
+	ID3D11Buffer*				m_cuboidBuffer; //@Not sure if i need the buffers?
+	ID3D11Buffer*				m_sphereBuffer;
+	ID3D11ShaderResourceView*	m_cuboidSRV;
+	ID3D11ShaderResourceView*	m_sphereSRV;
 };

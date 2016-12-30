@@ -53,7 +53,7 @@ bool Field::loadShared(ID3D11Device* _device)
 	_device->CreateVertexShader(buffer->GetBufferPointer(), buffer->GetBufferSize(), 0, &s_shaders.m_vs);
 	if (FAILED(result))
 	{
-		buffer->Release();
+		RELEASE(buffer);
 		DXTRACE_MSG(L"Couldn't create the vertex shader.");
 		return false;
 	}
@@ -80,7 +80,6 @@ bool Field::loadShared(ID3D11Device* _device)
 	RELEASE(buffer);
 	if (FAILED(result))
 	{
-		RELEASE(buffer);
 		DXTRACE_MSG(L"Couldn't create the input layout.");
 		return false;
 	}
@@ -95,7 +94,7 @@ bool Field::loadShared(ID3D11Device* _device)
 	}
 
 	result = _device->CreatePixelShader(buffer->GetBufferPointer(), buffer->GetBufferSize(), 0, &s_shaders.m_ps);
-	buffer->Release();
+	RELEASE(buffer);
 	if (FAILED(result))
 	{
 		DXTRACE_MSG(L"Couldn't create the pixel shader.");
