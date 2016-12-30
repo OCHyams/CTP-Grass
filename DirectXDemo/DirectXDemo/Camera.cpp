@@ -72,6 +72,15 @@ void ArcCamera::update()
 		m_offset.z -= speed;
 	}
 
+	if (INPUT::get()->getKey(DIK_LEFT))
+	{
+		m_target.x += speed;
+	}
+	else if (INPUT::get()->getKey(DIK_RIGHT))
+	{
+		m_target.x -= speed;
+	}
+
 	XMVECTOR offset = XMVector3Rotate(LF3(&m_offset), QUAT(LF3(&euler)));
 	XMStoreFloat3(&m_pos, LF3(&m_target) + offset);
 	m_rot = euler;

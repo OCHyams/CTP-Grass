@@ -137,6 +137,7 @@
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="TokenStream.cpp" />
     <ClCompile Include="Triangle.cpp" />
+    <ClCompile Include="WindManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasicDemo.h" />
@@ -151,6 +152,7 @@
     <ClInclude Include="FieldRenderData.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Input.h" />
+    <ClInclude Include="Object.h" />
     <ClInclude Include="objLoader.h" />
     <ClInclude Include="Octree.h" />
     <ClInclude Include="OctreeDebugger.h" />
@@ -161,6 +163,9 @@
     <ClInclude Include="Time.h" />
     <ClInclude Include="TokenStream.h" />
     <ClInclude Include="Triangle.h" />
+    <ClInclude Include="WindManager.h" />
+    <ClInclude Include="WindRect.h" />
+    <ClInclude Include="WindSphere.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="BasicShader.fx">
