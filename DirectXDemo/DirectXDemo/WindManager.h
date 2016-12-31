@@ -8,6 +8,7 @@
 class WindManager
 {
 public:
+
 	/////////////////////////////////////////////////
 	/// Should be called once per frame after all 
 	///	wind zones have been modified. No need to call 
