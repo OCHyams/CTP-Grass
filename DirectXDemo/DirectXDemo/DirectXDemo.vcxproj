@@ -157,6 +157,7 @@
     <ClInclude Include="Octree.h" />
     <ClInclude Include="OctreeDebugger.h" />
     <ClInclude Include="Plane.h" />
+    <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="ServiceLocator.h" />
     <ClInclude Include="Shorthand.h" />
     <ClInclude Include="SimpleGrass.h" />

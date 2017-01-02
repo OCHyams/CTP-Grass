@@ -41,6 +41,15 @@ namespace field
 			_dc->PSSetShader(m_ps, 0, 0);
 		}
 
+		static inline void remove(ID3D11DeviceContext* _dc)
+		{
+			_dc->VSSetShader(nullptr, 0, 0);
+			_dc->HSSetShader(nullptr, 0, 0);
+			_dc->DSSetShader(nullptr, 0, 0);
+			_dc->GSSetShader(nullptr, 0, 0);
+			_dc->PSSetShader(nullptr, 0, 0);
+		}
+
 		inline void release()
 		{
 			if (m_vs) { m_vs->Release(); m_vs = nullptr; }

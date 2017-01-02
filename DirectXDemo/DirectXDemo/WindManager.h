@@ -18,6 +18,16 @@ public:
 	void updateResources(ID3D11DeviceContext*);
 
 	/////////////////////////////////////////////////
+	/// Load wind shader and shared resources.
+	/////////////////////////////////////////////////
+	static bool loadShared(ID3D11Device*);
+
+	/////////////////////////////////////////////////
+	/// Unload wind shader and shared resources.
+	/////////////////////////////////////////////////
+	static void unloadShared();
+
+	/////////////////////////////////////////////////
 	/// Call once to initalise resources.
 	/////////////////////////////////////////////////
 	bool load(ID3D11Device*, int _maxRects, int _maxSpheres);
@@ -29,7 +39,7 @@ public:
 	void unload();
 
 	/////////////////////////////////////////////////
-	/// No memory management required. Returns nullptr
+	/// No memory management required. Returns nullptr //@This sort of stuff should get hidden behind some user interface classes
 	/// if there are already too many WindRects.
 	/////////////////////////////////////////////////
 	WindCuboid* CreateWindCuboid();
@@ -55,6 +65,8 @@ public:
 	/////////////////////////////////////////////////
 	void removeAll();
 
+	void applyWindForces(ID3D11UnorderedAccessView* _grass, ID3D11DeviceContext* _dc, const DirectX::XMFLOAT3& _threadGroups);
+
 	ID3D11ShaderResourceView* getRectSRV() { return m_cuboidSRV;  }
 	ID3D11ShaderResourceView* getSphereSRV() { return m_sphereSRV; }
 	const std::vector<WindCuboid>& getCuboids() const { return m_cuboids; }
@@ -70,4 +82,6 @@ private:
 	ID3D11Buffer*				m_sphereBuffer;
 	ID3D11ShaderResourceView*	m_cuboidSRV;
 	ID3D11ShaderResourceView*	m_sphereSRV;
+
+	static ID3D11ComputeShader*	s_cs;
 };

@@ -311,7 +311,6 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	m_octreeRoot = Octree::build(*_model, LF3(&_pos), { 0.2f, 0.2f, 0.2f }, 1.0f);
 
 	/*Procedurally generate grass positions*/
-	//std::vector<field::Instance> instances;//@trying to phase this out with the frustum culling & Octree stuff
 
 	float truncationAccumulator = 0;
 	float* vertElementPtr = _model->GetVertices();
@@ -347,7 +346,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 
 		/*Add the patch to the field and octree*/
 		addPatch(triangle, numBlades);
-		m_maxInstanceCount += numBlades;//@
+		m_maxInstanceCount += numBlades;
 	}
 
 	/*Prune the octree to remove unused leaves*/
@@ -359,7 +358,6 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	/*build instance buffer...*/
 	D3D11_BUFFER_DESC instanceBufferDesc;
 	D3D11_SUBRESOURCE_DATA instanceData;
-	//m_maxInstanceCount = instances.size();//@
 
 	// Set up the description of the instance buffer.
 	instanceBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -368,8 +366,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	instanceBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	instanceBufferDesc.MiscFlags = 0;
 	instanceBufferDesc.StructureByteStride = 0;
-	// Give the subresource structure a pointer to the instance data.
-	//instanceData.pSysMem = instances.data();
+
 	instanceData.pSysMem = m_instances;
 	instanceData.SysMemPitch = 0;
 	instanceData.SysMemSlicePitch = 0;
@@ -471,8 +468,6 @@ void Field::draw(const DrawData& _data)
 	//texture
 	_data.m_dc->PSSetShaderResources(0, 1, &s_texture);
 
-	//@trying dynamic instance buffer
-	//_data.m_dc->DrawInstanced(4, m_maxInstanceCount, 0, 0);
 	_data.m_dc->DrawInstanced(4, m_curInstanceCount, 0, 0);
 }
 
@@ -674,9 +669,6 @@ void Field::addPatch(/*std::vector<field::Instance>& _field, */const Triangle& _
 		//XMMATRIX world = DirectX::XMMatrixRotationY(angle);
 		//world = XMMatrixMultiply(world, XMMatrixTranslationFromVector(translation));
 		//XMStoreFloat4x4(&instance.world, XMMatrixTranspose(world));
-
-		//@SOON WILL NOT USE THIS, ONLY OCTREE
-		//_field.push_back(instance);
 
 		/*Add the grace instance to the Octree*/
 		if (!Octree::addGrass(m_octreeRoot, instance)) MessageBox(0, "Grass out of octree bounds", "Implementation Bug", MB_OK);
