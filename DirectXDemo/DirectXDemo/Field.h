@@ -102,12 +102,14 @@ private:
 	DirectX::XMFLOAT2		m_size;
 	DirectX::XMFLOAT3		m_pos;
 
+
+
 	void updateConstBuffers();
 
 	/////////////////////////////////////////////////
 	///	Allocates m_instanceCount of Instance, don't forget to clear up mem!
 	/////////////////////////////////////////////////
-	field::Instance* generateInstanceData();
+	field::Instance* generateInstanceData();//@not in use atm...
 	void buildInstanceBuffer();
 	bool loadBuffers(ID3D11Device*);
 

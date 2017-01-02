@@ -2,12 +2,13 @@
 #include <vector>
 #include <d3d11_2.h>
 
-#include "WindRect.h"
+#include "WindCuboid.h"
 #include "WindSphere.h"
 
 class WindManager
 {
 public:
+	const int m_threadsPerGroupX = 1024;
 
 	/////////////////////////////////////////////////
 	/// Should be called once per frame after all 
@@ -65,7 +66,7 @@ public:
 	/////////////////////////////////////////////////
 	void removeAll();
 
-	void applyWindForces(ID3D11UnorderedAccessView* _grass, ID3D11DeviceContext* _dc, const DirectX::XMFLOAT3& _threadGroups);
+	void applyWindForces(ID3D11UnorderedAccessView* _grass, ID3D11DeviceContext* _dc, int _numGroupsX);
 
 	ID3D11ShaderResourceView* getRectSRV() { return m_cuboidSRV;  }
 	ID3D11ShaderResourceView* getSphereSRV() { return m_sphereSRV; }

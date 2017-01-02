@@ -34,6 +34,7 @@ struct VS_INPUT
 	//matrix	world		: INSTANCE_WORLD;		//world transform matrix - Not in use atm, might be required later...
 	float4	rotation	: INSTANCE_ROTATION;	//quaternion rotation
 	float3	location	: INSTANCE_LOCATION;	//position of grass in world for lighting calc etc
+	float3	wind		: INSTANCE_WIND;
 };
 
 struct HS_DS_INPUT

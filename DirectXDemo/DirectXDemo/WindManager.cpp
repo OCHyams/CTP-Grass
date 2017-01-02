@@ -35,7 +35,7 @@ bool WindManager::loadShared(ID3D11Device* _device)
 #endif
 
 	//VS SHADER
-	result = D3DCompileFromFile(L"Wind.cs", NULL, NULL, "CS_Main", "cs_5_0", shaderFlags, 0, &buffer, NULL);
+	result = D3DCompileFromFile(L"Wind.cs", NULL, NULL, "main", "cs_5_0", shaderFlags, 0, &buffer, NULL);
 	if (FAILED(result))
 	{
 		RELEASE(buffer);
@@ -145,7 +145,7 @@ void WindManager::removeAll()
 	m_cuboids.shrink_to_fit();
 }
 
-void WindManager::applyWindForces(ID3D11UnorderedAccessView* _grass, ID3D11DeviceContext* _dc, const DirectX::XMFLOAT3& _threadGroups)
+void WindManager::applyWindForces(ID3D11UnorderedAccessView* _grass, ID3D11DeviceContext* _dc, int _numGroupsX)
 {
 	ID3D11ShaderResourceView* views[2] =
 	{
@@ -157,7 +157,7 @@ void WindManager::applyWindForces(ID3D11UnorderedAccessView* _grass, ID3D11Devic
 	_dc->CSSetShader(s_cs, NULL, 0);
 	_dc->CSSetShaderResources(0, 2, views);
 	_dc->CSGetUnorderedAccessViews(0, 1, &_grass);
-	_dc->Dispatch(_threadGroups.x, _threadGroups.y, _threadGroups.z);
+	_dc->Dispatch(_numGroupsX, 1, 1);
 
 	views[0] = nullptr;
 	views[1] = nullptr;

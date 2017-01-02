@@ -20,6 +20,7 @@ namespace field
 		//XMFLOAT4X4		world;
 		XMFLOAT4		rotation;
 		XMFLOAT3		location;
+		XMFLOAT3		wind;
 	};
 
 

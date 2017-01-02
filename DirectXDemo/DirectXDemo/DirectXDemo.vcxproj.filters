@@ -152,14 +152,14 @@
     <ClInclude Include="WindSphere.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WindRect.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="WindManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ResourceManager.h">
       <Filter>Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="WindCuboid.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -173,6 +173,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Field.fx">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="WindForce.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
