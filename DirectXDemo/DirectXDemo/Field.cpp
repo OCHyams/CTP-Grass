@@ -14,6 +14,8 @@
 #include "objLoader.h"
 #include <stdlib.h>
 #include "Shorthand.h"
+#include "WindManager.h"
+
 //statics
 DirectX::XMFLOAT3		Field::s_cameraPos		= DirectX::XMFLOAT3();
 DirectX::XMFLOAT4X4		Field::s_viewproj		= DirectX::XMFLOAT4X4();
@@ -365,7 +367,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	instanceBufferDesc.ByteWidth = sizeof(field::Instance) * m_maxInstanceCount;
 	instanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	instanceBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	instanceBufferDesc.MiscFlags = 0;
+	instanceBufferDesc.MiscFlags =  0; 
 	instanceBufferDesc.StructureByteStride = 0;
 
 	instanceData.pSysMem = m_instances;
@@ -380,6 +382,68 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		return false;
 	}
 
+	/*Create wind manager resources*/
+	//UAV Buffer
+	ZeroMemory(&instanceBufferDesc, sizeof(instanceBufferDesc));
+	instanceBufferDesc.BindFlags			=	D3D11_BIND_UNORDERED_ACCESS |
+											D3D11_BIND_SHADER_RESOURCE;
+	instanceBufferDesc.ByteWidth			= sizeof(field::Instance) * m_maxInstanceCount;
+	instanceBufferDesc.MiscFlags			= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	instanceBufferDesc.StructureByteStride	= sizeof(field::Instance);
+	if (FAILED(_device->CreateBuffer(&instanceBufferDesc, NULL,
+		&m_instanceUAVBufferOut)))
+	{
+		MessageBox(0, "Error creating instance UAV buffer.", "Field", MB_OK);
+		return false;
+	}
+	//UAV
+	D3D11_UNORDERED_ACCESS_VIEW_DESC UAVDesc;
+	ZeroMemory(&UAVDesc, sizeof(UAVDesc));
+	UAVDesc.ViewDimension					= D3D11_UAV_DIMENSION_BUFFER;
+	UAVDesc.Buffer.FirstElement				= 0;
+	UAVDesc.Format							= DXGI_FORMAT_UNKNOWN;
+	UAVDesc.Buffer.NumElements				= m_maxInstanceCount;
+
+	if (FAILED(_device->CreateUnorderedAccessView(m_instanceUAVBufferOut,
+		&UAVDesc, &m_instancesUAV)))
+	{
+		MessageBox(0, "Error creating instance UAV.", "Field", MB_OK);
+		return false;
+	}
+	//SRV Buffer
+	ZeroMemory(&instanceBufferDesc, sizeof(instanceBufferDesc));
+	instanceBufferDesc.Usage				= D3D11_USAGE_DYNAMIC;
+	instanceBufferDesc.ByteWidth			= m_maxInstanceCount * sizeof(field::Instance);
+	instanceBufferDesc.BindFlags			=	/*D3D11_BIND_UNORDERED_ACCESS |*/
+												D3D11_BIND_SHADER_RESOURCE;
+	instanceBufferDesc.CPUAccessFlags		= D3D11_CPU_ACCESS_WRITE;
+	instanceBufferDesc.StructureByteStride	= sizeof(field::Instance);
+	instanceBufferDesc.MiscFlags			= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+
+	ZeroMemory(&instanceData, sizeof(instanceData));
+	instanceData.pSysMem = m_instances;
+	if (FAILED(_device->CreateBuffer(&instanceBufferDesc, &instanceData,
+		&m_instanceSRVBufferIn)))
+	{
+		MessageBox(0, "Error creating instance SRV buffer.", "Field", MB_OK);
+		return false;
+	}
+
+	//SRV
+	D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc;
+	ZeroMemory(&SRVDesc, sizeof(SRVDesc));
+	SRVDesc.ViewDimension					= D3D11_SRV_DIMENSION_BUFFEREX;
+	SRVDesc.BufferEx.FirstElement			= 0;
+	SRVDesc.Format							= DXGI_FORMAT_UNKNOWN;
+	SRVDesc.BufferEx.NumElements			= m_maxInstanceCount;
+	if (FAILED(_device->CreateShaderResourceView(m_instanceSRVBufferIn,
+												&SRVDesc, &m_instanceSRV)))
+	{
+		MessageBox(0, "Error creating instance SRV.", "Field", MB_OK);
+		return false;
+	}
+
+
 	return loadBuffers(_device);
 }
 
@@ -388,7 +452,10 @@ void Field::unload()
 	RELEASE(m_instanceBuffer);
 	RELEASE(m_CB_geometry);
 	RELEASE(m_CB_viewproj);
-	
+	RELEASE(m_instancesUAV);
+	RELEASE(m_instanceUAVBufferOut);
+	RELEASE(m_instanceSRV);
+	RELEASE(m_instanceSRVBufferIn)
 	if (m_instances) delete m_instances;
 	/*Clean up octree*/
 	Octree::cleanup(m_octreeRoot);
@@ -411,6 +478,19 @@ void Field::draw(const DrawData& _data)
 
 	/*Draw octree*/
 	m_octreeDebugger.draw(_data.m_dc, s_viewproj, m_octreeRoot);
+
+	/*Apply wind force to visible grass*/
+	//Update the input buffer resource
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
+	HRESULT result = _data.m_dc->Map(m_instanceSRVBufferIn, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, m_instances, m_curInstanceCount * sizeof(field::Instance));
+	mappedResource.RowPitch = m_curInstanceCount * sizeof(field::Instance);
+	_data.m_dc->Unmap(m_instanceSRVBufferIn, 0);
+	assert(!FAILED(result));
+	//Dispatch the wind update
+	m_windManager->applyWindForces(m_instancesUAV, m_instanceSRV, _data.m_dc, m_curInstanceCount);
+
 
 	/*Draw field*/
 	unsigned int strides[2];
@@ -445,9 +525,9 @@ void Field::draw(const DrawData& _data)
 	_data.m_dc->UpdateSubresource(m_CB_light, 0, 0, &m_CBcpu_light, 0, 0);
 
 	//Update instance buffer
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	/*D3D11_MAPPED_SUBRESOURCE mappedResource;*/
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
-	HRESULT result = _data.m_dc->Map(m_instanceBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	/*HRESULT*/ result = _data.m_dc->Map(m_instanceBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, m_instances, m_curInstanceCount * sizeof(field::Instance));
 	_data.m_dc->Unmap(m_instanceBuffer, 0);
 	assert(!FAILED(result));

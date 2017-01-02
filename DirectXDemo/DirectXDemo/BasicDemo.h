@@ -3,6 +3,7 @@
 #include <vector>
 #include <DirectXMath.h>
 #include "Field.h"
+#include "WindManager.h"
 class GameObject;
 class ArcCamera;
 class SimpleGrass;
@@ -24,6 +25,7 @@ private:
 	std::vector<GameObject*> m_objects;
 	ArcCamera* m_cam;
 	Field m_field;
+	WindManager m_windManager;
 	float m_fps;
 	int m_numBlades;
 	int m_numDrawnBlades;

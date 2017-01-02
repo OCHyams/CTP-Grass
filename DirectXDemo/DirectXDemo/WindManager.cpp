@@ -23,6 +23,7 @@ void WindManager::updateResources(ID3D11DeviceContext* _dc)
 	mappedResource.RowPitch = m_spheres.size() * sizeof(WindSphere);
 	_dc->Unmap(m_sphereBuffer, 0);
 	assert(!FAILED(result));
+
 }
 
 bool WindManager::loadShared(ID3D11Device* _device)
@@ -35,7 +36,7 @@ bool WindManager::loadShared(ID3D11Device* _device)
 #endif
 
 	//VS SHADER
-	result = D3DCompileFromFile(L"Wind.cs", NULL, NULL, "main", "cs_5_0", shaderFlags, 0, &buffer, NULL);
+	result = D3DCompileFromFile(L"WindForce.hlsl", NULL, NULL, "main", "cs_5_0", shaderFlags, 0, &buffer, NULL);
 	if (FAILED(result))
 	{
 		RELEASE(buffer);
@@ -55,7 +56,7 @@ bool WindManager::loadShared(ID3D11Device* _device)
 
 void WindManager::unloadShared()
 {
-
+	RELEASE(s_cs);
 }
 
 bool WindManager::load(ID3D11Device* _device, int _maxRects, int _maxSpheres)
@@ -64,19 +65,17 @@ bool WindManager::load(ID3D11Device* _device, int _maxRects, int _maxSpheres)
 	//Cuboids
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
-	bufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
-	bufferDesc.ByteWidth = _maxRects * sizeof(WindCuboid);
-	bufferDesc.CPUAccessFlags = D3D11_USAGE_DYNAMIC;//@i put that there...
-	bufferDesc.StructureByteStride = sizeof(WindCuboid);
-	D3D11_SUBRESOURCE_DATA subresoure;
-	ZeroMemory(&subresoure, sizeof(subresoure));
-	subresoure.pSysMem = m_cuboids.data();
-	if (FAILED(_device->CreateBuffer(&bufferDesc, &subresoure, &m_cuboidBuffer))) return false;
+	bufferDesc.BindFlags			= /*D3D11_BIND_UNORDERED_ACCESS |*/ D3D11_BIND_SHADER_RESOURCE;
+	bufferDesc.ByteWidth			= _maxRects * sizeof(WindCuboid);
+	bufferDesc.CPUAccessFlags		= D3D11_CPU_ACCESS_WRITE;//@i put that there...
+	bufferDesc.Usage				= D3D11_USAGE_DYNAMIC;
+	bufferDesc.MiscFlags			= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	bufferDesc.StructureByteStride	= sizeof(WindCuboid);
+	if (FAILED(_device->CreateBuffer(&bufferDesc, NULL, &m_cuboidBuffer))) return false;
 	//Spheres
-	bufferDesc.ByteWidth = _maxSpheres * sizeof(WindSphere);
-	bufferDesc.StructureByteStride = sizeof(WindSphere);
-	subresoure.pSysMem = m_spheres.data();
-	if (FAILED(_device->CreateBuffer(&bufferDesc, &subresoure, &m_sphereBuffer))) return false;
+	bufferDesc.ByteWidth			= _maxSpheres * sizeof(WindSphere);
+	bufferDesc.StructureByteStride	= sizeof(WindSphere);
+	if (FAILED(_device->CreateBuffer(&bufferDesc, NULL, &m_sphereBuffer))) return false;
 
 	/*Create shader resource views*/
 	//Cuboids
@@ -84,15 +83,18 @@ bool WindManager::load(ID3D11Device* _device, int _maxRects, int _maxSpheres)
 	m_cuboidBuffer->GetDesc(&bufferDesc);
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 	ZeroMemory(&srvDesc, sizeof(srvDesc));
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
-	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-	srvDesc.BufferEx.FirstElement = 0;
-	srvDesc.BufferEx.NumElements = bufferDesc.ByteWidth / bufferDesc.StructureByteStride;
+	srvDesc.ViewDimension			= D3D11_SRV_DIMENSION_BUFFEREX;
+	srvDesc.Format					= DXGI_FORMAT_UNKNOWN;
+	srvDesc.BufferEx.FirstElement	= 0;
+	srvDesc.BufferEx.NumElements	= _maxRects;
 	if (FAILED(_device->CreateShaderResourceView(m_cuboidBuffer, &srvDesc, &m_cuboidSRV))) return false;
 	//Spheres
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
 	m_sphereBuffer->GetDesc(&bufferDesc);
-	srvDesc.BufferEx.NumElements = bufferDesc.ByteWidth / bufferDesc.StructureByteStride;
+	srvDesc.ViewDimension			= D3D11_SRV_DIMENSION_BUFFEREX;
+	srvDesc.Format					= DXGI_FORMAT_UNKNOWN;
+	srvDesc.BufferEx.FirstElement	= 0;
+	srvDesc.BufferEx.NumElements	= _maxSpheres;
 	if (FAILED(_device->CreateShaderResourceView(m_sphereBuffer, &srvDesc, &m_sphereSRV))) return false;
 
 	return true;
@@ -145,25 +147,27 @@ void WindManager::removeAll()
 	m_cuboids.shrink_to_fit();
 }
 
-void WindManager::applyWindForces(ID3D11UnorderedAccessView* _grass, ID3D11DeviceContext* _dc, int _numGroupsX)
+void WindManager::applyWindForces(ID3D11UnorderedAccessView* _outGrass, ID3D11ShaderResourceView* _inGrass, ID3D11DeviceContext* _dc, int _numInstances)
 {
-	ID3D11ShaderResourceView* views[2] =
+	ID3D11ShaderResourceView* views[3] =
 	{
 		m_cuboidSRV,
-		m_sphereSRV
+		m_sphereSRV,
+		_inGrass
 	};
 
 	/*Dispatch*/
 	_dc->CSSetShader(s_cs, NULL, 0);
-	_dc->CSSetShaderResources(0, 2, views);
-	_dc->CSGetUnorderedAccessViews(0, 1, &_grass);
-	_dc->Dispatch(_numGroupsX, 1, 1);
+	_dc->CSSetShaderResources(0, 3, views);
+	_dc->CSSetUnorderedAccessViews(0, 1, &_outGrass, nullptr);
+	_dc->Dispatch(ceil(_numInstances/ m_threadsPerGroupX), 1, 1);
 
 	views[0] = nullptr;
 	views[1] = nullptr;
 
 	/*Cleanup*/
 	_dc->CSSetShader(nullptr, NULL, 0);
-	_dc->CSSetShaderResources(0, 2, views);
-	_dc->CSGetUnorderedAccessViews(0, 1, nullptr);
+	_dc->CSSetShaderResources(0, 3, views);
+	ID3D11UnorderedAccessView* nullUAV[1] = { nullptr };
+	_dc->CSSetUnorderedAccessViews(0, 1, nullUAV, nullptr);
 }

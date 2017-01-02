@@ -8,7 +8,7 @@
 class WindManager
 {
 public:
-	const int m_threadsPerGroupX = 1024;
+	const int m_threadsPerGroupX = 768;
 
 	/////////////////////////////////////////////////
 	/// Should be called once per frame after all 
@@ -66,7 +66,7 @@ public:
 	/////////////////////////////////////////////////
 	void removeAll();
 
-	void applyWindForces(ID3D11UnorderedAccessView* _grass, ID3D11DeviceContext* _dc, int _numGroupsX);
+	void applyWindForces(ID3D11UnorderedAccessView* _outGrass, ID3D11ShaderResourceView* _inGrass, ID3D11DeviceContext* _dc, int _numInstances);
 
 	ID3D11ShaderResourceView* getRectSRV() { return m_cuboidSRV;  }
 	ID3D11ShaderResourceView* getSphereSRV() { return m_sphereSRV; }

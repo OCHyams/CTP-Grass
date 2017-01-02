@@ -9,12 +9,20 @@
 #include <vector>
 #include "OctreeDebugger.h"
 class ObjModel;
+class WindManager;
+
 /////////////////////////////////////////////////
 /// Field of grass 
 /////////////////////////////////////////////////
 class Field final
 {
 public:
+	/////////////////////////////////////////////////
+	/// This shouldn't be public *oops*@
+	/////////////////////////////////////////////////
+	WindManager* m_windManager;
+	
+
 	Field();
 	~Field();
 
@@ -96,13 +104,18 @@ private:
 	static
 	DirectX::XMFLOAT3		s_cameraPos;
 	/////////////////////////////////////////////////
+	/// Wind data for per-instance wind
+	/////////////////////////////////////////////////
+	ID3D11UnorderedAccessView*	m_instancesUAV;//@
+	ID3D11Buffer*				m_instanceUAVBufferOut;//@for now have this seperate but would like a way for instance data be shared between wind cs and field fx
+	ID3D11ShaderResourceView*	m_instanceSRV;
+	ID3D11Buffer*				m_instanceSRVBufferIn;
+	/////////////////////////////////////////////////
 	///	Field data
 	/////////////////////////////////////////////////
 	//rectangle dimentions of field
 	DirectX::XMFLOAT2		m_size;
 	DirectX::XMFLOAT3		m_pos;
-
-
 
 	void updateConstBuffers();
 

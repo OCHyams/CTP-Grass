@@ -38,11 +38,16 @@ bool BasicDemo::load()
 	m_windStr = 0.2;
 	m_fps = 0;
 
+	/*Load data shared by all wind managers (though there should only be one anyway)*/
+	WindManager::loadShared(m_d3dDevice);
+	CHECK_FAIL(m_windManager.load(m_d3dDevice, 5, 5));
+
 	/*Load data shared by all fields*/
 	Field::loadShared(m_d3dDevice);
 
 	/*Set up demo field*/
 	m_field.m_halfGrassWidth = 0.02f;
+	m_field.m_windManager = &m_windManager;
 
 	/*Load hills model for grass*/
 	ObjModel model;
@@ -65,6 +70,7 @@ bool BasicDemo::load()
 
 void BasicDemo::unload()
 {
+	WindManager::unloadShared();
 	Field::unloadShared();
 
 	for (auto obj : m_objects)
@@ -111,6 +117,9 @@ void BasicDemo::render()
 	m_d3dContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0xff);
 
 	DrawData data = { m_cam, m_d3dContext };
+
+	/*Update wind resources*/
+	m_windManager.updateResources(m_d3dContext);
 
 	using namespace DirectX;
 	m_field.draw(data);

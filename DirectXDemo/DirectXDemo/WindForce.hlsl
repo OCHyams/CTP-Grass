@@ -3,6 +3,7 @@ struct Instance
 	float4 rot;
 	float3 pos;
 	float3 wind;
+	float2 padding;
 };
 
 //@For now only deal with AABB wind volumes
@@ -28,9 +29,9 @@ cbuffer CBChangePerFrame
 	uint numCuboids;
 };
 
-StructuredBuffer<Instance>		inGrass		: register(t0);
-StructuredBuffer<WindCuboid>	inCuboids	: register(t1);
-StructuredBuffer<WindSphere>	inSpheres	: register(t2);
+StructuredBuffer<WindCuboid>	inCuboids	: register(t0);
+StructuredBuffer<WindSphere>	inSpheres	: register(t1);
+StructuredBuffer<Instance>		inGrass		: register(t2);
 RWStructuredBuffer<Instance>	outGrass	: register(u0);
 
 Instance applyCuboids(Instance input)
