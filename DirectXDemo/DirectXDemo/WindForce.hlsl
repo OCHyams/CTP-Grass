@@ -3,7 +3,7 @@ struct Instance
 	float4 rot;
 	float3 pos;
 	float3 wind;
-	float2 padding;
+	//float2 padding;
 };
 
 //@For now only deal with AABB wind volumes
@@ -25,63 +25,75 @@ struct WindSphere
 
 cbuffer CBChangePerFrame
 {
-	uint numSpheres;
 	uint numCuboids;
+	uint numSpheres;
+	uint numInstances;
 };
 
 StructuredBuffer<WindCuboid>	inCuboids	: register(t0);
 StructuredBuffer<WindSphere>	inSpheres	: register(t1);
-StructuredBuffer<Instance>		inGrass		: register(t2);
-RWStructuredBuffer<Instance>	outGrass	: register(u0);
+ByteAddressBuffer				inGrass		: register(t2);
+RWByteAddressBuffer				outGrass	: register(u0);
 
-Instance applyCuboids(Instance input)
+
+float3 windFromCuboids(float3 pos)
 {
+	float3 output = 0;
 	for (uint i = 0; i < numCuboids; ++i)
 	{
 		WindCuboid cuboid = inCuboids[i];
 		float3 min = cuboid.pos - cuboid.extents;
 		float3 max = cuboid.pos + cuboid.extents;
 
-		if ((input.pos.x >= min.x && input.pos.x <= max.x) &&
-			(input.pos.y >= min.y && input.pos.y <= max.y) &&
-			(input.pos.z >= min.z && input.pos.z <= max.z))
+		if ((pos.x >= min.x && pos.x <= max.x) &&
+			(pos.y >= min.y && pos.y <= max.y) &&
+			(pos.z >= min.z && pos.z <= max.z))
 		{
-			input.wind += cuboid.velocity;
+			output += cuboid.velocity;
 		}
 	}
 
-	return input;
+	return output;
 }
 
-Instance applySpheres(Instance input)
+float3 windFromSpheres(float3 pos)
 {
+	float3 output = 0;
 	for (uint i = 0; i < numSpheres; ++i)
 	{
 		WindSphere sphere = inSpheres[i];
-		float3 vec = input.pos - sphere.pos;
+		float3 vec = pos - sphere.pos;
 		float distance = length(vec);
 
 		if (distance <= sphere.radius)
 		{
 			vec = normalize(vec);
-			input.wind += (sphere.initalStrength - (pow(distance / sphere.radius, sphere.fallOffPow) * sphere.initalStrength)) * vec;
+			output += (sphere.initalStrength - (pow(distance / sphere.radius, sphere.fallOffPow) * sphere.initalStrength)) * vec;
 		}
 	}
 
-	return input;
+	return output;
 }
 
-[numthreads(768, 1, 1)]
+[numthreads(256, 1, 1)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
-	//Copy instance
-	Instance output = inGrass[DTid.x];
-	output.wind = 0;
+	//if (DTid.x > numInstances) return;//@Might not need this
+	uint address = DTid.x * 48;
+	float3 pos	= asfloat(inGrass.Load3(address + 16));
+	float3 windVec = windFromCuboids(pos) + windFromSpheres(pos);
+	
+	outGrass.Store4(address + 0, inGrass.Load4(address));
+	outGrass.Store3(address + 16, asuint(pos));
+	outGrass.Store3(address + 28, asuint(windVec));
+	outGrass.Store(address + 40, asuint(DTid.x));	//for debugging @ remove in release
+	outGrass.Store(address + 44, -1);				//for debugging @ remove in release
 
-	output = applyCuboids(output);
-	output = applySpheres(output);
 
-	outGrass[DTid.x] = output;
+	//float3 info = float3(inSpheres[0].radius, inSpheres[0].initalStrength, inSpheres[0].fallOffPow);
+	//outGrass.Store4(address + 0, uint4(DTid.x, DTid.y, DTid.z, -1));
+	//outGrass.Store3(address + 16, inSpheres[0].pos);
+	//outGrass.Store3(address + 28, asuint(info));
+	//outGrass.Store2(address + 40, uint2(-1, -1));//for debugging
+
 }
-
-

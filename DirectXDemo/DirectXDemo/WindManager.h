@@ -8,7 +8,7 @@
 class WindManager
 {
 public:
-	const int m_threadsPerGroupX = 768;
+	const int m_threadsPerGroupX = 256;
 
 	/////////////////////////////////////////////////
 	/// Should be called once per frame after all 
@@ -31,7 +31,7 @@ public:
 	/////////////////////////////////////////////////
 	/// Call once to initalise resources.
 	/////////////////////////////////////////////////
-	bool load(ID3D11Device*, int _maxRects, int _maxSpheres);
+	bool load(ID3D11Device*, int _maxCuboids, int _maxSpheres);
 
 	/////////////////////////////////////////////////
 	/// Called in destructor but can be called 
@@ -43,13 +43,13 @@ public:
 	/// No memory management required. Returns nullptr //@This sort of stuff should get hidden behind some user interface classes
 	/// if there are already too many WindRects.
 	/////////////////////////////////////////////////
-	WindCuboid* CreateWindCuboid();
+	WindCuboid* createWindCuboid();
 
 	/////////////////////////////////////////////////
 	/// No memory management required. Returns nullptr
 	/// if there are already too many WindSpheres.
 	/////////////////////////////////////////////////
-	WindSphere* CreateWindSphere();
+	WindSphere* createWindSphere();
 
 	/////////////////////////////////////////////////
 	/// Remove a specific wind zone.
@@ -83,6 +83,6 @@ private:
 	ID3D11Buffer*				m_sphereBuffer;
 	ID3D11ShaderResourceView*	m_cuboidSRV;
 	ID3D11ShaderResourceView*	m_sphereSRV;
-
+	ID3D11Buffer*				m_CB_changesPerFrame;
 	static ID3D11ComputeShader*	s_cs;
 };

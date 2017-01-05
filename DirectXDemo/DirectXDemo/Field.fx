@@ -92,16 +92,16 @@ inline float4 trianglef(float4 x)
 {
 	return abs(frac(x + 0.5) * 2.0 - 1.0);
 }
-inline float4 windForce(float3 p, float3 wind)
+inline float4 windForce(float3 p, float3 windVec)
 {
 	// Compute the phase shift for the position p with respect to
 	// the current wind strength and direction
-	float phase = (time * length(wind)) + dot(wind, p);
+	float phase = (time * length(windVec)) + dot(windVec, p);
 	// Compute the four translation strengths.
 	float4 ts = smoothf(trianglef(translationFrequency * phase));
 	// Compute the mean of the four values and
 	// return the translation vector.
-	return float4(wind * dot(ts, 0.25), 0.0f);
+	return float4(windVec * dot(ts, 0.25), 0.0f);
 }
 
 //http://donw.io/post/dual-quaternion-skinning/
@@ -143,7 +143,7 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	output.cpoint = float4(quatRotateVector(vertex.rotation, vertex.pos), 1.0f);//@new
 
 	/*Wind displacement*/ //[Orthomans technique]
-	output.cpoint += (windForce(vertex.location, wind) * vertex.flexibility);
+	output.cpoint += (windForce(vertex.location, vertex.wind) * vertex.flexibility);
 
 	/*Rotation of vectors under wind force*/ //-@->NOT WORKING ATM
 	float4 rot = quatFromTwoVec(vertex.pos, output.cpoint);

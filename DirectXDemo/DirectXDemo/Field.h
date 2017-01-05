@@ -34,10 +34,10 @@ public:
 	/// unload the grass shader
 	/////////////////////////////////////////////////
 	static void unloadShared();
-
+	//Don't use this anymore
 	bool load(ID3D11Device*, int _instanceCount, DirectX::XMFLOAT2 _size, DirectX::XMFLOAT3	_pos);
-	/*Model is only used during set-up*/
-	bool load(ID3D11Device*, ObjModel*, float density, DirectX::XMFLOAT3 _pos);
+	/*Model is only used during set-up*/ //@_minOctreeNodeSize should get calculated from collision data
+	bool load(ID3D11Device*, ObjModel*, float density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize);
 
 	void unload();
 
@@ -107,7 +107,7 @@ private:
 	/// Wind data for per-instance wind
 	/////////////////////////////////////////////////
 	ID3D11UnorderedAccessView*	m_instancesUAV;//@
-	ID3D11Buffer*				m_instanceUAVBufferOut;//@for now have this seperate but would like a way for instance data be shared between wind cs and field fx
+	ID3D11Buffer*				m_instanceUAVBufferOut;
 	ID3D11ShaderResourceView*	m_instanceSRV;
 	ID3D11Buffer*				m_instanceSRVBufferIn;
 	/////////////////////////////////////////////////

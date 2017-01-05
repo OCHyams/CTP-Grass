@@ -7,6 +7,8 @@
 #include "Field.h"
 #include "AntTweakBar.h"
 #include "objLoader.h"
+#include "WindCuboid.h"
+#include "WindSphere.h"
 /*Make large INTs easier to read in code*/
 #define NUM(x0) x0
 #define NUM(x0, x1) x0 ## x1
@@ -40,10 +42,17 @@ bool BasicDemo::load()
 
 	/*Load data shared by all wind managers (though there should only be one anyway)*/
 	WindManager::loadShared(m_d3dDevice);
-	CHECK_FAIL(m_windManager.load(m_d3dDevice, 5, 5));
+	CHECK_FAIL(m_windManager.load(m_d3dDevice, 1, 1));
+
+	/*Create a static wind volume, no need to keep track of mem, system does that*/
+	WindSphere* windSphere = m_windManager.createWindSphere();
+	windSphere->m_fallOffPow = 2;
+	windSphere->m_initalStrength = 0.4;
+	windSphere->m_position = { 0,0,0 };
+	windSphere->m_radius = 1.5;
 
 	/*Load data shared by all fields*/
-	Field::loadShared(m_d3dDevice);
+	CHECK_FAIL(Field::loadShared(m_d3dDevice));
 
 	/*Set up demo field*/
 	m_field.m_halfGrassWidth = 0.02f;
@@ -52,12 +61,11 @@ bool BasicDemo::load()
 	/*Load hills model for grass*/
 	ObjModel model;
 	CHECK_FAIL(model.LoadOBJ("../Resources/box.obj"));
-	m_field.load(m_d3dDevice, &model, NUM(1,000), XMFLOAT3(0, 0, 0));
+	CHECK_FAIL(m_field.load(m_d3dDevice, &model, NUM(1,000), XMFLOAT3(0, 0, 0), {0.2f, 0.2f, 0.2f}));
 	m_numBlades = m_field.getMaxNumBlades();
 	/*Only needed the hill model to place the grass (FOR NOW ANYWAY)*/
 	model.Release();
-	//@Original load function
-	//m_field.load(m_d3dDevice, NUM(500,000), { 50, 50 }, {-25,0,-25});
+
 
 	m_cam = new ArcCamera({ 0.f, 0.f, 0.f });//0, .5, 3
 	//m_cam->setPos({ 0.0f, 1.f, -3.f });
@@ -72,6 +80,8 @@ void BasicDemo::unload()
 {
 	WindManager::unloadShared();
 	Field::unloadShared();
+	m_field.unload();
+	m_windManager.unload();
 
 	for (auto obj : m_objects)
 	{

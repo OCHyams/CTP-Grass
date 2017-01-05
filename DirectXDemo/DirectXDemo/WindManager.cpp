@@ -2,6 +2,7 @@
 #include "Shorthand.h"
 #include <algorithm>
 #include <d3dcompiler.h>
+#include "ConstantBuffers.h"
 ID3D11ComputeShader* WindManager::s_cs = nullptr;
 
 void WindManager::updateResources(ID3D11DeviceContext* _dc)
@@ -12,7 +13,6 @@ void WindManager::updateResources(ID3D11DeviceContext* _dc)
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 	HRESULT result = _dc->Map(m_cuboidBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, m_cuboids.data(), m_cuboids.size() * sizeof(WindCuboid));
-	mappedResource.RowPitch = m_cuboids.size() * sizeof(WindCuboid);
 	_dc->Unmap(m_cuboidBuffer, 0);
 	assert(!FAILED(result));
 
@@ -20,9 +20,9 @@ void WindManager::updateResources(ID3D11DeviceContext* _dc)
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 	result = _dc->Map(m_sphereBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, m_spheres.data(), m_spheres.size() * sizeof(WindSphere));
-	mappedResource.RowPitch = m_spheres.size() * sizeof(WindSphere);
 	_dc->Unmap(m_sphereBuffer, 0);
 	assert(!FAILED(result));
+
 
 }
 
@@ -59,15 +59,19 @@ void WindManager::unloadShared()
 	RELEASE(s_cs);
 }
 
-bool WindManager::load(ID3D11Device* _device, int _maxRects, int _maxSpheres)
+bool WindManager::load(ID3D11Device* _device, int _maxCuboids, int _maxSpheres)
 {
+	/*Set members*/
+	m_maxSpheres = _maxSpheres;
+	m_maxCuboids = _maxCuboids;
+
 	/*Create buffers*/
 	//Cuboids
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
-	bufferDesc.BindFlags			= /*D3D11_BIND_UNORDERED_ACCESS |*/ D3D11_BIND_SHADER_RESOURCE;
-	bufferDesc.ByteWidth			= _maxRects * sizeof(WindCuboid);
-	bufferDesc.CPUAccessFlags		= D3D11_CPU_ACCESS_WRITE;//@i put that there...
+	bufferDesc.BindFlags			= D3D11_BIND_SHADER_RESOURCE;
+	bufferDesc.ByteWidth			= _maxCuboids * sizeof(WindCuboid);
+	bufferDesc.CPUAccessFlags		= D3D11_CPU_ACCESS_WRITE;
 	bufferDesc.Usage				= D3D11_USAGE_DYNAMIC;
 	bufferDesc.MiscFlags			= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	bufferDesc.StructureByteStride	= sizeof(WindCuboid);
@@ -86,7 +90,7 @@ bool WindManager::load(ID3D11Device* _device, int _maxRects, int _maxSpheres)
 	srvDesc.ViewDimension			= D3D11_SRV_DIMENSION_BUFFEREX;
 	srvDesc.Format					= DXGI_FORMAT_UNKNOWN;
 	srvDesc.BufferEx.FirstElement	= 0;
-	srvDesc.BufferEx.NumElements	= _maxRects;
+	srvDesc.BufferEx.NumElements	= _maxCuboids;
 	if (FAILED(_device->CreateShaderResourceView(m_cuboidBuffer, &srvDesc, &m_cuboidSRV))) return false;
 	//Spheres
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
@@ -97,6 +101,19 @@ bool WindManager::load(ID3D11Device* _device, int _maxRects, int _maxSpheres)
 	srvDesc.BufferEx.NumElements	= _maxSpheres;
 	if (FAILED(_device->CreateShaderResourceView(m_sphereBuffer, &srvDesc, &m_sphereSRV))) return false;
 
+	/*Create constant buffer*/
+	HRESULT result;
+	D3D11_BUFFER_DESC bufferdesc;
+	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
+	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferdesc.ByteWidth = sizeof(CBWindForceChangesPerFrame);
+	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bufferdesc.CPUAccessFlags = 0;
+	bufferdesc.MiscFlags = 0;
+	bufferdesc.StructureByteStride = 0;
+	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_changesPerFrame);
+	if (FAILED(result)) return false;
+
 	return true;
 }
 
@@ -104,11 +121,12 @@ void WindManager::unload()
 {
 	RELEASE(m_cuboidBuffer);
 	RELEASE(m_sphereBuffer);
+	RELEASE(m_CB_changesPerFrame);
 	RELEASE(m_cuboidSRV);
 	RELEASE(m_sphereSRV);
 }
 
-WindCuboid* WindManager::CreateWindCuboid()
+WindCuboid* WindManager::createWindCuboid()
 {
 	if (m_cuboids.size() < m_maxCuboids)
 	{
@@ -118,7 +136,7 @@ WindCuboid* WindManager::CreateWindCuboid()
 	return nullptr;
 }
 
-WindSphere* WindManager::CreateWindSphere()
+WindSphere* WindManager::createWindSphere()
 {
 	if (m_spheres.size() < m_maxCuboids)
 	{
@@ -149,6 +167,10 @@ void WindManager::removeAll()
 
 void WindManager::applyWindForces(ID3D11UnorderedAccessView* _outGrass, ID3D11ShaderResourceView* _inGrass, ID3D11DeviceContext* _dc, int _numInstances)
 {
+	//moved this here from update resources for testing
+	CBWindForceChangesPerFrame cb = { m_cuboids.size(), m_spheres.size(), _numInstances };
+	_dc->UpdateSubresource(m_CB_changesPerFrame, 0, 0, &cb, 0, 0);
+
 	ID3D11ShaderResourceView* views[3] =
 	{
 		m_cuboidSRV,
@@ -160,14 +182,14 @@ void WindManager::applyWindForces(ID3D11UnorderedAccessView* _outGrass, ID3D11Sh
 	_dc->CSSetShader(s_cs, NULL, 0);
 	_dc->CSSetShaderResources(0, 3, views);
 	_dc->CSSetUnorderedAccessViews(0, 1, &_outGrass, nullptr);
-	_dc->Dispatch(ceil(_numInstances/ m_threadsPerGroupX), 1, 1);
-
-	views[0] = nullptr;
-	views[1] = nullptr;
+	_dc->CSSetConstantBuffers(0, 1, &m_CB_changesPerFrame);
+	_dc->Dispatch(ceil((float)_numInstances/ (float)m_threadsPerGroupX), 1, 1);
 
 	/*Cleanup*/
+	views[0] = nullptr;
+	views[1] = nullptr;
+	ID3D11UnorderedAccessView* nullUAV[1] = { nullptr };
 	_dc->CSSetShader(nullptr, NULL, 0);
 	_dc->CSSetShaderResources(0, 3, views);
-	ID3D11UnorderedAccessView* nullUAV[1] = { nullptr };
 	_dc->CSSetUnorderedAccessViews(0, 1, nullUAV, nullptr);
 }

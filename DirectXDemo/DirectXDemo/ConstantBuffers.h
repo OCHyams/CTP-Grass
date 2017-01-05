@@ -56,3 +56,11 @@ struct CBLight
 	float cam_y;
 	float cam_z;
 };
+
+__declspec(align(16))
+struct CBWindForceChangesPerFrame
+{
+	unsigned int numCuboids;
+	unsigned int numSpheres;
+	unsigned int numInstances;
+};
