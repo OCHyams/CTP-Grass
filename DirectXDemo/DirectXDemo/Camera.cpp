@@ -38,7 +38,7 @@ void ArcCamera::update()
 	using namespace DirectX;
 	using TIME = OCH::ServiceLocator<Time>;
 	using INPUT = OCH::ServiceLocator<Input>;
-	float speed = 0.3 * TIME::get()->deltaTime;
+	float speed = 0.8 * TIME::get()->deltaTime;
 
 	XMFLOAT3 euler = m_rot;
 

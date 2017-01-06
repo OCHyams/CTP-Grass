@@ -18,6 +18,11 @@ class Field final
 {
 public:
 	/////////////////////////////////////////////////
+	/// Should draw the Octree?
+	/////////////////////////////////////////////////
+	bool drawOctree = true;
+
+	/////////////////////////////////////////////////
 	/// This shouldn't be public *oops*@
 	/////////////////////////////////////////////////
 	WindManager* m_windManager;
@@ -37,7 +42,7 @@ public:
 	//Don't use this anymore
 	bool load(ID3D11Device*, int _instanceCount, DirectX::XMFLOAT2 _size, DirectX::XMFLOAT3	_pos);
 	/*Model is only used during set-up*/ //@_minOctreeNodeSize should get calculated from collision data
-	bool load(ID3D11Device*, ObjModel*, float density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize);
+	bool load(ID3D11Device*, ObjModel*, float density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize/*, const DirectX::XMMATRIX& _transform*/);
 
 	void unload();
 

@@ -22,15 +22,27 @@ BasicDemo::~BasicDemo()
 
 #define CHECK_FAIL(x) if (!x) return false
 bool BasicDemo::load()
-{
+{	
+	/*Load data shared by all wind managers (though there should only be one anyway)*/
+	WindManager::loadShared(m_d3dDevice);
+	CHECK_FAIL(m_windManager.load(m_d3dDevice, 1, 1));
+	/*Create a static wind volume, no need to keep track of mem, system does that*/
+	WindSphere* windSphere = m_windManager.createWindSphere();
+	windSphere->m_fallOffPow = 2;
+	windSphere->m_initalStrength = 0.4;
+	windSphere->m_position = { 0,0,0 };
+	windSphere->m_radius = 1.5;
+
 	//Tweak bar
-	TwBar* GUI = TwNewBar("Wind");
+	TwBar* GUI = TwNewBar("Settings");
 	TwDefine(" Wind position='10 10' ");
 	TwDefine(" Wind size='100 200' ");
 	TwDefine(" Wind movable= false ");
 	TwDefine(" Wind resizable= true ");
-	TwAddVarRW(GUI, "str", TwType::TW_TYPE_FLOAT, &m_windStr, "step = 0.05");
-	TwAddVarRW(GUI, "dir", TwType::TW_TYPE_DIR3F, &m_wind, "opened = true axisz = -z showval = false");
+	TwAddVarRW(GUI, "str", TwType::TW_TYPE_FLOAT, &windSphere->m_initalStrength, "step = 0.05");
+	TwAddVarRW(GUI, "rad", TwType::TW_TYPE_FLOAT, &windSphere->m_radius, "step = 0.05");
+	TwAddVarRW(GUI, "pow", TwType::TW_TYPE_FLOAT, &windSphere->m_fallOffPow, "step = 0.05");
+	TwAddVarRW(GUI, "draw octree", TwType::TW_TYPE_BOOL32, &m_field.drawOctree, "");
 	TwAddVarRO(GUI, "FPS", TwType::TW_TYPE_FLOAT, &m_fps, "");
 	TwAddVarRO(GUI, "Total Blade count", TwType::TW_TYPE_INT32, &m_numBlades, "");
 	TwAddVarRO(GUI, "Blades Drawn", TwType::TW_TYPE_INT32, &m_numDrawnBlades, "");
@@ -39,17 +51,6 @@ bool BasicDemo::load()
 	m_wind = { 0.f, 0.0f, 1.0f };
 	m_windStr = 0.2;
 	m_fps = 0;
-
-	/*Load data shared by all wind managers (though there should only be one anyway)*/
-	WindManager::loadShared(m_d3dDevice);
-	CHECK_FAIL(m_windManager.load(m_d3dDevice, 1, 1));
-
-	/*Create a static wind volume, no need to keep track of mem, system does that*/
-	WindSphere* windSphere = m_windManager.createWindSphere();
-	windSphere->m_fallOffPow = 2;
-	windSphere->m_initalStrength = 0.4;
-	windSphere->m_position = { 0,0,0 };
-	windSphere->m_radius = 1.5;
 
 	/*Load data shared by all fields*/
 	CHECK_FAIL(Field::loadShared(m_d3dDevice));
@@ -60,8 +61,9 @@ bool BasicDemo::load()
 
 	/*Load hills model for grass*/
 	ObjModel model;
-	CHECK_FAIL(model.LoadOBJ("../Resources/box.obj"));
-	CHECK_FAIL(m_field.load(m_d3dDevice, &model, NUM(10,000), XMFLOAT3(0, 0, 0), {0.2f, 0.2f, 0.2f}));
+	XMMATRIX transform = XMMatrixScalingFromVector(VEC3(1, 0, 1));
+	CHECK_FAIL(model.LoadOBJ("../Resources/plane.txt"));
+	CHECK_FAIL(m_field.load(m_d3dDevice, &model, NUM(1,000), XMFLOAT3(0, 0, 0), {0.2f, 0.2f, 0.2f}/*, transform*/));
 	m_numBlades = m_field.getMaxNumBlades();
 	/*Only needed the hill model to place the grass (FOR NOW ANYWAY)*/
 	model.Release();

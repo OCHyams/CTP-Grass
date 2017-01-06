@@ -299,7 +299,7 @@ bool Field::load(	ID3D11Device*		_device,
 	return loadBuffers(_device);
 }
 
-bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize)
+bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize/*, const DirectX::XMMATRIX& _transform*/)
 {
 	m_pos = _pos;
 
@@ -320,12 +320,19 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	m_maxInstanceCount = 0;//@
 
 	/*For every triangle...*/
-	for (int i = 0; i < numVerts; i +=3)
+	for (int i = 0; i < numVerts; i += 3)
 	{
 		/*Get vert positions*/
 		XMFLOAT3 triVerts[3];
-		memcpy(triVerts, vertElementPtr, sizeof(float)*9);
+		memcpy(triVerts, vertElementPtr, sizeof(float) * 9);
 		vertElementPtr += 9;
+		///*Transform verts*/
+		//for (int i = 0; i < 3; ++i)
+		//{
+		//	XMVECTOR transformedVert = XMVector3Transform(LF3(&triVerts[i]), _transform);
+		//	XMStoreFloat3(&triVerts[i], transformedVert);
+		//}
+
 		XMFLOAT3 triNorms[3];
 		/*Get vert normals*/
 		if (normElementPtr)
@@ -333,6 +340,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 			memcpy(triNorms, normElementPtr, sizeof(float) * 9);
 			normElementPtr += 9;
 		}
+
 		/*Store vert positions & calc surface area*/
 		Triangle triangle = Triangle(triVerts, triNorms);
 		/*Calc number of blades*/
@@ -440,38 +448,6 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		return false;
 	}
 
-	//////SRV Buffer@@ not really working
-	////ZeroMemory(&instanceBufferDesc, sizeof(instanceBufferDesc));
-	////instanceBufferDesc.Usage				= D3D11_USAGE_DYNAMIC;
-	////instanceBufferDesc.ByteWidth			= m_maxInstanceCount * sizeof(field::Instance);
-	////instanceBufferDesc.BindFlags			=	/*D3D11_BIND_UNORDERED_ACCESS |*/
-	////											D3D11_BIND_SHADER_RESOURCE;
-	////instanceBufferDesc.CPUAccessFlags		= D3D11_CPU_ACCESS_WRITE;
-	////instanceBufferDesc.StructureByteStride	= sizeof(field::Instance);
-	////instanceBufferDesc.MiscFlags			= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-	////if (FAILED(_device->CreateBuffer(	&instanceBufferDesc, NULL,
-	////									&m_instanceSRVBufferIn)))
-	////{
-	////	MessageBox(0, "Error creating instance SRV buffer.", "Field", MB_OK);
-	////	return false;
-	////}
-
-	//////SRV
-	////D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc;
-	////ZeroMemory(&SRVDesc, sizeof(SRVDesc));
-	////SRVDesc.ViewDimension					= D3D11_SRV_DIMENSION_BUFFEREX;
-	////SRVDesc.Format							= DXGI_FORMAT_UNKNOWN;
-	////SRVDesc.BufferEx.Flags					= 0;
-	////SRVDesc.BufferEx.FirstElement			= 0;
-	////SRVDesc.BufferEx.NumElements			= m_maxInstanceCount;
-	////if (FAILED(_device->CreateShaderResourceView(	m_instanceSRVBufferIn,
-	////												&SRVDesc, &m_instanceSRV)))
-	////{
-	////	MessageBox(0, "Error creating instance SRV.", "Field", MB_OK);
-	////	return false;
-	////}
-
-
 	return loadBuffers(_device);
 }
 
@@ -505,7 +481,7 @@ void Field::draw(const DrawData& _data)
 	Octree::frustumCull(m_octreeRoot, frustum, m_instances, m_maxInstanceCount, m_curInstanceCount);
 
 	/*Draw octree*/
-	m_octreeDebugger.draw(_data.m_dc, s_viewproj, m_octreeRoot);
+	if (drawOctree) m_octreeDebugger.draw(_data.m_dc, s_viewproj, m_octreeRoot);
 
 	/*Apply wind force to visible grass*/ //@For sure the problem is here...
 	//Update the input buffer resource
