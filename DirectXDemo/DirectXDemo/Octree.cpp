@@ -116,14 +116,15 @@ void Octree::prune(Node* _root)
 	if (_root == nullptr) return;
 
 	std::stack<Node*> tree;
-	tree.push(_root);
 
 	bool complete = false;
 
 	/*Iterate until comepletly pruned*/
 	while (!complete)
 	{
+		tree.push(_root);
 		complete = true;
+
 		/*Depth first traversal of nodes*/
 		while (!tree.empty())
 		{
