@@ -116,7 +116,6 @@ void Octree::prune(Node* _root)
 	if (_root == nullptr) return;
 
 	std::stack<Node*> tree;
-
 	bool complete = false;
 
 	/*Iterate until comepletly pruned*/

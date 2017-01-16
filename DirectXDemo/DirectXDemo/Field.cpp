@@ -317,7 +317,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	float* vertElementPtr = _model->GetVertices();
 	float* normElementPtr = _model->GetNormals();
 	int numVerts = _model->GetTotalVerts();
-	m_maxInstanceCount = 0;//@
+	m_maxInstanceCount = 0;
 
 	/*For every triangle...*/
 	for (int i = 0; i < numVerts; i += 3)
@@ -326,12 +326,13 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		XMFLOAT3 triVerts[3];
 		memcpy(triVerts, vertElementPtr, sizeof(float) * 9);
 		vertElementPtr += 9;
-		///*Transform verts*/
-		//for (int i = 0; i < 3; ++i)
-		//{
-		//	XMVECTOR transformedVert = XMVector3Transform(LF3(&triVerts[i]), _transform);
-		//	XMStoreFloat3(&triVerts[i], transformedVert);
-		//}
+		/*Transform verts*///@For now just translate
+		for (int i = 0; i < 3; ++i)
+		{
+			//XMVECTOR transformedVert = XMVector3Transform(LF3(&triVerts[i]), _transform);
+			//XMStoreFloat3(&triVerts[i], transformedVert);
+			XMStoreFloat3(&triVerts[i], LF3(&m_pos) + LF3(&triVerts[i]));
+		}
 
 		XMFLOAT3 triNorms[3];
 		/*Get vert normals*/
@@ -728,6 +729,11 @@ void Field::addPatch(/*std::vector<field::Instance>& _field, */const Triangle& _
 	auto rand = std::bind(distribution, generator);
 	auto randAngle = std::bind(angleDistribution, generator);
 
+
+	XMVECTOR a = LF3(&_tri.m_verts[0]);
+	XMVECTOR b = LF3(&_tri.m_verts[1]);
+	XMVECTOR c = LF3(&_tri.m_verts[2]);
+
 	//Use barycentric coordinates [Orthmann] to place grass
 	for (int i = 0; i < _numBlades; ++i)
 	{
@@ -737,17 +743,14 @@ void Field::addPatch(/*std::vector<field::Instance>& _field, */const Triangle& _
 		float u = rand();
 		float v = rand();
 
-		XMVECTOR a = DirectX::XMLoadFloat3(&_tri.m_verts[0]);
-		XMVECTOR b = DirectX::XMLoadFloat3(&_tri.m_verts[1]);
-		XMVECTOR c = DirectX::XMLoadFloat3(&_tri.m_verts[2]);
+		//http://cgg.mff.cuni.cz/~jaroslav/papers/2013-meshsampling/2013-meshsampling-paper.pdf
+		//https://classes.soe.ucsc.edu/cmps160/Fall10/resources/barycentricInterpolation.pdf
+		//http://math.stackexchange.com/questions/18686/uniform-random-point-in-triangle
+		//http://chrischoy.github.io/research/barycentric-coordinate-for-mesh-sampling/ ///@Doesn't work :C:C: rechecking orthamnn stuff...
+		XMVECTOR translation =	(1 - sqrt(u)) * a +
+								sqrt(u) * (1 - v) * b +
+								sqrt(u) * v * c;
 
-		//http://chrischoy.github.io/research/barycentric-coordinate-for-mesh-sampling/
-		XMVECTOR translation =	( 1- sqrt ( u ) ) * a +
-								sqrt( u ) * ( 1 - v ) * b + 
-								sqrt( u ) * v * c;
-
-		a = XMLoadFloat3(&m_pos);
-		translation += a;
 
 		/*Rotation*/
 		float angle = randAngle();
