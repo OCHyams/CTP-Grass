@@ -554,7 +554,6 @@ void Field::draw(const DrawData& _data)
 	_data.m_dc->PSSetSamplers(0, 1, &s_samplerState);
 	//texture
 	_data.m_dc->PSSetShaderResources(0, 1, &s_texture);
-
 	_data.m_dc->DrawInstanced(4, m_curInstanceCount, 0, 0);
 	
 	/*Cleanup*/
@@ -729,7 +728,6 @@ void Field::addPatch(/*std::vector<field::Instance>& _field, */const Triangle& _
 	auto rand = std::bind(distribution, generator);
 	auto randAngle = std::bind(angleDistribution, generator);
 
-
 	XMVECTOR a = LF3(&_tri.m_verts[0]);
 	XMVECTOR b = LF3(&_tri.m_verts[1]);
 	XMVECTOR c = LF3(&_tri.m_verts[2]);
@@ -746,11 +744,10 @@ void Field::addPatch(/*std::vector<field::Instance>& _field, */const Triangle& _
 		//http://cgg.mff.cuni.cz/~jaroslav/papers/2013-meshsampling/2013-meshsampling-paper.pdf
 		//https://classes.soe.ucsc.edu/cmps160/Fall10/resources/barycentricInterpolation.pdf
 		//http://math.stackexchange.com/questions/18686/uniform-random-point-in-triangle
-		//http://chrischoy.github.io/research/barycentric-coordinate-for-mesh-sampling/ ///@Doesn't work :C:C: rechecking orthamnn stuff...
+		//http://chrischoy.github.io/research/barycentric-coordinate-for-mesh-sampling/ 
 		XMVECTOR translation =	(1 - sqrt(u)) * a +
 								sqrt(u) * (1 - v) * b +
 								sqrt(u) * v * c;
-
 
 		/*Rotation*/
 		float angle = randAngle();
@@ -761,6 +758,7 @@ void Field::addPatch(/*std::vector<field::Instance>& _field, */const Triangle& _
 		/*Translation*/
 		XMStoreFloat3(&instance.location, translation);
 		instance.wind = { 0 ,0, 0 };
+
 		///*World*/
 		//XMMATRIX world = DirectX::XMMatrixRotationY(angle);
 		//world = XMMatrixMultiply(world, XMMatrixTranslationFromVector(translation));
