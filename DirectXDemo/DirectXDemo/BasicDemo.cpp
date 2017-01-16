@@ -35,10 +35,10 @@ bool BasicDemo::load()
 
 	//Tweak bar
 	TwBar* GUI = TwNewBar("Settings");
-	TwDefine(" Wind position='10 10' ");
-	TwDefine(" Wind size='100 200' ");
-	TwDefine(" Wind movable= false ");
-	TwDefine(" Wind resizable= true ");
+	TwDefine(" Settings position='10 10' ");
+	TwDefine(" Settings size='100 200' ");
+	TwDefine(" Settings movable= false ");
+	TwDefine(" Settings resizable= true ");
 	TwAddVarRW(GUI, "str", TwType::TW_TYPE_FLOAT, &windSphere->m_initalStrength, "step = 0.05");
 	TwAddVarRW(GUI, "rad", TwType::TW_TYPE_FLOAT, &windSphere->m_radius, "step = 0.05");
 	TwAddVarRW(GUI, "pow", TwType::TW_TYPE_FLOAT, &windSphere->m_fallOffPow, "step = 0.05");
@@ -48,8 +48,6 @@ bool BasicDemo::load()
 	TwAddVarRO(GUI, "Blades Drawn", TwType::TW_TYPE_INT32, &m_numDrawnBlades, "");
 
 	using namespace DirectX;
-	m_wind = { 0.f, 0.0f, 1.0f };
-	m_windStr = 0.2;
 	m_fps = 0;
 
 	/*Load data shared by all fields*/
@@ -62,8 +60,8 @@ bool BasicDemo::load()
 	/*Load hills model for grass*/
 	ObjModel model;
 	XMMATRIX transform = XMMatrixScalingFromVector(VEC3(1, 0, 1));
-	CHECK_FAIL(model.LoadOBJ("../Resources/plane.txt"));
-	CHECK_FAIL(m_field.load(m_d3dDevice, &model, NUM(1,000), XMFLOAT3(0, 0, 0), {0.2f, 0.2f, 0.2f}/*, transform*/));
+	CHECK_FAIL(model.LoadOBJ("../Resources/Box.obj"));
+	CHECK_FAIL(m_field.load(m_d3dDevice, &model, NUM(100), XMFLOAT3(0, 0, 0), {0.2f, 0.1f, 0.2f}/*, transform*/));
 	m_numBlades = m_field.getMaxNumBlades();
 	/*Only needed the hill model to place the grass (FOR NOW ANYWAY)*/
 	model.Release();
@@ -97,12 +95,6 @@ void BasicDemo::unload()
 void BasicDemo::update()
 {
 	DX11Demo::update();
-	
-	using namespace DirectX;
-	XMVECTOR windv = XMVectorScale(XMVector3Normalize(XMLoadFloat3(&m_wind)), m_windStr);
-	XMFLOAT3 windf3;
-	DirectX::XMStoreFloat3(&windf3, windv);
-	m_field.setWind(windf3);
 
 	for (auto obj : m_objects)
 	{

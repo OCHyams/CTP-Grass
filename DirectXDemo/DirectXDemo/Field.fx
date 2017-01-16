@@ -1,8 +1,7 @@
 //CONSTANT BUFFERS-----------------------------------------------------------------
 
 cbuffer CONSTS : register(b0)
-{
-	float3	wind;		
+{	
 	float	halfGrassWidth; //this should be in another buffer that never needs to be updated....
 	float	time;
 	float	minTessDensity;//this should be in another buffer that never needs to be updated....

@@ -63,4 +63,6 @@ namespace Octree
 	///	into a buffer. @If there is time etc, implement this as a compute shader
 	/////////////////////////////////////////////////
 	void frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, field::Instance* _buffer, int _bufferSize, int& _numInstances);
+
+	void noCull(Node* _root, field::Instance* _buffer, int _bufferSize, int& _numInstances);
 }

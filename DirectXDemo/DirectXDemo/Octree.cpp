@@ -6,7 +6,7 @@
 #include <stack>
 #include "Shorthand.h"
 
-Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position, const DirectX::XMFLOAT3 & _minSize, float _minGrassLength)
+Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position, const DirectX::XMFLOAT3& _minSize, float _minGrassLength)
 {
 	using namespace DirectX;
 
@@ -246,4 +246,42 @@ void Octree::frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, 
 			}
 		}
 	}
+}
+
+void Octree::noCull(Node * _root, field::Instance * _buffer, int _bufferSize, int & _numInstances)
+{/*Early out if _root ptr is null*/
+	if (_root == nullptr) return;
+
+	std::stack<Node*> tree;
+	tree.push(_root);
+
+	_numInstances = 0;
+
+	/*Depth first traversal of nodes*/
+	while (tree.size())
+	{
+		//Pop top node
+		Node* current = tree.top();
+		tree.pop();
+
+
+		//If this is a leaf node
+		if (current->m_children.empty())
+		{
+			//If the buffer is full, exit function//@not the most elegant solution
+			//int distanceToSize = _bufferSize - _numInstances - current->m_instances.size();
+			//if (distanceToSize < 0) return;
+
+			//Add the grass instances to the buffer
+			memcpy(_buffer + _numInstances, current->m_instances.data(), current->m_instances.size() * sizeof(field::Instance));
+			_numInstances += current->m_instances.size();
+		}
+		//Else if not leaf node
+		//Push child nodes
+		for (Node* child : current->m_children)
+		{
+			tree.push(child);
+		}
+	}
+	
 }

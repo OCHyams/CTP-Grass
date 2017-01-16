@@ -50,7 +50,6 @@ public:
 	void draw(const DrawData&);
 
 	static void updateCameraPosition(const DirectX::XMFLOAT3& _pos) { s_cameraPos = _pos; }
-	void setWind(const DirectX::XMFLOAT3& _wind) { m_wind = _wind; }
 
 	int getMaxNumBlades() { return m_maxInstanceCount; }
 	int getCurNumBlades() { return m_curInstanceCount; }
@@ -102,10 +101,6 @@ private:
 	/////////////////////////////////////////////////
 	Octree::Node*			m_octreeRoot = nullptr;
 	OctreeDebugger			m_octreeDebugger;
-	/////////////////////////////////////////////////
-	/// Wind data stored here for testing!
-	/////////////////////////////////////////////////
-	DirectX::XMFLOAT3		m_wind;
 	static
 	DirectX::XMFLOAT3		s_cameraPos;
 	/////////////////////////////////////////////////

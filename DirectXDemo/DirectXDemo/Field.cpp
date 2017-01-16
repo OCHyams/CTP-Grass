@@ -436,11 +436,11 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	//SRV
 	D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc;
 	ZeroMemory(&SRVDesc, sizeof(SRVDesc));
-	SRVDesc.ViewDimension				= D3D11_SRV_DIMENSION_BUFFEREX;
-	SRVDesc.Format						= DXGI_FORMAT_R32_TYPELESS;
-	SRVDesc.BufferEx.Flags				= D3D11_BUFFEREX_SRV_FLAG_RAW;
-	SRVDesc.BufferEx.FirstElement		= 0;
-	SRVDesc.BufferEx.NumElements		= m_maxInstanceCount * 12;
+	SRVDesc.ViewDimension					= D3D11_SRV_DIMENSION_BUFFEREX;
+	SRVDesc.Format							= DXGI_FORMAT_R32_TYPELESS;
+	SRVDesc.BufferEx.Flags					= D3D11_BUFFEREX_SRV_FLAG_RAW;
+	SRVDesc.BufferEx.FirstElement			= 0;
+	SRVDesc.BufferEx.NumElements			= m_maxInstanceCount * 12;
 	if (FAILED(_device->CreateShaderResourceView(	m_instanceSRVBufferIn,
 													&SRVDesc, &m_instanceSRV)))
 	{
@@ -475,17 +475,20 @@ void Field::draw(const DrawData& _data)
 	using namespace DirectX;
 	/*Build instance buffer after frustum culling*/
 	XMMATRIX transform = XMMatrixMultiply(XMMatrixRotationRollPitchYawFromVector(LF3(&_data.m_cam->getRot())), XMMatrixTranslationFromVector(LF3(&_data.m_cam->getPos())));
-	BoundingFrustum frustum(LF44(&_data.m_cam->getProjMatrix()));
+	//BoundingFrustum frustum(LF44(&_data.m_cam->getProjMatrix()));
+	BoundingFrustum frustum(_data.m_cam->calcLargeProjMatrix());
 	frustum.Transform(frustum, transform);
 	//cull
 	Octree::frustumCull(m_octreeRoot, frustum, m_instances, m_maxInstanceCount, m_curInstanceCount);
+	//For debugging, draw entire field
+	//Octree::noCull(m_octreeRoot, m_instances, m_maxInstanceCount, m_curInstanceCount);
 
 	/*Draw octree*/
 	if (drawOctree) m_octreeDebugger.draw(_data.m_dc, s_viewproj, m_octreeRoot);
 
-	/*Apply wind force to visible grass*/ //@For sure the problem is here...
+	/*Apply wind force to visible grass*/
 	//Update the input buffer resource
-	D3D11_MAPPED_SUBRESOURCE mappedResource;//@wahhhh
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 	HRESULT result = _data.m_dc->Map(m_instanceSRVBufferIn, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, m_instances, m_curInstanceCount * sizeof(field::Instance));
@@ -569,7 +572,6 @@ void Field::updateConstBuffers()
 
 	m_CBcpu_geometry.halfGrassWidth = m_halfGrassWidth;
 	m_CBcpu_geometry.time = (float)t->time;
-	m_CBcpu_geometry.wind = m_wind;
 	m_CBcpu_geometry.farTess = 5.0f;
 	m_CBcpu_geometry.nearTess = 0.4f;
 	m_CBcpu_geometry.minTessDensity = 3.0f;

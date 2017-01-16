@@ -110,6 +110,11 @@ const DirectX::XMFLOAT4X4& ArcCamera::getProjMatrix() const
 	return m_proj;
 }
 
+const DirectX::XMMATRIX ArcCamera::calcLargeProjMatrix() const
+{
+	return DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV4 * 1.5, 640 / 480, 0.1f, 1010);
+}
+
 void ArcCamera::updateViewProjForGO()
 {
 	using namespace DirectX;

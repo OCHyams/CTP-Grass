@@ -23,7 +23,6 @@ struct CBGrassGeometry
 __declspec(align(16))
 struct CBField
 {
-	DirectX::XMFLOAT3 wind;
 	float	halfGrassWidth;
 	float	time;
 	float	minTessDensity;

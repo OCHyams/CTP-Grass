@@ -19,7 +19,7 @@ public:
 
 	const DirectX::XMFLOAT4X4& getViewMatrix() const;
 	const DirectX::XMFLOAT4X4& getProjMatrix() const;
-
+	const DirectX::XMMATRIX calcLargeProjMatrix() const;
 private:
 	DirectX::XMFLOAT3 m_target;
 	DirectX::XMFLOAT3 m_offset;

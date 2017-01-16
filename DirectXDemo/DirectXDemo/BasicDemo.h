@@ -20,8 +20,6 @@ public:
 	void render() override;
 
 private:
-	DirectX::XMFLOAT3 m_wind;
-	float m_windStr;
 	std::vector<GameObject*> m_objects;
 	ArcCamera* m_cam;
 	Field m_field;
