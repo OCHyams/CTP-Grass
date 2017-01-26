@@ -5,44 +5,45 @@
     ObjModel - Used to represent an OBJ model.
 */
 
-
+#include <d3d11_2.h>
+#include <SimpleMath.h>
 #include<fstream>
 #include<vector>
 #include<string>
 #include"objLoader.h"
 #include"TokenStream.h"
-
+#include "Shorthand.h"
 
 ObjModel::ObjModel( )
 {
-    vertices_ = 0;
-    normals_ = 0;
-    texCoords_ = 0;
-    totalVerts_ = 0;
+    m_vertices = 0;
+    m_normals = 0;
+    m_texCoords = 0;
+    m_totalVerts = 0;
 }
 
       
 ObjModel::~ObjModel( )
 {
-    Release( );
+    release( );
 }
 
 
-void ObjModel::Release( )
+void ObjModel::release( )
 {
-    totalVerts_ = 0;
+    m_totalVerts = 0;
 
-    if( vertices_ != 0 ) delete[] vertices_;
-    if( normals_ != 0 ) delete[] normals_;
-    if( texCoords_ != 0 ) delete[] texCoords_;
+    if( m_vertices != 0 ) delete[] m_vertices;
+    if( m_normals != 0 ) delete[] m_normals;
+    if( m_texCoords != 0 ) delete[] m_texCoords;
 
-    vertices_ = 0;
-    normals_ = 0;
-    texCoords_ = 0;
+    m_vertices = 0;
+    m_normals = 0;
+    m_texCoords = 0;
 }
 
 
-bool ObjModel::LoadOBJ( char *fileName )
+bool ObjModel::loadOBJ( char *fileName )
 {
     std::ifstream fileStream;
     int fileSize = 0;
@@ -153,40 +154,40 @@ bool ObjModel::LoadOBJ( char *fileName )
     int vIndex = 0, nIndex = 0, tIndex = 0;
     int numFaces = ( int )faces.size( ) / 9;
 
-    totalVerts_ = numFaces * 3;
+    m_totalVerts = numFaces * 3;
 
-    vertices_ = new float[totalVerts_ * 3];
+    m_vertices = new float[m_totalVerts * 3];
 
     if( ( int )norms.size( ) != 0 )
     {
-        normals_ = new float[totalVerts_ * 3];
+        m_normals = new float[m_totalVerts * 3];
     }
 
     if( ( int )texC.size( ) != 0 )
     {
-        texCoords_ = new float[totalVerts_ * 2];
+        m_texCoords = new float[m_totalVerts * 2];
     }
 
     for( int f = 0; f < ( int )faces.size( ); f+=3 )
     {
-        vertices_[vIndex + 0] = verts[( faces[f + 0] - 1 ) * 3 + 0];
-        vertices_[vIndex + 1] = verts[( faces[f + 0] - 1 ) * 3 + 1];
-        vertices_[vIndex + 2] = verts[( faces[f + 0] - 1 ) * 3 + 2];
+        m_vertices[vIndex + 0] = verts[( faces[f + 0] - 1 ) * 3 + 0];
+        m_vertices[vIndex + 1] = verts[( faces[f + 0] - 1 ) * 3 + 1];
+        m_vertices[vIndex + 2] = verts[( faces[f + 0] - 1 ) * 3 + 2];
         vIndex += 3;
 
-        if(texCoords_)
+        if(m_texCoords)
         {
-            texCoords_[tIndex + 0] = texC[( faces[f + 1] - 1 ) * 2 + 0];
-            texCoords_[tIndex + 1] = texC[( faces[f + 1] - 1 ) * 2 + 1];
+            m_texCoords[tIndex + 0] = texC[( faces[f + 1] - 1 ) * 2 + 0];
+            m_texCoords[tIndex + 1] = texC[( faces[f + 1] - 1 ) * 2 + 1];
             tIndex += 2;
         }
 
-        if(normals_)
+        if(m_normals)
         {
 			int index = (faces[f + 2] - 1) * 3;
-            normals_[nIndex + 0] = norms[index + 0];
-            normals_[nIndex + 1] = norms[index + 1];
-            normals_[nIndex + 2] = norms[index + 2];
+            m_normals[nIndex + 0] = norms[index + 0];
+            m_normals[nIndex + 1] = norms[index + 1];
+            m_normals[nIndex + 2] = norms[index + 2];
             nIndex += 3;
         }
     }
@@ -197,4 +198,79 @@ bool ObjModel::LoadOBJ( char *fileName )
     faces.clear( );
 
     return true;
+}
+
+bool ObjModel::loadPlane(float _x, float _z, float _subSizeX, float _subSizeZ)
+{
+	assert(_x >= _subSizeX, "Subdivision min size must be smaller than size");
+	assert(_z >= _subSizeZ, "Subdivision min size must be smaller than size");
+	if (_x < _subSizeX || _z < _subSizeZ) return false;
+
+
+	using namespace DirectX;
+	XMFLOAT2 size = { _x, _z };
+	XMFLOAT2 halfSize = { size.x / 2, size.y / 2 };
+	XMFLOAT2 numDivs = { floor(size.x / _subSizeX), floor(size.y / _subSizeZ) };
+	XMFLOAT2 subSize = { size.x / numDivs.x, size.y / numDivs.y };
+
+	XMVECTOR vec;
+	XMVECTOR halfSizeVec = VEC3(halfSize.x, 0, halfSize.y);
+	XMFLOAT3 vert;
+	XMFLOAT3 norm = { 0, 1, 0 };
+
+	m_totalVerts = (int)numDivs.x * (int)numDivs.y * 6;
+	m_vertices = new float[m_totalVerts * 3];
+	m_normals = new float[m_totalVerts * 3];
+	float* verPtr = m_vertices;
+	float* normPtr = m_normals;
+	for (int x = 0; x < (int)numDivs.x; ++x)
+	{
+		for (int y = 0; y < (int)numDivs.y; ++y)
+		{
+			vec = VEC3((subSize.x  * (x + 1)), 0, (subSize.y * y)) - halfSizeVec;
+			STOREF3(&vert, vec);
+			memcpy(verPtr, &vert, sizeof(float) * 3);
+			memcpy(normPtr, &norm, sizeof(float) * 3);
+			verPtr += 3;
+			normPtr += 3;
+
+			vec = VEC3((subSize.x  * x), 0, (subSize.y * y)) - halfSizeVec;
+			STOREF3(&vert, vec);
+			memcpy(verPtr, &vert, sizeof(float) * 3);
+			memcpy(normPtr, &norm, sizeof(float) * 3);
+			verPtr += 3;
+			normPtr += 3;
+			
+			vec = VEC3((subSize.x  * x), 0, (subSize.y * (y + 1))) - halfSizeVec;
+			STOREF3(&vert, vec);
+			memcpy(verPtr, &vert, sizeof(float) * 3);
+			memcpy(normPtr, &norm, sizeof(float) * 3);
+			verPtr += 3;
+			normPtr += 3;
+
+			vec = VEC3((subSize.x  * x), 0, (subSize.y * (y + 1))) - halfSizeVec;
+			STOREF3(&vert, vec);
+			memcpy(verPtr, &vert, sizeof(float) * 3);
+			memcpy(normPtr, &norm, sizeof(float) * 3);
+			verPtr += 3;
+			normPtr += 3;
+
+			vec = VEC3((subSize.x  * (x + 1)), 0, (subSize.y * (y + 1))) - halfSizeVec;
+			STOREF3(&vert, vec);
+			memcpy(verPtr, &vert, sizeof(float) * 3);
+			memcpy(normPtr, &norm, sizeof(float) * 3);
+			verPtr += 3;
+			normPtr += 3;
+
+			vec = VEC3((subSize.x  * (x + 1)), 0, (subSize.y * y)) - halfSizeVec;
+			STOREF3(&vert, vec);
+			memcpy(verPtr, &vert, sizeof(float) * 3);
+			memcpy(normPtr, &norm, sizeof(float) * 3);
+			verPtr += 3;
+			normPtr += 3;
+		}
+	}
+
+	
+	return true;
 }

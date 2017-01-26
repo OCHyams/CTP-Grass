@@ -132,7 +132,6 @@
     <ClCompile Include="objLoader.cpp" />
     <ClCompile Include="Octree.cpp" />
     <ClCompile Include="OctreeDebugger.cpp" />
-    <ClCompile Include="Plane.cpp" />
     <ClCompile Include="SimpleGrass.cpp" />
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="TokenStream.cpp" />
@@ -156,7 +155,6 @@
     <ClInclude Include="objLoader.h" />
     <ClInclude Include="Octree.h" />
     <ClInclude Include="OctreeDebugger.h" />
-    <ClInclude Include="Plane.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="ServiceLocator.h" />
     <ClInclude Include="Shorthand.h" />

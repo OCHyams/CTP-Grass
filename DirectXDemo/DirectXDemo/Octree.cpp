@@ -11,13 +11,14 @@ Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position,
 	using namespace DirectX;
 
 	/*Calculate the size of the bounding box of the model*/
-	float* vtxElePtr	= _model.GetVertices();
+	float* vtxElePtr	= _model.getVertices();
 	//Set the first vertex as the largest and smallest to begin with
 	XMFLOAT3 current	= { *vtxElePtr, *(vtxElePtr + 1), *(vtxElePtr + 2) };
-	XMVECTOR smallest	= LF3(&current);
+	XMVECTOR smallest	= LF3(&current); 
 	XMVECTOR largest	= LF3(&current);
-	
-	for (int i = 0; i < _model.GetTotalVerts(); ++i)
+
+
+	for (int i = 0; i < _model.getTotalVerts(); ++i)
 	{
 		//Get next three floats, store in XMFLOAT3 current
 		memcpy(&current, vtxElePtr, sizeof(float)*3);
@@ -39,47 +40,93 @@ Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position,
 	stack.push(root);
 
 	XMVECTOR minSize = LF3(&_minSize); 
+	//XMVECTOR halfMinSize = minSize / 2;
+	XMVECTOR childSize;
 	while (!stack.empty())
 	{
 		//Pop top node
 		Node* current = stack.top();
 		stack.pop();
 
-		/*Test if the node can contain children*/
-		BoundingBox testAABB;
-		XMVECTOR childSize = LF3(&current->m_AABB.Extents) * 0.5f;
-		//Move to origin
-		testAABB.Center = { 0, 0, 0 };
-		//Resize
-		XMStoreFloat3(&testAABB.Extents, childSize);
-
-		//If node is large enough to contain all 8 children
-		if (testAABB.Contains(minSize))
+		childSize = LF3(&current->m_AABB.Extents); //Because extents == half width/height/depth
+		XMFLOAT3 numChildren = {1,1,1};
+		XMVECTOR childSubtractMin = childSize - minSize;
+		//If node can contain children X
+		if (childSubtractMin.m128_f32[0] >= 0)
 		{
-			//Center point of current node
-			XMVECTOR center = LF3(&current->m_AABB.Center);
-			//Octree segments
-			XMVECTOR oct[8] =
-			{
-				{ 1 ,  1 ,  1 },
-				{ -1 ,  1 ,  1 },
-				{ -1 ,  1 , -1 },
-				{ 1 ,  1 , -1 },
-				{ 1 , -1 ,  1 },
-				{ -1 , -1 ,  1 },
-				{ -1 , -1 , -1 },
-				{ 1 ,  -1 , -1 }
-			};
-
-			/*Create new children and push onto stack*/
-			for (int i = 0; i < 8; ++i)
-			{
-				XMVECTOR outer = center + oct[i] * LF3(&current->m_AABB.Extents);
-				Node* child = new Node(center, outer, current);
-				current->m_children.push_back(child);
-				stack.push(child);
-			}	
+			numChildren.x = 2;
 		}
+		//If node can contain children Y
+		if (childSubtractMin.m128_f32[1] >= 0)
+		{
+			numChildren.y = 2;
+		}
+		//If node can contain children Z
+		if (childSubtractMin.m128_f32[2] >= 0)
+		{
+			numChildren.z = 2;
+		}
+
+		//If at least one of the directions can spawn a new node....
+		XMVECTOR avgChildren = XMVector3Dot(VEC3(1, 1, 1), LF3(&numChildren));
+		if (avgChildren.m128_f32[0] > 3)
+		{
+			//HOURS OF DEBUGGING TO ARRIVE AT THIS
+			for (int i = 0; i < numChildren.x; ++i)
+			{
+				float x0 = current->m_AABB.Center.x - ((current->m_AABB.Extents.x) * (1- i));
+				float x1 = current->m_AABB.Center.x + ((current->m_AABB.Extents.x * (2 - numChildren.x))) + (current->m_AABB.Extents.x * i);
+				for (int j = 0; j < numChildren.y; ++j)
+				{
+					float y0 = current->m_AABB.Center.y - ((current->m_AABB.Extents.y) * (1 - j));
+					float y1 = current->m_AABB.Center.y + ((current->m_AABB.Extents.y * (2 - numChildren.y))) + (current->m_AABB.Extents.y * j);
+					for (int k = 0; k < numChildren.z; ++k)
+					{
+						float z0 = current->m_AABB.Center.z - ((current->m_AABB.Extents.z) * (1 - k));
+						float z1 = current->m_AABB.Center.z + ((current->m_AABB.Extents.z * (2 - numChildren.z))) + (current->m_AABB.Extents.z * k);
+				
+						Node* child = new Node(VEC3(x0, y0, z0), VEC3(x1, y1, z1), current);
+						current->m_children.push_back(child);
+						stack.push(child);
+					}
+				}
+			}
+		}
+
+		///*Test if the node can contain children*/
+		//BoundingBox testAABB;
+		//XMVECTOR childSize = LF3(&current->m_AABB.Extents) * 0.5f;
+		////Move to origin
+		//testAABB.Center = { 0, 0, 0 };
+		////Resize
+		//XMStoreFloat3(&testAABB.Extents, childSize);
+		////If node is large enough to contain all 8 children
+		//if (testAABB.Contains(minSize))
+		//{
+		//	//Center point of current node
+		//	XMVECTOR center = LF3(&current->m_AABB.Center);
+		//	//Octree segments
+		//	XMVECTOR oct[8] =
+		//	{
+		//		{ 1 ,  1 ,  1 },
+		//		{ -1 ,  1 ,  1 },
+		//		{ -1 ,  1 , -1 },
+		//		{ 1 ,  1 , -1 },
+		//		{ 1 , -1 ,  1 },
+		//		{ -1 , -1 ,  1 },
+		//		{ -1 , -1 , -1 },
+		//		{ 1 ,  -1 , -1 }
+		//	};
+
+		//	/*Create new children and push onto stack*/
+		//	for (int i = 0; i < 8; ++i)
+		//	{
+		//		XMVECTOR outer = center + oct[i] * LF3(&current->m_AABB.Extents);
+		//		Node* child = new Node(center, outer, current);
+		//		current->m_children.push_back(child);
+		//		stack.push(child);
+		//	}	
+		//}
 	}
 	return root;
 }

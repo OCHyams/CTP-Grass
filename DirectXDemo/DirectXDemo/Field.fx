@@ -95,7 +95,10 @@ inline float4 windForce(float3 p, float3 windVec)
 {
 	// Compute the phase shift for the position p with respect to
 	// the current wind strength and direction
-	float phase = (time * length(windVec)) + dot(windVec, p);
+	//float phase = (time * length(windVec)) + dot(windVec, p);*/ //HAD TO MODIFY THIS SO BECAUSE PER_INSTANCE wind vectors can now change suddenly!
+
+	//				@@NEED TO SOLVE THIS ISSUE@@
+	float phase = (time *length(windVec)) + dot(normalize(windVec), p);  //HAD TO MODIFY THIS SO BECAUSE PER_INSTANCE wind vectors can now change suddenly!
 	// Compute the four translation strengths.
 	float4 ts = smoothf(trianglef(translationFrequency * phase));
 	// Compute the mean of the four values and
@@ -177,7 +180,7 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	//output.b1 = mul(output.b1, wvp);
 	//output.b2 = mul(output.b2, wvp);
 
-	/*Tess factor*/
+	/*Tess factor*/ //@@Could move this out to the compute shader as it shouldn't need to be calculated 4 times!
 	float distance = length(camera - vertex.location);
 	distance = (distance- nearTess)/(farTess - nearTess);
 	output.tessDensity = maxTessDensity - distance * (maxTessDensity - minTessDensity);
@@ -309,11 +312,26 @@ float4 PS_Main(PS_INPUT input) : SV_TARGET
 	//@@for now do this but maybe get rid of the if later!
 	//if (diffuseTerm > 0.0f)
 	//{
-		specularTerm = pow(saturate(dot(/*input.*/normal, normalize(input.lightVec + input.viewVec))), 25);
+		float specularPow = 4;
+		specularTerm = pow(saturate(dot(/*input.*/normal, normalize(input.lightVec + input.viewVec))), specularPow);
 	//}
 	float3 final = ambientColour + intensity * diffuseTerm + intensity * specularTerm;
 	/*NOTE: remove tex coords to test just lighting*/
 	return float4(final * TEX_0.Sample(SAMPLER_STATE, input.texcoord), 1.0f);
+
+
+	///////*Trying lighting from Outline shader project*/
+	//////float4 diffuse	= TEX_0.Sample(SAMPLER_STATE, input.texcoord);
+	//////float4 ambient	= { 0.1f, 0.1f, 0.0f, 1.0f };
+	//////float diff		= clamp(dot(input.normal, input.lightVec), 0, 1); // diffuse component
+	//////float reversedDiff = clamp(dot(-input.normal, input.lightVec), 0, 1);
+	//////diff += reversedDiff;
+
+	//////float3 Reflect	= normalize(2 * diff * input.normal - input.lightVec);
+	//////float4 specular = pow(saturate(dot(Reflect, input.viewVec)), specularPow); // R.V^n
+
+	//////																		  // I = Acolor + Dcolor * N.L + (R.V)n
+	//////return ambient + diffuse * diff + specular;
 }
 
 /*technique11 RenderField

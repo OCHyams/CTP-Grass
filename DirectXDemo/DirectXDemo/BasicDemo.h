@@ -24,6 +24,7 @@ private:
 	ArcCamera* m_cam;
 	Field m_field;
 	WindManager m_windManager;
+	WindSphere* m_demoSphere;
 	float m_fps;
 	int m_numBlades;
 	int m_numDrawnBlades;

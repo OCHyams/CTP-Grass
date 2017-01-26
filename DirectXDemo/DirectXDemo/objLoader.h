@@ -3,6 +3,8 @@
     By Allen Sherrod and Wendy Jones
 
     ObjModel - Used to represent an OBJ model.
+
+	Modified for this simulation.
 */
 
 
@@ -16,19 +18,22 @@ class ObjModel
       ObjModel( );      
       ~ObjModel( );
 
-      void Release( );
-      bool LoadOBJ( char *fileName );
+      void release( );
 
-      float *GetVertices()		const { return vertices_; }
-      float *GetNormals()		const { return normals_; }
-      float *GetTexCoords()		const { return texCoords_; }
-      int    GetTotalVerts()	const { return totalVerts_; } 
+      bool loadOBJ( char *fileName );
+	  bool loadPlane( float x, float z, float subSizeX, float subSizeZ );
+
+
+      float *getVertices()		const { return m_vertices; }
+      float *getNormals()		const { return m_normals; }
+      float *getTexCoords()		const { return m_texCoords; }
+      int    getTotalVerts()	const { return m_totalVerts; } 
 
    private:
-      float *vertices_ = nullptr;
-      float *normals_ = nullptr;
-      float *texCoords_ = nullptr;
-      int totalVerts_;
+      float*	m_vertices	= nullptr;
+      float*	m_normals	= nullptr;
+      float*	m_texCoords = nullptr;
+      int		m_totalVerts;
 };
 
 

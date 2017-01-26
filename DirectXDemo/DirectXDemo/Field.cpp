@@ -207,10 +207,10 @@ bool Field::loadShared(ID3D11Device* _device)
 	//texture... for now don't bother parameterising it
 	// Load the texture in.
 	using namespace DirectX;
-	result = CreateDDSTextureFromFile(_device, L"../Resources/GRASS.dds", nullptr, &s_texture);
+	result = CreateDDSTextureFromFile(_device, L"../Resources/GRASS_1.dds", nullptr, &s_texture);
 	if (FAILED(result))
 	{
-		MessageBox(0, "Failed to load ../Resources/GRASS.DDS", "Texture loading", MB_OK);
+		MessageBox(0, "Failed to load ../Resources/GRASS_1.DDS", "Texture loading", MB_OK);
 		return false;
 	}
 
@@ -314,9 +314,9 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 
 	/*Procedurally generate grass positions*/
 	float truncationAccumulator = 0;
-	float* vertElementPtr = _model->GetVertices();
-	float* normElementPtr = _model->GetNormals();
-	int numVerts = _model->GetTotalVerts();
+	float* vertElementPtr = _model->getVertices();
+	float* normElementPtr = _model->getNormals();
+	int numVerts = _model->getTotalVerts();
 	m_maxInstanceCount = 0;
 
 	/*For every triangle...*/
@@ -347,7 +347,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		/*Calc number of blades*/
 		int numBlades = std::truncf(triangle.m_surfaceArea * _density);
 		/*Deal with trunc rounding accumulation*/
-		truncationAccumulator += std::fmodf(triangle.m_surfaceArea, _density);
+		truncationAccumulator += std::fmodf(_density, triangle.m_surfaceArea);
 		if (truncationAccumulator >= 1.0f)
 		{
 			++numBlades;
@@ -572,7 +572,7 @@ void Field::updateConstBuffers()
 
 	m_CBcpu_geometry.halfGrassWidth = m_halfGrassWidth;
 	m_CBcpu_geometry.time = (float)t->time;
-	m_CBcpu_geometry.farTess = 5.0f;
+	m_CBcpu_geometry.farTess = 3.0f;
 	m_CBcpu_geometry.nearTess = 0.4f;
 	m_CBcpu_geometry.minTessDensity = 3.0f;
 	m_CBcpu_geometry.maxTessDensity = 9.0f;
@@ -765,7 +765,15 @@ void Field::addPatch(/*std::vector<field::Instance>& _field, */const Triangle& _
 		//XMStoreFloat4x4(&instance.world, XMMatrixTranspose(world));
 
 		/*Add the grace instance to the Octree*/
-		if (!Octree::addGrass(m_octreeRoot, instance)) MessageBox(0, "Grass out of octree bounds", "Implementation Bug", MB_OK);
+		if (!Octree::addGrass(m_octreeRoot, instance))
+		{
+			std::string msg = "Grass out of octree bounds, POS = ( "
+				+ std::to_string(instance.location.x) + ", "
+				+ std::to_string(instance.location.y) + ", "
+				+ std::to_string(instance.location.z) + " ).";
+
+			MessageBox(0, msg.c_str(), "Implementation Bug", MB_OK);
+		}
 	}
 }
 
