@@ -30,9 +30,10 @@ cbuffer CBChangePerFrame
 	uint numInstances;
 };
 
-StructuredBuffer<WindCuboid>	inCuboids	: register(t0);
-StructuredBuffer<WindSphere>	inSpheres	: register(t1);
-ByteAddressBuffer				inGrass		: register(t2);
+
+ByteAddressBuffer				inGrass		: register(t0);
+StructuredBuffer<WindCuboid>	inCuboids	: register(t1);
+StructuredBuffer<WindSphere>	inSpheres	: register(t2);
 RWByteAddressBuffer				outGrass	: register(u0);
 
 
@@ -65,6 +66,7 @@ float3 windFromSpheres(float3 pos)
 		float3 vec = pos - sphere.pos;
 		float distance = length(vec);
 
+
 		if (distance <= sphere.radius)
 		{
 			vec = normalize(vec);
@@ -79,11 +81,12 @@ float3 windFromSpheres(float3 pos)
 void main( uint3 DTid : SV_DispatchThreadID )
 {
 	//if (DTid.x > numInstances) return;//@Might not need this
-	uint address = DTid.x * 48;//8 bytes padding
-	float3 pos	= asfloat(inGrass.Load3(address + 16));
-	float3 windVec = windFromCuboids(pos) + windFromSpheres(pos);
-	
+	uint address	= DTid.x * (42 + 6);
+	float3 pos		= asfloat(inGrass.Load3(address + 16));
+	float3 windVec	= windFromCuboids(pos) + windFromSpheres(pos);
+
 	outGrass.Store4(address + 0, inGrass.Load4(address));
 	outGrass.Store3(address + 16, asuint(pos));
 	outGrass.Store3(address + 28, asuint(windVec));
+
 }

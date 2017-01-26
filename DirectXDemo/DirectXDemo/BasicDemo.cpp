@@ -25,19 +25,18 @@ bool BasicDemo::load()
 {	
 	/*Load data shared by all wind managers (though there should only be one anyway)*/
 	WindManager::loadShared(m_d3dDevice);
-	CHECK_FAIL(m_windManager.load(m_d3dDevice, 1, 1));
-	/*Create a static wind volume, no need to keep track of mem, system does that*/
-	m_demoSphere = m_windManager.createWindSphere();
-	m_demoSphere->m_fallOffPow = 5;
-	m_demoSphere->m_initalStrength = 0.f;;
-	m_demoSphere->m_position = { 0,0,0 };
-	m_demoSphere->m_radius = 2.0f;
+	CHECK_FAIL(m_windManager.load(m_d3dDevice, 2, 1));
 	/*Create a static wind volume, no need to keep track of mem, system does that*/
 	WindCuboid* windCuboid = m_windManager.createWindCuboid();
 	windCuboid->m_extents = { 100.0f, 100.0f, 100.0f };
 	windCuboid->m_initalVelocity = { 0.3f, 0.f, 0.f };
 	windCuboid->m_position = { 0.f, 0.f, 0.f };
-
+	/*Create a static wind volume, no need to keep track of mem, system does that*/
+	m_demoSphere = m_windManager.createWindSphere();
+	m_demoSphere->m_fallOffPow = 5;
+	m_demoSphere->m_initalStrength = 0.f;;
+	m_demoSphere->m_position = { 5,0,0 };
+	m_demoSphere->m_radius = 2.0f;
 
 	//Tweak bar
 	TwBar* GUI = TwNewBar("Settings");
@@ -45,9 +44,9 @@ bool BasicDemo::load()
 	TwDefine(" Settings size='100 200' ");
 	TwDefine(" Settings movable= false ");
 	TwDefine(" Settings resizable= true ");
-	TwAddVarRW(GUI, "str", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_initalStrength, "step = 0.05");
-	TwAddVarRW(GUI, "rad", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_radius, "step = 0.05");
-	TwAddVarRW(GUI, "pow", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_fallOffPow, "step = 0.05");
+	//TwAddVarRW(GUI, "str", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_initalStrength, "step = 0.05");
+	//TwAddVarRW(GUI, "rad", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_radius, "step = 0.05");
+	//TwAddVarRW(GUI, "pow", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_fallOffPow, "step = 0.05");
 	TwAddVarRW(GUI, "draw octree", TwType::TW_TYPE_BOOL32, &m_field.drawOctree, "");
 	TwAddVarRO(GUI, "FPS", TwType::TW_TYPE_FLOAT, &m_fps, "");
 	TwAddVarRO(GUI, "Total Blade count", TwType::TW_TYPE_INT32, &m_numBlades, "");
@@ -112,8 +111,8 @@ void BasicDemo::update()
 										(int)m_input->getKey(DIK_DOWN) * -1 + (int)m_input->getKey(DIK_UP),
 										0);
 	windSphereNewPos *= m_time.deltaTime * 0.5f;
-	windSphereNewPos += LF3(&m_demoSphere->m_position);
-	STOREF3(&m_demoSphere->m_position, windSphereNewPos);
+	//windSphereNewPos += LF3(&m_demoSphere->m_position);
+	//STOREF3(&m_demoSphere->m_position, windSphereNewPos);
 	
 	
 	Field::updateCameraPosition(m_cam->getPos());

@@ -181,9 +181,9 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	//output.b2 = mul(output.b2, wvp);
 
 	/*Tess factor*/ //@@Could move this out to the compute shader as it shouldn't need to be calculated 4 times!
-	float distance = length(camera - vertex.location);
+	float distance = length(camera.xyz - vertex.location);
 	distance = (distance- nearTess)/(farTess - nearTess);
-	output.tessDensity = maxTessDensity - distance * (maxTessDensity - minTessDensity);
+	output.tessDensity = clamp(maxTessDensity - distance * (maxTessDensity - minTessDensity), 3.0f, maxTessDensity);
 
 	return output;
 }

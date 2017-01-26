@@ -549,6 +549,7 @@ void Field::draw(const DrawData& _data)
 	_data.m_dc->GSSetConstantBuffers(1, 1, &m_CB_viewproj);
 	_data.m_dc->GSSetConstantBuffers(2, 1, &m_CB_light);
 	_data.m_dc->PSSetConstantBuffers(2, 1, &m_CB_light);
+	_data.m_dc->VSSetConstantBuffers(2, 1, &m_CB_light);
 
 	//sampler
 	_data.m_dc->PSSetSamplers(0, 1, &s_samplerState);
@@ -572,7 +573,7 @@ void Field::updateConstBuffers()
 
 	m_CBcpu_geometry.halfGrassWidth = m_halfGrassWidth;
 	m_CBcpu_geometry.time = (float)t->time;
-	m_CBcpu_geometry.farTess = 3.0f;
+	m_CBcpu_geometry.farTess = 6.0f;
 	m_CBcpu_geometry.nearTess = 0.4f;
 	m_CBcpu_geometry.minTessDensity = 3.0f;
 	m_CBcpu_geometry.maxTessDensity = 9.0f;
@@ -583,7 +584,7 @@ void Field::updateConstBuffers()
 	m_CBcpu_light.intensity = 1.0f;
 	m_CBcpu_light.camera = XMFLOAT4(s_cameraPos.x, s_cameraPos.y, s_cameraPos.z, 1.f);
 	m_CBcpu_light.light = XMFLOAT4(0,2,0,1);//m_CBcpu_light.camera;
-	
+
 }
 
 #define MAX(x,y)    (x)>(y)?(x):(y)
