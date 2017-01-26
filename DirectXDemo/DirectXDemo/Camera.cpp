@@ -7,16 +7,6 @@
 #include "Shorthand.h"
 bool ArcCamera::load(ID3D11Device*)
 {
-	//Tweak bar
-	TwBar* GUI = TwNewBar("Cam");
-	TwDefine(" Cam position='10 200' ");
-	TwDefine(" Cam size='100 150' ");
-	TwDefine(" Cam movable= false ");
-	TwDefine(" Cam resizable= true ");
-	TwAddVarRW(GUI, "x", TwType::TW_TYPE_FLOAT, &(m_pos.x), "");
-	TwAddVarRW(GUI, "y", TwType::TW_TYPE_FLOAT, &(m_pos.y), "");
-	TwAddVarRW(GUI, "z", TwType::TW_TYPE_FLOAT, &(m_pos.z), "");
-
 	m_rot = { 0,0,0 };
 
 	using namespace DirectX;

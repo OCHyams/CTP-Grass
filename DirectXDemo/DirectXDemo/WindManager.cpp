@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <d3dcompiler.h>
 #include "ConstantBuffers.h"
+
 ID3D11ComputeShader* WindManager::s_cs = nullptr;
 
 void WindManager::updateResources(ID3D11DeviceContext* _dc)

@@ -500,6 +500,7 @@ void Field::unload()
 	RELEASE(m_instanceBuffer);
 	RELEASE(m_CB_geometry);
 	RELEASE(m_CB_viewproj);
+	RELEASE(m_CB_light);
 	RELEASE(m_instancesUAV);
 	RELEASE(m_instanceUAVBufferOut);
 	RELEASE(m_instanceSRV);
@@ -516,19 +517,23 @@ void Field::update()
 
 void Field::draw(const DrawData& _data)
 {
-	using namespace DirectX;
-	/*Build instance buffer after frustum culling*/
-	XMMATRIX transform = XMMatrixMultiply(XMMatrixRotationRollPitchYawFromVector(LF3(&_data.m_cam->getRot())), XMMatrixTranslationFromVector(LF3(&_data.m_cam->getPos())));
-	//BoundingFrustum frustum(LF44(&_data.m_cam->getProjMatrix()));
-	BoundingFrustum frustum(_data.m_cam->calcLargeProjMatrix());
-	frustum.Transform(frustum, transform);
-	//cull
-	Octree::frustumCull(m_octreeRoot, frustum, m_instances, m_maxInstanceCount, m_curInstanceCount);
-	//For debugging, draw entire field
-	//Octree::noCull(m_octreeRoot, m_instances, m_maxInstanceCount, m_curInstanceCount);
+	using namespace DirectX;	
+	/*Culling*/
+	if (m_frustumCull)
+	{
+		/*Build instance buffer after frustum culling*/
+		XMMATRIX transform = XMMatrixMultiply(XMMatrixRotationRollPitchYawFromVector(LF3(&_data.m_cam->getRot())), XMMatrixTranslationFromVector(LF3(&_data.m_cam->getPos())));
+		BoundingFrustum frustum(_data.m_cam->calcLargeProjMatrix());
+		frustum.Transform(frustum, transform);
+		Octree::frustumCull(m_octreeRoot, frustum, m_instances, m_maxInstanceCount, m_curInstanceCount);
+	}
+	else
+	{
+		Octree::noCull(m_octreeRoot, m_instances, m_maxInstanceCount, m_curInstanceCount);
+	}
 
 	/*Draw octree*/
-	if (drawOctree) m_octreeDebugger.draw(_data.m_dc, s_viewproj, m_octreeRoot);
+	if (m_drawOctree) m_octreeDebugger.draw(_data.m_dc, s_viewproj, m_octreeRoot);
 
 	/*Apply wind force to visible grass*/
 	//Update the input buffer resource
