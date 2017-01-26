@@ -1,6 +1,6 @@
 #pragma once
 class ArcCamera; 
-class ID3D11DeviceContext;
+struct ID3D11DeviceContext;
 
 struct DrawData
 {

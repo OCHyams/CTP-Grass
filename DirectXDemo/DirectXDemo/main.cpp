@@ -23,7 +23,8 @@ int WINAPI wWinMain(HINSTANCE _hInstance, HINSTANCE _prevInstance, LPWSTR _cmdLi
 
 	if (!RegisterClassEx(&wndClass)) return -1;
 
-	RECT rc = { 0,0,640,480 };
+	//RECT rc = { 0,0,640,480 };
+	RECT rc = { 0,0, 1000, 600 };
 	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
 
 	HWND hwnd = CreateWindowA("DX11WinClass", "DX11 Demo", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,

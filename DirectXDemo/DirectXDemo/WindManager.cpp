@@ -198,7 +198,7 @@ void WindManager::applyWindForces(ID3D11UnorderedAccessView* _outGrass, ID3D11Sh
 	_dc->CSSetShaderResources(0, 3, views);
 	_dc->CSSetUnorderedAccessViews(0, 1, &_outGrass, nullptr);
 	_dc->CSSetConstantBuffers(0, 1, &m_CB_changesPerFrame);
-	_dc->Dispatch(ceil((float)_numInstances/ (float)m_threadsPerGroupX), 1, 1);
+	_dc->Dispatch((unsigned int)ceil((float)_numInstances/ (float)m_threadsPerGroupX), 1, 1);
 
 	/*Cleanup*/
 	views[0] = nullptr;

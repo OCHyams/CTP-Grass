@@ -66,8 +66,8 @@ bool BasicDemo::load()
 	ObjModel model;
 	XMMATRIX transform = XMMatrixScalingFromVector(VEC3(1, 0, 1));
 	//CHECK_FAIL(model.loadOBJ("../Resources/plane.txt"));
-	CHECK_FAIL(model.loadPlane(50, 50, 5, 5));
-	CHECK_FAIL(m_field.load(m_d3dDevice, &model, NUM(25), XMFLOAT3(0, 0, 0), {5.f, 25, 5.f}/*, transform*/));
+	CHECK_FAIL(model.loadPlane(50, 50, 50, 50));
+	CHECK_FAIL(m_field.load(m_d3dDevice, &model, NUM(100), XMFLOAT3(0, 0, 0), { 5.f, 25, 5.f}/*, transform*/));
 	m_numBlades = m_field.getMaxNumBlades();
 	/*Only needed the hill model to place the grass (FOR NOW ANYWAY)*/
 	model.release();

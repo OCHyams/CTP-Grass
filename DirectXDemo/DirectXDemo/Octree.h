@@ -39,7 +39,8 @@ namespace Octree
 	Node* build(const ObjModel&				_model, 
 				DirectX::XMVECTOR			_position,
 				const DirectX::XMFLOAT3&	_minSize, 
-				float						_minGrassLength);
+				float						_minGrassLength,
+				float						_grassDensity);
 
 	/////////////////////////////////////////////////
 	///	Deletes all nodes including root.
@@ -54,9 +55,10 @@ namespace Octree
 
 	/////////////////////////////////////////////////
 	///	Coppies a grass instance into a leaf node.
-	///	Returns false if the grass couldn't be added.
+	///	Returns nullptr if the grass couldn't be added.
+	/// Returns the node that it was added to.
 	/////////////////////////////////////////////////
-	bool addGrass(Node* _root, const field::Instance& _instance);
+	Node* addGrass(Node* _root, const field::Instance& _instance);
 
 	/////////////////////////////////////////////////
 	///	Coppies a grass instances that are in view 

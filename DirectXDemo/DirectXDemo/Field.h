@@ -129,6 +129,18 @@ private:
 	/*Stuff for proc gen grass*/
 	struct Triangle
 	{
+		//Calculate surface area from 3 * float3 positions
+		static float surfaceArea(float* verts)
+		{
+			using namespace DirectX;
+			/*Calc surface area*/
+			XMVECTOR a = VEC3(*(verts), *(verts + 1), *(verts + 2));
+			XMVECTOR b = VEC3(*(verts + 3), *(verts + 4), *(verts + 5));
+			XMVECTOR c = VEC3(*(verts + 6), *(verts + 7), *(verts + 8));
+			XMVECTOR sa = 0.5 * XMVector3Length(XMVector3Cross((a - c), (b - c)));
+			return sa.m128_f32[0];
+		}
+
 		DirectX::XMFLOAT3	m_verts[3];
 		DirectX::XMFLOAT3	m_norms[3];
 		float				m_surfaceArea;
@@ -150,7 +162,7 @@ private:
 		}
 
 	};
-	void addPatch(/*std::vector<field::Instance>& _field,*/ const Triangle& _tri, int _numBlade);
+	void addPatch(/*std::vector<field::Instance>& _field,*//* const Triangle& _tri*/float* verts, int _numBlade, Octree::Node* _nodeCache);
 };
 
 

@@ -6,7 +6,7 @@
 #include <stack>
 #include "Shorthand.h"
 
-Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position, const DirectX::XMFLOAT3& _minSize, float _minGrassLength)
+Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position, const DirectX::XMFLOAT3& _minSize, float _minGrassLength, float _density)
 {
 	using namespace DirectX;
 
@@ -35,6 +35,10 @@ Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position,
 	/*Root starts as a leaf with no children. Translate AABB points.*/
 	Node* root = new Node(smallest + _position, largest + _position, nullptr);
 	
+	/*Keep a record of leaf nodes to quickly iterate over them and reserve mem for grass*/
+	std::vector<Node*> leaves;
+	leaves.push_back(root);
+
 	/*Build child nodes*/
 	std::stack<Node*> stack;
 	stack.push(root);
@@ -71,6 +75,9 @@ Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position,
 		XMVECTOR avgChildren = XMVector3Dot(VEC3(1, 1, 1), LF3(&numChildren));
 		if (avgChildren.m128_f32[0] > 3)
 		{
+			//Remove this guy from the leaf stacks
+			std::remove(leaves.begin(), leaves.end(), current);
+
 			//HOURS OF DEBUGGING TO ARRIVE AT THIS
 			for (int i = 0; i < numChildren.x; ++i)
 			{
@@ -88,12 +95,13 @@ Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position,
 						Node* child = new Node(VEC3(x0, y0, z0), VEC3(x1, y1, z1), current);
 						current->m_children.push_back(child);
 						stack.push(child);
+						leaves.push_back(child);
 					}
 				}
 			}
 		}
 
-		///*Test if the node can contain children*/
+		///*Test if the node can contain children*//*OLD IMPLEMENTATION, INFERIOR*/
 		//BoundingBox testAABB;
 		//XMVECTOR childSize = LF3(&current->m_AABB.Extents) * 0.5f;
 		////Move to origin
@@ -128,6 +136,15 @@ Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position,
 		//	}	
 		//}
 	}
+
+	/*Reserving roughly the right ammount of memory will help speed up generation*/
+	for(auto leaf: leaves)
+	{
+		/*Just take surface area of base * density because usually only one plane is covered in any node*/
+		/*mul by 2 because extents are 1/2, mul by 1.1 to to be safe*/
+		leaf->m_instances.reserve(_density * 2.1 * leaf->m_AABB.Extents.x * leaf->m_AABB.Extents.z);
+	}
+
 	return root;
 }
 
@@ -217,10 +234,10 @@ void Octree::prune(Node* _root)
 	return;
 }
 
-bool Octree::addGrass(Node* _root, const field::Instance& _instance)
+Octree::Node* Octree::addGrass(Node* _root, const field::Instance& _instance)
 {
 	/*Early out if _root ptr is null*/
-	if (_root == nullptr) return false;
+	if (_root == nullptr) return nullptr;
 
 	std::stack<Node*> tree;
 	tree.push(_root);
@@ -240,7 +257,7 @@ bool Octree::addGrass(Node* _root, const field::Instance& _instance)
 			{
 				//Add the grass instance
 				current->m_instances.push_back(_instance);
-				return true;
+				return current;
 			}
 			//Else if not leaf node
 			//Push child nodes
@@ -251,7 +268,7 @@ bool Octree::addGrass(Node* _root, const field::Instance& _instance)
 		}
 	}
 
-	return false;
+	return nullptr;
 }
 
 void Octree::frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, field::Instance* _buffer, int _bufferSize, int& _numInstances)
@@ -281,7 +298,7 @@ void Octree::frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, 
 				//int distanceToSize = _bufferSize - _numInstances - current->m_instances.size();
 				//if (distanceToSize < 0) return;
 				
-				//Add the grass instances to the buffer
+				//Add the grass instances to the buffer... @too slow!
 				memcpy(_buffer + _numInstances, current->m_instances.data(), current->m_instances.size() * sizeof(field::Instance));
 				_numInstances += current->m_instances.size();
 			}

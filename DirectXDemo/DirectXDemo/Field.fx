@@ -148,7 +148,7 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	output.cpoint += (windForce(vertex.location, vertex.wind) * vertex.flexibility);
 
 	/*Rotation of vectors under wind force*/ //-@->NOT WORKING ATM
-	float4 rot = quatFromTwoVec(vertex.pos, output.cpoint);
+	float4 rot = quatFromTwoVec(vertex.pos, output.cpoint.xyz);
 
 	//@when better wind simulation is in, use twisting to manipulate normal
 	/*Normals*/
@@ -182,8 +182,8 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 
 	/*Tess factor*/ //@@Could move this out to the compute shader as it shouldn't need to be calculated 4 times!
 	float distance = length(camera.xyz - vertex.location);
-	distance = (distance- nearTess)/(farTess - nearTess);
-	output.tessDensity = clamp(maxTessDensity - distance * (maxTessDensity - minTessDensity), 3.0f, maxTessDensity);
+	distance = clamp((distance- nearTess)/(farTess - nearTess), 0, 1);
+	output.tessDensity = maxTessDensity - (distance * (maxTessDensity - minTessDensity));
 
 	return output;
 }
@@ -262,8 +262,8 @@ void GS_Main(line GS_INPUT input[2], inout TriangleStream<PS_INPUT> output)
 		element.pos = input[i].b1;
 
 		/*Lighting*/
-		element.viewVec = normalize(camera - element.pos);
-		element.lightVec = normalize(light - element.pos);
+		element.viewVec = normalize(camera.xyz - element.pos.xyz);
+		element.lightVec = normalize(light.xyz - element.pos.xyz);
 		element.normal = input[i].normal;
 
 		/*output the vertex*/
@@ -276,8 +276,8 @@ void GS_Main(line GS_INPUT input[2], inout TriangleStream<PS_INPUT> output)
 		element.pos = input[i].b2;
 
 		/*Lighting*/
-		element.viewVec = normalize(camera - element.pos);
-		element.lightVec = normalize(light - element.pos);
+		element.viewVec = normalize(camera.xyz - element.pos.xyz);
+		element.lightVec = normalize(light.xyz - element.pos.xyz);
 
 		/*output the vertex*/
 		output.Append(element);

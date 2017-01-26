@@ -207,10 +207,10 @@ bool Field::loadShared(ID3D11Device* _device)
 	//texture... for now don't bother parameterising it
 	// Load the texture in.
 	using namespace DirectX;
-	result = CreateDDSTextureFromFile(_device, L"../Resources/GRASS_1.dds", nullptr, &s_texture);
+	result = CreateDDSTextureFromFile(_device, L"../Resources/GRASS.dds", nullptr, &s_texture);
 	if (FAILED(result))
 	{
-		MessageBox(0, "Failed to load ../Resources/GRASS_1.DDS", "Texture loading", MB_OK);
+		MessageBox(0, "Failed to load ../Resources/GRASS.DDS", "Texture loading", MB_OK);
 		return false;
 	}
 
@@ -299,6 +299,7 @@ bool Field::load(	ID3D11Device*		_device,
 	return loadBuffers(_device);
 }
 
+
 bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize/*, const DirectX::XMMATRIX& _transform*/)
 {
 	m_pos = _pos;
@@ -310,7 +311,10 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	m_octreeDebugger.loadShared(_device);
 
 	/*Build the octree*/
-	m_octreeRoot = Octree::build(*_model, LF3(&_pos), _minOctreeNodeSize, 1.0f);
+	m_octreeRoot = Octree::build(*_model, LF3(&_pos), _minOctreeNodeSize, 1.0f, _density);
+
+	/*Save a special cache for proc gen to help reduce lookup times when checking for grass-tree collision*/
+	Octree::Node* nodeCache = nullptr;
 
 	/*Procedurally generate grass positions*/
 	float truncationAccumulator = 0;
@@ -319,11 +323,51 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	int numVerts = _model->getTotalVerts();
 	m_maxInstanceCount = 0;
 
+	XMFLOAT3 triVerts[3];
+	XMFLOAT3 triNorms[3];
+	XMVECTOR posVec = LF3(&m_pos);
 	/*For every triangle...*/
+	//for (int i = 0; i < numVerts; i += 3)
+	//{
+	//	/*Get vert positions*/
+	//	memcpy(triVerts, vertElementPtr, sizeof(float) * 9);
+	//	vertElementPtr += 9;
+	//	/*Transform verts*///@For now just translate
+	//	for (int i = 0; i < 3; ++i)
+	//	{
+	//		//XMVECTOR transformedVert = XMVector3Transform(LF3(&triVerts[i]), _transform);
+	//		//XMStoreFloat3(&triVerts[i], transformedVert);
+	//		XMStoreFloat3(&triVerts[i], posVec + LF3(&triVerts[i]));
+	//	}
+
+	//	/*Get vert normals*/
+	//	if (normElementPtr)
+	//	{
+	//		memcpy(triNorms, normElementPtr, sizeof(float) * 9);
+	//		normElementPtr += 9;
+	//	}
+
+	//	/*Store vert positions & calc surface area*/
+	//	Triangle triangle = Triangle(triVerts, triNorms);
+
+	//	/*Calc number of blades*/
+	//	int numBlades = (int)std::truncf(triangle.m_surfaceArea * _density);
+	//	/*Deal with trunc rounding accumulation*/
+	//	truncationAccumulator += std::fmodf(_density, triangle.m_surfaceArea);
+	//	if (truncationAccumulator >= 1.0f)
+	//	{
+	//		++numBlades;
+	//		--truncationAccumulator;
+	//	}
+
+	//	/*Add the patch to the field and octree*/
+	//	addPatch(triangle, numBlades, nodeCache);
+	//	m_maxInstanceCount += numBlades;
+	//}
+	/*For every triangle, currently testing faster implementation*/
 	for (int i = 0; i < numVerts; i += 3)
 	{
 		/*Get vert positions*/
-		XMFLOAT3 triVerts[3];
 		memcpy(triVerts, vertElementPtr, sizeof(float) * 9);
 		vertElementPtr += 9;
 		/*Transform verts*///@For now just translate
@@ -331,10 +375,9 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		{
 			//XMVECTOR transformedVert = XMVector3Transform(LF3(&triVerts[i]), _transform);
 			//XMStoreFloat3(&triVerts[i], transformedVert);
-			XMStoreFloat3(&triVerts[i], LF3(&m_pos) + LF3(&triVerts[i]));
+			XMStoreFloat3(&triVerts[i], posVec + LF3(&triVerts[i]));
 		}
 
-		XMFLOAT3 triNorms[3];
 		/*Get vert normals*/
 		if (normElementPtr)
 		{
@@ -343,11 +386,11 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		}
 
 		/*Store vert positions & calc surface area*/
-		Triangle triangle = Triangle(triVerts, triNorms);
+		float sa = Triangle::surfaceArea((float*)triVerts);
 		/*Calc number of blades*/
-		int numBlades = std::truncf(triangle.m_surfaceArea * _density);
+		int numBlades = (int)std::truncf(sa * _density);
 		/*Deal with trunc rounding accumulation*/
-		truncationAccumulator += std::fmodf(_density, triangle.m_surfaceArea);
+		truncationAccumulator += std::fmodf(_density, sa);
 		if (truncationAccumulator >= 1.0f)
 		{
 			++numBlades;
@@ -355,7 +398,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		}
 
 		/*Add the patch to the field and octree*/
-		addPatch(triangle, numBlades);
+		addPatch((float*)triVerts, numBlades, nodeCache);
 		m_maxInstanceCount += numBlades;
 	}
 
@@ -492,7 +535,7 @@ void Field::draw(const DrawData& _data)
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 	HRESULT result = _data.m_dc->Map(m_instanceSRVBufferIn, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	memcpy(mappedResource.pData, m_instances, m_curInstanceCount * sizeof(field::Instance));
+	memcpy(mappedResource.pData, m_instances, m_curInstanceCount * sizeof(field::Instance));//<<---This is a bottleneck.
 	_data.m_dc->Unmap(m_instanceSRVBufferIn, 0);
 	assert(!FAILED(result));
 
@@ -718,7 +761,7 @@ bool Field::loadBuffers(ID3D11Device* _device)
 	return true;
 }
 
-void Field::addPatch(/*std::vector<field::Instance>& _field, */const Triangle& _tri, int _numBlades)
+void Field::addPatch(/*std::vector<field::Instance>& _field, *//*const Triangle& _tri*/float* verts, int _numBlades, Octree::Node* _nodeCache)
 {
 	using namespace DirectX;
 	
@@ -729,9 +772,13 @@ void Field::addPatch(/*std::vector<field::Instance>& _field, */const Triangle& _
 	auto rand = std::bind(distribution, generator);
 	auto randAngle = std::bind(angleDistribution, generator);
 
-	XMVECTOR a = LF3(&_tri.m_verts[0]);
-	XMVECTOR b = LF3(&_tri.m_verts[1]);
-	XMVECTOR c = LF3(&_tri.m_verts[2]);
+	//XMVECTOR a = LF3(&_tri.m_verts[0]);
+	//XMVECTOR b = LF3(&_tri.m_verts[1]);
+	//XMVECTOR c = LF3(&_tri.m_verts[2]);
+
+	XMVECTOR a = VEC3(*(verts), *(verts + 1), *(verts + 2));
+	XMVECTOR b = VEC3(*(verts + 3), *(verts + 4), *(verts + 5));
+	XMVECTOR c = VEC3(*(verts + 6), *(verts + 7), *(verts + 8));
 
 	//Use barycentric coordinates [Orthmann] to place grass
 	for (int i = 0; i < _numBlades; ++i)
@@ -765,15 +812,19 @@ void Field::addPatch(/*std::vector<field::Instance>& _field, */const Triangle& _
 		//world = XMMatrixMultiply(world, XMMatrixTranslationFromVector(translation));
 		//XMStoreFloat4x4(&instance.world, XMMatrixTranspose(world));
 
-		/*Add the grace instance to the Octree*/
-		if (!Octree::addGrass(m_octreeRoot, instance))
+		/*Add the grass instance to the Octree, first try cached node*/
+		if (!Octree::addGrass(_nodeCache, instance))
 		{
-			std::string msg = "Grass out of octree bounds, POS = ( "
-				+ std::to_string(instance.location.x) + ", "
-				+ std::to_string(instance.location.y) + ", "
-				+ std::to_string(instance.location.z) + " ).";
+			/*Try from root*/
+			if (!Octree::addGrass(m_octreeRoot, instance))
+			{
+				std::string msg = "Grass out of octree bounds, POS = ( "
+					+ std::to_string(instance.location.x) + ", "
+					+ std::to_string(instance.location.y) + ", "
+					+ std::to_string(instance.location.z) + " ).";
 
-			MessageBox(0, msg.c_str(), "Implementation Bug", MB_OK);
+				MessageBox(0, msg.c_str(), "Implementation Bug", MB_OK);
+			}
 		}
 	}
 }
