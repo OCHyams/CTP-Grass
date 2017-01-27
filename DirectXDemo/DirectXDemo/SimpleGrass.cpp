@@ -361,7 +361,7 @@ void SimpleGrass::updateConstBuffers()
 	m_CBcpu_geometry = { m_curDensity, m_halfGrassWidth, (float)t->time, m_wind.x, m_wind.y, m_wind.z, m_pos.x, m_pos.y, m_pos.z, tanf4.x, tanf4.y, tanf4.z, tanf4.w };
 
 	//world view projection buffer
-	m_CBcpu_worldviewproj.m_wvp = XMLoadFloat4x4(&m_worldViewProj);
+	XMStoreFloat4x4(&m_CBcpu_worldviewproj.m_wvp, XMLoadFloat4x4(&m_worldViewProj));
 
 	//light
 	//do this for now!

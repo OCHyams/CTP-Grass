@@ -102,7 +102,7 @@ const DirectX::XMFLOAT4X4& ArcCamera::getProjMatrix() const
 
 const DirectX::XMMATRIX ArcCamera::calcLargeProjMatrix() const
 {
-	return DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV4 * 1.5, 640 / 480, 0.1f, 1010);
+	return DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV4 * 1.5, 1000 / 600, 0.1f, 1010);
 }
 
 void ArcCamera::updateViewProjForGO()
@@ -111,7 +111,5 @@ void ArcCamera::updateViewProjForGO()
 	XMMATRIX view = XMLoadFloat4x4(&m_view);
 	XMMATRIX proj = XMLoadFloat4x4(&m_proj);
 	XMMATRIX viewprojmat = XMMatrixMultiply(view, proj);
-	XMFLOAT4X4 viewproj4x4;
-	XMStoreFloat4x4(&viewproj4x4, viewprojmat);
-	GameObject::setViewProjMat(viewproj4x4);
+	XMStoreFloat4x4(&s_viewProj, viewprojmat);
 }

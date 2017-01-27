@@ -42,7 +42,7 @@ bool BasicDemo::load()
 	//Tweak bar
 	TwBar* GUI = TwNewBar("Settings");
 	TwDefine(" Settings position='10 10' ");
-	TwDefine(" Settings size='100 200' ");
+	TwDefine(" Settings size='300 200' ");
 	TwDefine(" Settings movable= false ");
 	TwDefine(" Settings resizable= true ");
 	TwAddVarRW(GUI, "draw octree", TwType::TW_TYPE_BOOLCPP, &m_field.m_drawOctree, "");
@@ -67,9 +67,9 @@ bool BasicDemo::load()
 	/*Load hills model for grass*/
 	ObjModel model;
 	XMMATRIX transform = XMMatrixScalingFromVector(VEC3(1, 0, 1));
-	//CHECK_FAIL(model.loadOBJ("../Resources/plane.txt"));
-	CHECK_FAIL(model.loadPlane(50, 50, 50, 50));
-	CHECK_FAIL(m_field.load(m_d3dDevice, &model, NUM(100), XMFLOAT3(0, 0, 0), { 5.f, 25, 5.f}/*, transform*/));
+	//CHECK_FAIL(model.loadOBJ("../Resources/cat.obj"));
+	CHECK_FAIL(model.loadPlane(25, 25, 25, 25));
+	CHECK_FAIL(m_field.load(m_d3dDevice, &model, NUM(350), XMFLOAT3(0, 0, 0), { 5.f, 25, 5.f}/*, transform*/));
 	m_numBlades = m_field.getMaxNumBlades();
 	/*Only needed the hill model to place the grass (FOR NOW ANYWAY)*/
 	model.release();
@@ -120,9 +120,9 @@ void BasicDemo::update()
 	STOREF3(&m_demoSphere->m_position, windSphereNewPos);
 	
 	
-	Field::updateCameraPosition(m_cam->getPos());
-	m_field.s_viewproj = GameObject::getViewProj();//@move this out onto camera, and call this function in draw instead of out here...
-	m_field.update();
+	//Field::updateCameraPosition(m_cam->getPos());
+	//m_field.s_viewproj = GameObject::getViewProj();//@move this out onto camera, and call this function in draw instead of out here...
+	//m_field.update();
 
 	if (m_time.deltaTime > 0)
 	{
@@ -143,8 +143,6 @@ void BasicDemo::render()
 
 	/*Update wind resources*/
 	m_windManager.updateResources(m_d3dContext);
-
-	using namespace DirectX;
 	m_field.draw(data);
 
 	/*for (auto obj : m_objects)

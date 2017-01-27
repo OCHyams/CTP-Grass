@@ -1,6 +1,9 @@
 #include "GameObject.h"
 
-DirectX::XMFLOAT4X4 GameObject::s_viewProj = DirectX::XMFLOAT4X4();
+DirectX::XMFLOAT4X4 GameObject::s_viewProj = {	1, 0, 0, 0,
+												0, 1, 0, 0,
+												0, 0, 1, 0,
+												0, 0, 0, 1 };
 
 void GameObject::update()
 {

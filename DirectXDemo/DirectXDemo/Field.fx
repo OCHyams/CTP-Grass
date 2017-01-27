@@ -157,7 +157,7 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 
 	/*Binormals*/
 	output.binormal = float4(quatRotateVector(vertex.rotation, vertex.binormal),0.f);
-	output.binormal = normalize(output.binormal);
+	output.binormal = float4(normalize(output.binormal.xyz), 0);
 
 	///*Quad verts*///@working
 	//output.b1 = output.cpoint + binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;

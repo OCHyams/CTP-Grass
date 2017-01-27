@@ -27,7 +27,7 @@ int WINAPI wWinMain(HINSTANCE _hInstance, HINSTANCE _prevInstance, LPWSTR _cmdLi
 	RECT rc = { 0,0, 1000, 600 };
 	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
 
-	HWND hwnd = CreateWindowA("DX11WinClass", "DX11 Demo", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+	HWND hwnd = CreateWindowA("DX11WinClass", "Procedurally generated and animated grass", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
 		rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, _hInstance, NULL);
 
 	if (!hwnd) return -1;

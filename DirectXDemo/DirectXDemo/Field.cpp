@@ -17,8 +17,8 @@
 #include "WindManager.h"
 
 //statics
-DirectX::XMFLOAT3		Field::s_cameraPos		= DirectX::XMFLOAT3();
-DirectX::XMFLOAT4X4		Field::s_viewproj		= DirectX::XMFLOAT4X4();
+//DirectX::XMFLOAT3		Field::s_cameraPos		= DirectX::XMFLOAT3();
+//DirectX::XMFLOAT4X4		Field::s_viewproj		= DirectX::XMFLOAT4X4();
 field::Shaders			Field::s_shaders		= field::Shaders();
 ID3D11RasterizerState*	Field::s_rasterizer		= nullptr;
 ID3D11InputLayout*		Field::s_inputLayout	= nullptr;
@@ -510,14 +510,16 @@ void Field::unload()
 	Octree::cleanup(m_octreeRoot);
 }
 
-void Field::update()
-{
-	updateConstBuffers();
-}
+//void Field::update()
+//{
+//	updateConstBuffers();
+//}
 
 void Field::draw(const DrawData& _data)
 {
 	using namespace DirectX;	
+	updateConstBuffers(_data);
+
 	/*Culling*/
 	if (m_frustumCull)
 	{
@@ -533,7 +535,7 @@ void Field::draw(const DrawData& _data)
 	}
 
 	/*Draw octree*/
-	if (m_drawOctree) m_octreeDebugger.draw(_data.m_dc, s_viewproj, m_octreeRoot);
+	if (m_drawOctree) m_octreeDebugger.draw(_data.m_dc, _data.m_cam->getViewProj(), m_octreeRoot);
 
 	/*Apply wind force to visible grass*/
 	//Update the input buffer resource
@@ -614,10 +616,15 @@ void Field::draw(const DrawData& _data)
 	_data.m_dc->IASetInputLayout(nullptr);
 }
 
-void Field::updateConstBuffers()
+void Field::updateConstBuffers(const DrawData& _data)
 {
+
+	
 	using namespace DirectX;
 	Time* t = OCH::ServiceLocator<Time>::get();
+
+	XMFLOAT3 camPos = _data.m_cam->getPos();
+
 
 	m_CBcpu_geometry.halfGrassWidth = m_halfGrassWidth;
 	m_CBcpu_geometry.time = (float)t->time;
@@ -627,10 +634,11 @@ void Field::updateConstBuffers()
 	m_CBcpu_geometry.maxTessDensity = 9.0f;
 
 	//view projection buffer
-	m_CBcpu_viewproj.m_wvp = XMMatrixTranspose(XMLoadFloat4x4(&s_viewproj));
+	XMMATRIX viewproj = XMMatrixTranspose(XMLoadFloat4x4(&_data.m_cam->getViewProj()));
+	XMStoreFloat4x4(&m_CBcpu_viewproj.m_wvp, viewproj);
 	
 	m_CBcpu_light.intensity = 1.0f;
-	m_CBcpu_light.camera = XMFLOAT4(s_cameraPos.x, s_cameraPos.y, s_cameraPos.z, 1.f);
+	m_CBcpu_light.camera = XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.f);
 	m_CBcpu_light.light = XMFLOAT4(0,2,0,1);//m_CBcpu_light.camera;
 
 }

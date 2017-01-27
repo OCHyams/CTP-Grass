@@ -51,16 +51,14 @@ public:
 
 	void unload();
 
-	void update();
+	//void update();
 	void draw(const DrawData&);
-
-	static void updateCameraPosition(const DirectX::XMFLOAT3& _pos) { s_cameraPos = _pos; }
 
 	int getMaxNumBlades() { return m_maxInstanceCount; }
 	int getCurNumBlades() { return m_curInstanceCount; }
 
 	//public for now cus lazy
-	static DirectX::XMFLOAT4X4		s_viewproj;
+	//static DirectX::XMFLOAT4X4		s_viewproj;
 	float							m_length;
 	//float							m_sdLength;//standard diviation
 	float							m_halfGrassWidth;
@@ -106,8 +104,8 @@ private:
 	/////////////////////////////////////////////////
 	Octree::Node*			m_octreeRoot = nullptr;
 	OctreeDebugger			m_octreeDebugger;
-	static
-	DirectX::XMFLOAT3		s_cameraPos;
+	//static
+	DirectX::XMFLOAT3		m_cameraPos;
 	/////////////////////////////////////////////////
 	/// Wind data for per-instance wind
 	/////////////////////////////////////////////////
@@ -122,7 +120,7 @@ private:
 	DirectX::XMFLOAT2		m_size;
 	DirectX::XMFLOAT3		m_pos;
 
-	void updateConstBuffers();
+	void updateConstBuffers(const DrawData&);
 
 	/////////////////////////////////////////////////
 	///	Allocates m_instanceCount of Instance, don't forget to clear up mem!

@@ -33,7 +33,7 @@ struct CBField
 __declspec(align(16))
 struct CBWorldViewProj
 {
-	DirectX::XMMATRIX m_wvp;
+	DirectX::XMFLOAT4X4 m_wvp;
 };
 
 __declspec(align(16))
