@@ -15,12 +15,13 @@
 class ObjModel
 {
    public:
+	   enum MESH_TOPOLOGY { TRIANGLE_LIST, TRIANGLE_STRIP, QUAD_LIST, QUAD_STRIP };
       ObjModel( );      
       ~ObjModel( );
 
       void release( );
 
-      bool loadOBJ( char *fileName );
+      bool loadOBJ( char *fileName, MESH_TOPOLOGY inputTopology = TRIANGLE_STRIP);
 	  bool loadPlane( float x, float z, float subSizeX, float subSizeZ );
 
 

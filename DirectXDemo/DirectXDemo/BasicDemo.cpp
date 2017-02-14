@@ -29,7 +29,7 @@ bool BasicDemo::load()
 	/*Create a static wind volume, no need to keep track of mem, system does that*/
 	WindCuboid* windCuboid = m_windManager.createWindCuboid();
 	windCuboid->m_extents = { 100.0f, 100.0f, 100.0f };
-	windCuboid->m_initalVelocity = { 0.1f, 0.f, 0.f };
+	windCuboid->m_initalVelocity = { 0.4f, 0.f, 0.f };
 	windCuboid->m_position = { 0.f, 0.f, 0.f };
 	/*Create a static wind volume, no need to keep track of mem, system does that*/
 	m_demoSphere = m_windManager.createWindSphere();
@@ -68,8 +68,9 @@ bool BasicDemo::load()
 	ObjModel model;
 	XMMATRIX transform = XMMatrixScalingFromVector(VEC3(1, 0, 1));
 	//CHECK_FAIL(model.loadOBJ("../Resources/cat.obj"));
-	CHECK_FAIL(model.loadPlane(25, 25, 25, 25));
-	CHECK_FAIL(m_field.load(m_d3dDevice, &model, NUM(350), XMFLOAT3(0, 0, 0), { 5.f, 25, 5.f}/*, transform*/));
+	//CHECK_FAIL(model.loadPlane(25, 25, 25, 25));
+	CHECK_FAIL(model.loadOBJ("../Resources/hill_tris.txt", ObjModel::MESH_TOPOLOGY::QUAD_STRIP));
+	CHECK_FAIL(m_field.load(m_d3dDevice, &model, NUM(10), XMFLOAT3(0, -10, 0), { 25.f, 25, 25.f}/*, transform*/));
 	m_numBlades = m_field.getMaxNumBlades();
 	/*Only needed the hill model to place the grass (FOR NOW ANYWAY)*/
 	model.release();

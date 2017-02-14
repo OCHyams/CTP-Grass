@@ -428,7 +428,8 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	result = _device->CreateBuffer(&instanceBufferDesc, &instanceData, &m_instanceBuffer);
 	if (FAILED(result))
 	{
-		MessageBox(0, "Error creating instance buffer.", "Field", MB_OK);
+		std::string msg = "Error creating instance buffer. Num instances " + std::to_string(m_maxInstanceCount) + ".";
+		MessageBox(0, msg.c_str() , "Field", MB_OK);
 		return false;
 	}
 

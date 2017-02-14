@@ -43,7 +43,7 @@ void ObjModel::release( )
 }
 
 
-bool ObjModel::loadOBJ( char *fileName )
+bool ObjModel::loadOBJ( char *fileName, MESH_TOPOLOGY inputTopology)
 {
     std::ifstream fileStream;
     int fileSize = 0;
@@ -122,23 +122,76 @@ bool ObjModel::loadOBJ( char *fileName )
         }
         else if( strcmp( token.c_str( ), "f" ) == 0 )
         {
-            char faceTokens[3] = { '\n', ' ', '/' };
-            std::string faceIndex;
+			char faceTokens[3] = { '\n', ' ', '/' };
+			std::string faceIndex;
 
-            faceStream.SetTokenStream( ( char* )tempLine.c_str( ) );
-            faceStream.GetNextToken( 0, 0, 0 );
+			switch (inputTopology)
+			{
+			case ObjModel::TRIANGLE_STRIP:
+			{
+				faceStream.SetTokenStream((char*)tempLine.c_str());
+				faceStream.GetNextToken(0, 0, 0);
 
-            for( int i = 0; i < 3; i++ )
-            {
-                faceStream.GetNextToken( &faceIndex, faceTokens, 3 );
-                faces.push_back( ( int )atoi( faceIndex.c_str( ) ) );
+				for (int i = 0; i < 3; i++)
+				{
+					faceStream.GetNextToken(&faceIndex, faceTokens, 3);
+					faces.push_back((int)atoi(faceIndex.c_str()));
 
-				faceStream.GetNextToken( &faceIndex, faceTokens, 3 );
-                faces.push_back( ( int )atoi( faceIndex.c_str( ) ) );
+					faceStream.GetNextToken(&faceIndex, faceTokens, 3);
+					faces.push_back((int)atoi(faceIndex.c_str()));
 
-                faceStream.GetNextToken( &faceIndex, faceTokens, 3 );
-                faces.push_back( ( int )atoi( faceIndex.c_str( ) ) );
-            }
+					faceStream.GetNextToken(&faceIndex, faceTokens, 3);
+					faces.push_back((int)atoi(faceIndex.c_str()));
+				}
+				break;
+			}
+			case ObjModel::QUAD_STRIP:
+			{
+				faceStream.SetTokenStream((char*)tempLine.c_str());
+				faceStream.GetNextToken(0, 0, 0);
+				std::string ax, ay, az, cx, cy, cz;
+
+				faceStream.GetNextToken(&ax, faceTokens, 3);
+				faces.push_back((int)atoi(ax.c_str()));
+				faceStream.GetNextToken(&ay, faceTokens, 3);
+				faces.push_back((int)atoi(ay.c_str()));
+				faceStream.GetNextToken(&az, faceTokens, 3);
+				faces.push_back((int)atoi(az.c_str()));
+
+				faceStream.GetNextToken(&faceIndex, faceTokens, 3);
+				faces.push_back((int)atoi(faceIndex.c_str()));
+				faceStream.GetNextToken(&faceIndex, faceTokens, 3);
+				faces.push_back((int)atoi(faceIndex.c_str()));
+				faceStream.GetNextToken(&faceIndex, faceTokens, 3);
+				faces.push_back((int)atoi(faceIndex.c_str()));
+
+				faceStream.GetNextToken(&cx, faceTokens, 3);
+				faces.push_back((int)atoi(cx.c_str()));
+				faceStream.GetNextToken(&cy, faceTokens, 3);
+				faces.push_back((int)atoi(cy.c_str()));
+				faceStream.GetNextToken(&cz, faceTokens, 3);
+				faces.push_back((int)atoi(cz.c_str()));
+
+				faces.push_back((int)atoi(ax.c_str()));
+				faces.push_back((int)atoi(ay.c_str()));
+				faces.push_back((int)atoi(az.c_str()));
+
+				faces.push_back((int)atoi(cx.c_str()));
+				faces.push_back((int)atoi(cy.c_str()));
+				faces.push_back((int)atoi(cz.c_str()));
+
+				faceStream.GetNextToken(&faceIndex, faceTokens, 3);
+				faces.push_back((int)atoi(faceIndex.c_str()));
+				faceStream.GetNextToken(&faceIndex, faceTokens, 3);
+				faces.push_back((int)atoi(faceIndex.c_str()));
+				faceStream.GetNextToken(&faceIndex, faceTokens, 3);
+				faces.push_back((int)atoi(faceIndex.c_str()));
+				break;
+			}
+			default:
+				break;
+			}
+
         }
         else if( strcmp( token.c_str( ), "#" ) == 0 )
         {
