@@ -39,7 +39,7 @@ bool Field::loadShared(ID3D11Device* _device)
 {
 	HRESULT result;
 	ID3DBlob* buffer = nullptr;
-	int shaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
+	unsigned int shaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
 #if defined(DEBUG) || defined(_DEBUG)
 	shaderFlags |= D3DCOMPILE_DEBUG;
 #endif
@@ -77,7 +77,7 @@ bool Field::loadShared(ID3D11Device* _device)
 		{ "INSTANCE_LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, /*80*/16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "INSTANCE_WIND", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 28, D3D11_INPUT_PER_INSTANCE_DATA, 1}
 	};
-	unsigned int totalLayoutElements = ARRAYSIZE(vsLayout);
+	unsigned unsigned int totalLayoutElements = ARRAYSIZE(vsLayout);
 
 	result = _device->CreateInputLayout(vsLayout, totalLayoutElements, buffer->GetBufferPointer(), buffer->GetBufferSize(), &s_inputLayout);
 	RELEASE(buffer);
@@ -252,55 +252,55 @@ void Field::unloadShared()
 }
 
 
-bool Field::load(	ID3D11Device*		_device, 
-					int					_instanceCount, 
-					DirectX::XMFLOAT2	_size, 
-					DirectX::XMFLOAT3	_pos)
-{
-	m_maxInstanceCount = _instanceCount;
-	m_size = _size;
-	m_pos = _pos;
+//bool Field::load(	ID3D11Device*		_device, 
+//					int					_instanceCount, 
+//					DirectX::XMFLOAT2	_size, 
+//					DirectX::XMFLOAT3	_pos)
+//{
+//	m_maxInstanceCount = _instanceCount;
+//	m_size = _size;
+//	m_pos = _pos;
+//
+//	using namespace DirectX;
+//	HRESULT result;
+//
+//	field::Instance* instances;
+//	D3D11_BUFFER_DESC instanceBufferDesc;
+//	D3D11_SUBRESOURCE_DATA instanceData;
+//
+//	// Create the instance array.
+//	instances = generateInstanceData();
+//
+//	// Set up the description of the instance buffer.
+//	instanceBufferDesc.Usage				= D3D11_USAGE_DEFAULT;
+//	instanceBufferDesc.ByteWidth			= sizeof(field::Instance) * m_maxInstanceCount;
+//	instanceBufferDesc.BindFlags			= D3D11_BIND_VERTEX_BUFFER;
+//	instanceBufferDesc.CPUAccessFlags		= 0;
+//	instanceBufferDesc.MiscFlags			= 0;
+//	instanceBufferDesc.StructureByteStride	= 0;
+//	// Give the subresource structure a pointer to the instance data.
+//	instanceData.pSysMem = instances; 
+//	instanceData.SysMemPitch = 0;
+//	instanceData.SysMemSlicePitch = 0;
+//
+//	// Create the instance buffer.
+//	result = _device->CreateBuffer(&instanceBufferDesc, &instanceData, &m_instanceBuffer);
+//	if (FAILED(result))
+//	{
+//		MessageBox(0, "Error creating instance buffer.", "Field", MB_OK);
+//		return false;
+//	}
+//
+//	// Release the instance array now that the instance buffer has been created and loaded.
+//	delete[] instances;
+//	instances = nullptr;
+//
+//
+//	return loadBuffers(_device);
+//}
 
-	using namespace DirectX;
-	HRESULT result;
 
-	field::Instance* instances;
-	D3D11_BUFFER_DESC instanceBufferDesc;
-	D3D11_SUBRESOURCE_DATA instanceData;
-
-	// Create the instance array.
-	instances = generateInstanceData();
-
-	// Set up the description of the instance buffer.
-	instanceBufferDesc.Usage				= D3D11_USAGE_DEFAULT;
-	instanceBufferDesc.ByteWidth			= sizeof(field::Instance) * m_maxInstanceCount;
-	instanceBufferDesc.BindFlags			= D3D11_BIND_VERTEX_BUFFER;
-	instanceBufferDesc.CPUAccessFlags		= 0;
-	instanceBufferDesc.MiscFlags			= 0;
-	instanceBufferDesc.StructureByteStride	= 0;
-	// Give the subresource structure a pointer to the instance data.
-	instanceData.pSysMem = instances; 
-	instanceData.SysMemPitch = 0;
-	instanceData.SysMemSlicePitch = 0;
-
-	// Create the instance buffer.
-	result = _device->CreateBuffer(&instanceBufferDesc, &instanceData, &m_instanceBuffer);
-	if (FAILED(result))
-	{
-		MessageBox(0, "Error creating instance buffer.", "Field", MB_OK);
-		return false;
-	}
-
-	// Release the instance array now that the instance buffer has been created and loaded.
-	delete[] instances;
-	instances = nullptr;
-
-
-	return loadBuffers(_device);
-}
-
-
-bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize/*, const DirectX::XMMATRIX& _transform*/)
+bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize)
 {
 	m_pos = _pos;
 
@@ -320,58 +320,21 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	float truncationAccumulator = 0;
 	float* vertElementPtr = _model->getVertices();
 	float* normElementPtr = _model->getNormals();
-	int numVerts = _model->getTotalVerts();
+	unsigned int numVerts = _model->getTotalVerts();
 	m_maxInstanceCount = 0;
 
 	XMFLOAT3 triVerts[3];
 	XMFLOAT3 triNorms[3];
 	XMVECTOR posVec = LF3(&m_pos);
-	/*For every triangle...*/
-	//for (int i = 0; i < numVerts; i += 3)
-	//{
-	//	/*Get vert positions*/
-	//	memcpy(triVerts, vertElementPtr, sizeof(float) * 9);
-	//	vertElementPtr += 9;
-	//	/*Transform verts*///@For now just translate
-	//	for (int i = 0; i < 3; ++i)
-	//	{
-	//		//XMVECTOR transformedVert = XMVector3Transform(LF3(&triVerts[i]), _transform);
-	//		//XMStoreFloat3(&triVerts[i], transformedVert);
-	//		XMStoreFloat3(&triVerts[i], posVec + LF3(&triVerts[i]));
-	//	}
-
-	//	/*Get vert normals*/
-	//	if (normElementPtr)
-	//	{
-	//		memcpy(triNorms, normElementPtr, sizeof(float) * 9);
-	//		normElementPtr += 9;
-	//	}
-
-	//	/*Store vert positions & calc surface area*/
-	//	Triangle triangle = Triangle(triVerts, triNorms);
-
-	//	/*Calc number of blades*/
-	//	int numBlades = (int)std::truncf(triangle.m_surfaceArea * _density);
-	//	/*Deal with trunc rounding accumulation*/
-	//	truncationAccumulator += std::fmodf(_density, triangle.m_surfaceArea);
-	//	if (truncationAccumulator >= 1.0f)
-	//	{
-	//		++numBlades;
-	//		--truncationAccumulator;
-	//	}
-
-	//	/*Add the patch to the field and octree*/
-	//	addPatch(triangle, numBlades, nodeCache);
-	//	m_maxInstanceCount += numBlades;
-	//}
+	
 	/*For every triangle, currently testing faster implementation*/
-	for (int i = 0; i < numVerts; i += 3)
+	for (unsigned int i = 0; i < numVerts; i += 3)
 	{
 		/*Get vert positions*/
 		memcpy(triVerts, vertElementPtr, sizeof(float) * 9);
 		vertElementPtr += 9;
 		/*Transform verts*///@For now just translate
-		for (int i = 0; i < 3; ++i)
+		for (unsigned int i = 0; i < 3; ++i)
 		{
 			//XMVECTOR transformedVert = XMVector3Transform(LF3(&triVerts[i]), _transform);
 			//XMStoreFloat3(&triVerts[i], transformedVert);
@@ -388,7 +351,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		/*Store vert positions & calc surface area*/
 		float sa = Triangle::surfaceArea((float*)triVerts);
 		/*Calc number of blades*/
-		int numBlades = (int)std::truncf(sa * _density);
+		unsigned int numBlades = (int)std::truncf(sa * _density);
 		/*Deal with trunc rounding accumulation*/
 		truncationAccumulator += std::fmodf(_density, sa);
 		if (truncationAccumulator >= 1.0f)
@@ -552,8 +515,8 @@ void Field::draw(const DrawData& _data)
 	//The resource is now already on the GPU
 
 	/*Draw field*/
-	unsigned int strides[2];
-	unsigned int offsets[2];
+	unsigned unsigned int strides[2];
+	unsigned unsigned int offsets[2];
 	ID3D11Buffer* bufferPointers[2];
 
 	// Set the buffer strides.
@@ -666,20 +629,20 @@ field::Instance* Field::generateInstanceData()
 
 	double side = MAX(sy, sx);
 
-	int xcount = floor(m_size.x / side);
-	int zcount = floor(m_size.y / side);
+	unsigned int xcount = floor(m_size.x / side);
+	unsigned int zcount = floor(m_size.y / side);
 	float xoffset = 0;
 	float zoffset = 0;
-	int index = 0;
+	unsigned int index = 0;
 
 	//RNG
 	std::default_random_engine generator;
 	std::uniform_real_distribution<float> distribution(0, 2 * XM_PI);
 	auto randAngle = std::bind(distribution, generator);
 
-	for (int x = 0; x < xcount; ++x)
+	for (unsigned int x = 0; x < xcount; ++x)
 	{
-		for (int z = 0; z < zcount; ++z)
+		for (unsigned int z = 0; z < zcount; ++z)
 		{
 			if (index >= m_maxInstanceCount) break;
 			//scale
@@ -775,7 +738,7 @@ bool Field::loadBuffers(ID3D11Device* _device)
 	return true;
 }
 
-void Field::addPatch(/*std::vector<field::Instance>& _field, *//*const Triangle& _tri*/float* verts, int _numBlades, Octree::Node* _nodeCache)
+void Field::addPatch(/*std::vector<field::Instance>& _field, *//*const Triangle& _tri*/float* verts, unsigned int _numBlades, Octree::Node* _nodeCache)
 {
 	using namespace DirectX;
 	
@@ -795,7 +758,7 @@ void Field::addPatch(/*std::vector<field::Instance>& _field, *//*const Triangle&
 	XMVECTOR c = VEC3(*(verts + 6), *(verts + 7), *(verts + 8));
 
 	//Use barycentric coordinates [Orthmann] to place grass
-	for (int i = 0; i < _numBlades; ++i)
+	for (unsigned int i = 0; i < _numBlades; ++i)
 	{
 		field::Instance instance;
 

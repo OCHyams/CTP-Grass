@@ -10,7 +10,8 @@
 
 #ifndef _OBJ_LOADER_H_
 #define _OBJ_LOADER_H_
-
+#include <d3d11_2.h>
+#include "SimpleMath.h"
 
 class ObjModel
 {
@@ -21,7 +22,9 @@ class ObjModel
 
       void release( );
 
-      bool loadOBJ( char *fileName, MESH_TOPOLOGY inputTopology = TRIANGLE_STRIP);
+	  //Right now, only works with TRIANGLE_STRIP and QUAD_STRIP inputs and TRIANGLE_LIST output
+      bool loadOBJ(const char *fileName, const DirectX::XMFLOAT4X4& _transform, MESH_TOPOLOGY inputTopology = TRIANGLE_STRIP );
+	  bool loadOBJ(const char *fileName,  MESH_TOPOLOGY inputTopology = TRIANGLE_STRIP);
 	  bool loadPlane( float x, float z, float subSizeX, float subSizeZ );
 
 

@@ -45,17 +45,17 @@ public:
 	/////////////////////////////////////////////////
 	static void unloadShared();
 	//Don't use this anymore
-	bool load(ID3D11Device*, int _instanceCount, DirectX::XMFLOAT2 _size, DirectX::XMFLOAT3	_pos);
+	//bool load(ID3D11Device*, unsigned int _instanceCount, DirectX::XMFLOAT2 _size, DirectX::XMFLOAT3	_pos);
 	/*Model is only used during set-up*/ //@_minOctreeNodeSize should get calculated from collision data
-	bool load(ID3D11Device*, ObjModel*, float density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize/*, const DirectX::XMMATRIX& _transform*/);
+	bool load(ID3D11Device*, ObjModel*, float density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize);
 
 	void unload();
 
 	//void update();
 	void draw(const DrawData&);
 
-	int getMaxNumBlades() { return m_maxInstanceCount; }
-	int getCurNumBlades() { return m_curInstanceCount; }
+	unsigned int getMaxNumBlades() { return m_maxInstanceCount; }
+	unsigned int getCurNumBlades() { return m_curInstanceCount; }
 
 	//public for now cus lazy
 	//static DirectX::XMFLOAT4X4		s_viewproj;
@@ -165,7 +165,7 @@ private:
 		}
 
 	};
-	void addPatch(/*std::vector<field::Instance>& _field,*//* const Triangle& _tri*/float* verts, int _numBlade, Octree::Node* _nodeCache);
+	void addPatch(/*std::vector<field::Instance>& _field,*//* const Triangle& _tri*/float* verts, unsigned int _numBlade, Octree::Node* _nodeCache);
 };
 
 

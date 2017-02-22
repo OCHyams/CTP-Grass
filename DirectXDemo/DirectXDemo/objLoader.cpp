@@ -42,8 +42,13 @@ void ObjModel::release( )
     m_texCoords = 0;
 }
 
-
-bool ObjModel::loadOBJ( char *fileName, MESH_TOPOLOGY inputTopology)
+bool ObjModel::loadOBJ(const char *fileName, MESH_TOPOLOGY inputTopology)
+{
+	DirectX::XMFLOAT4X4 idnty;
+	DirectX::XMStoreFloat4x4(&idnty, DirectX::XMMatrixIdentity());
+	return loadOBJ(fileName, idnty, inputTopology);
+}
+bool ObjModel::loadOBJ( const char *fileName, const DirectX::XMFLOAT4X4& _transform, MESH_TOPOLOGY inputTopology)
 {
     std::ifstream fileStream;
     int fileSize = 0;
@@ -221,11 +226,19 @@ bool ObjModel::loadOBJ( char *fileName, MESH_TOPOLOGY inputTopology)
         m_texCoords = new float[m_totalVerts * 2];
     }
 
+	using namespace DirectX;
+	XMMATRIX transform = LF44(&_transform);
     for( int f = 0; f < ( int )faces.size( ); f+=3 )
     {
-        m_vertices[vIndex + 0] = verts[( faces[f + 0] - 1 ) * 3 + 0];
+		XMVECTOR v3_vertPos = VEC3(verts[(faces[f + 0] - 1) * 3 + 0], verts[(faces[f + 0] - 1) * 3 + 1], verts[(faces[f + 0] - 1) * 3 + 2]);
+		v3_vertPos = XMVector3TransformCoord(v3_vertPos, transform);
+
+		XMFLOAT3 f3_vertPos;
+		STOREF3(&f3_vertPos, v3_vertPos);
+		memcpy(&m_vertices[vIndex], &f3_vertPos, sizeof(float)*3);
+      /*  m_vertices[vIndex + 0] = verts[( faces[f + 0] - 1 ) * 3 + 0];
         m_vertices[vIndex + 1] = verts[( faces[f + 0] - 1 ) * 3 + 1];
-        m_vertices[vIndex + 2] = verts[( faces[f + 0] - 1 ) * 3 + 2];
+        m_vertices[vIndex + 2] = verts[( faces[f + 0] - 1 ) * 3 + 2];*/
         vIndex += 3;
 
         if(m_texCoords)

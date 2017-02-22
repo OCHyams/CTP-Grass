@@ -28,6 +28,8 @@ public:
 	const DirectX::XMFLOAT3& getPos() const {return m_pos;}
 	const DirectX::XMFLOAT3& getRot() const { return m_rot; }
 	static const DirectX::XMFLOAT4X4& getViewProj() { return s_viewProj; }
+	const DirectX::XMFLOAT4X4& getWVPTranspose() const { return m_worldViewProj; }
+
 protected:
 	DirectX::XMFLOAT3 m_pos;
 	DirectX::XMFLOAT3 m_rot;

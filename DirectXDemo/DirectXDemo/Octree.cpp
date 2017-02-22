@@ -141,8 +141,8 @@ Octree::Node* Octree::build(const ObjModel& _model, DirectX::XMVECTOR _position,
 	for(auto leaf: leaves)
 	{
 		/*Just take surface area of base * density because usually only one plane is covered in any node*/
-		/*mul by 2 because extents are 1/2, mul by 1.1 to to be safe*/
-		leaf->m_instances.reserve(_density * 2.1 * leaf->m_AABB.Extents.x * leaf->m_AABB.Extents.z);
+		/*mul by 2 because extents are 1/2*/
+		leaf->m_instances.reserve(_density * 2.0 * leaf->m_AABB.Extents.x * leaf->m_AABB.Extents.z);
 	}
 
 	return root;

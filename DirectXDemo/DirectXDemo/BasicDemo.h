@@ -4,6 +4,7 @@
 #include <DirectXMath.h>
 #include "Field.h"
 #include "WindManager.h"
+#include "Renderer.h"
 class GameObject;
 class ArcCamera;
 class SimpleGrass;
@@ -28,4 +29,5 @@ private:
 	float m_fps;
 	int m_numBlades;
 	int m_numDrawnBlades;
+	Renderer m_renderer;
 };

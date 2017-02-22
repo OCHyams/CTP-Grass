@@ -28,7 +28,7 @@ void ArcCamera::update()
 	using namespace DirectX;
 	using TIME = OCH::ServiceLocator<Time>;
 	using INPUT = OCH::ServiceLocator<Input>;
-	float speed = 2 * TIME::get()->deltaTime;
+	float speed = 0.5f * TIME::get()->deltaTime;
 
 	XMFLOAT3 euler = m_rot;
 
@@ -64,19 +64,19 @@ void ArcCamera::update()
 
 	if (INPUT::get()->getKey(DIK_LEFT))
 	{
-		m_target.x += speed;
+		m_target.x += speed*3;
 	}
 	else if (INPUT::get()->getKey(DIK_RIGHT))
 	{
-		m_target.x -= speed;
+		m_target.x -= speed*3;
 	}
 	if (INPUT::get()->getKey(DIK_UP))
 	{
-		m_target.z += speed;
+		m_target.z += speed*3;
 	}
 	else if (INPUT::get()->getKey(DIK_DOWN))
 	{
-		m_target.z -= speed;
+		m_target.z -= speed*3;
 	}
 	XMVECTOR offset = XMVector3Rotate(LF3(&m_offset), QUAT(LF3(&euler)));
 	XMStoreFloat3(&m_pos, LF3(&m_target) + offset);

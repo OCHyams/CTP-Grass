@@ -1,4 +1,7 @@
 #pragma once
+#include <d3d11_2.h>
+#include "SimpleMath.h"
+
 __declspec(align(16))
 struct CBGrassGeometry
 {
@@ -62,4 +65,21 @@ struct CBWindForceChangesPerFrame
 	unsigned int numCuboids;
 	unsigned int numSpheres;
 	unsigned int numInstances;
+};
+
+__declspec(align(16))
+struct CBDefaultObject_ChangesPerObject
+{
+	DirectX::XMMATRIX	m_worldViewProj;
+	DirectX::XMFLOAT3	m_worldPos;
+	float				m_specularPow;
+};
+
+__declspec(align(16))
+struct CBDefaultObject_ChangesPerFrame
+{
+	DirectX::XMFLOAT3	m_cameraPos;
+	float				pad0;
+	DirectX::XMFLOAT3	m_lightPos;
+	float				m_intensity;
 };
