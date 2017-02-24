@@ -23,7 +23,7 @@ struct PS_INPUT
 
 struct PS_OUT
 {
-	float4	target0	: SV_TARGET0;
+	float4	target0	: SV_TARGET;
 };
 
 ////For now just draw one colour & don't worry about texcoords

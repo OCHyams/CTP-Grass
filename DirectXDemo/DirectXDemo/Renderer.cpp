@@ -127,7 +127,10 @@ bool Renderer::load(ID3D11Device* _device)
 
 
 	/*Models!*/
-	if (!loadMesh("../Resources/hill_tris.txt", ObjModel::QUAD_STRIP, MESH::HILL, _device))
+	XMMATRIX v44_transform = XMMatrixScalingFromVector(VEC3(0.3, 0.3, 0.3));
+	XMFLOAT4X4 f44_transform;
+	XMStoreFloat4x4(&f44_transform, v44_transform);
+	if (!loadMesh("../Resources/hill_tris.txt", ObjModel::QUAD_STRIP, MESH::HILL, _device, f44_transform))
 	{
 		MessageBox(0, "Error loading or creating model", "Mesh object", MB_OK);
 		return false;
@@ -268,9 +271,9 @@ MeshInfo* Renderer::loadMeshHelper(const ObjModel& model, ID3D11Device* _device)
 	}
 	mesh->m_vbs.push_back(vertexBufferPtr);
 
-	/*Create index buffer*///@What's wrong here?!!??!
+
 	WORD* idxBuffer = new WORD[model.getTotalVerts()];
-	for (WORD i = 0; i < model.getTotalVerts(); ++i)
+	for (int i = 0; i < model.getTotalVerts(); ++i)
 	{
 		idxBuffer[i] = i;
 	}
@@ -301,13 +304,13 @@ MeshInfo* Renderer::loadMeshHelper(const ObjModel& model, ID3D11Device* _device)
 	return mesh;
 }
 
-MeshInfo* Renderer::loadMesh(const std::string& _fpath, ObjModel::MESH_TOPOLOGY inputTopology, MESH idx, ID3D11Device* _device)
+MeshInfo* Renderer::loadMesh(const std::string& _fpath, ObjModel::MESH_TOPOLOGY inputTopology, MESH idx, ID3D11Device* _device, const DirectX::XMFLOAT4X4& _transform)
 {
 	/*Load the model and build the vertex buffer*/
 	ObjModel* model = new ObjModel;
 
 
-	bool result = model->loadOBJ(_fpath.c_str(), inputTopology);
+	bool result = model->loadOBJ(_fpath.c_str(), _transform, inputTopology);
 	if (!result)
 	{
 		MessageBox(0, "Couldn't load obj.", "Mesh Object", MB_OK);

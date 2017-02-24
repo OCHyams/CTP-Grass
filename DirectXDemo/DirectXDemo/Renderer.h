@@ -6,7 +6,7 @@
 #include "RendererData.h"
 #include "DrawData.h"
 #include "GameObject.h"
-
+#include <SimpleMath.h>
 class ArcCamera;
 class MeshInfo;
 class RenderInfo;
@@ -36,7 +36,7 @@ protected:
 	std::map<FX, RenderInfo*>	m_fx;
 	std::vector<MeshObject*>	m_meshObjects;
 
-	MeshInfo* Renderer::loadMesh(const std::string& _fpath, ObjModel::MESH_TOPOLOGY inputTopology, MESH idx, ID3D11Device* _device);
+	MeshInfo* Renderer::loadMesh(const std::string& _fpath, ObjModel::MESH_TOPOLOGY inputTopology, MESH idx, ID3D11Device* _device, const DirectX::XMFLOAT4X4& _transform);
 	
 private:
 	MeshInfo* Renderer::loadMeshHelper(const ObjModel& model, ID3D11Device* _device);

@@ -23,7 +23,7 @@ BasicDemo::~BasicDemo()
 #define CHECK_FAIL(x) if (!x) return false
 bool BasicDemo::load()
 {	
-	//CHECK_FAIL(m_renderer.load(m_d3dDevice));
+	CHECK_FAIL(m_renderer.load(m_d3dDevice));
 
 	/*Load data shared by all wind managers (though there should only be one anyway)*/
 	WindManager::loadShared(m_d3dDevice);
@@ -67,18 +67,18 @@ bool BasicDemo::load()
 	m_field.m_windManager = &m_windManager;
 
 	/*Load hills model for grass*/
-	//ObjModel* pModel = m_renderer.getObjModel(MESH::HILL);
-	//CHECK_FAIL(pModel);
-	ObjModel model;
+	ObjModel* pModel = m_renderer.getObjModel(MESH::HILL);
+	CHECK_FAIL(pModel);
+	//ObjModel model;
 	XMMATRIX v44_transform = XMMatrixScalingFromVector(VEC3(0.1, 0.1, 0.1));
 	XMFLOAT4X4 f44_transform;
 	XMStoreFloat4x4(&f44_transform, v44_transform);
-	CHECK_FAIL(model.loadPlane(100, 100, 100, 100));
+	//CHECK_FAIL(model.loadPlane(100, 100, 100, 100));
 	//CHECK_FAIL(model.loadOBJ("../Resources/hill_tris.txt", f44_transform, ObjModel::MESH_TOPOLOGY::QUAD_STRIP));
-	CHECK_FAIL(m_field.load(m_d3dDevice, &model, NUM(100), XMFLOAT3(0, -0.5, 0), { 10.f, 10, 10.f}));
+	CHECK_FAIL(m_field.load(m_d3dDevice, pModel, NUM(100), XMFLOAT3(0, -0.5, 0), { 10.f, 10, 10.f}));
 	m_numBlades = m_field.getMaxNumBlades();
 	/*Only needed the hill model to place the grass (FOR NOW ANYWAY)*/
-	model.release();
+	//model.release();
 
 	m_cam = new ArcCamera({ 0.f, 0.f, 0.f });
 	m_objects.push_back(m_cam);
