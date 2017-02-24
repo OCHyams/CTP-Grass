@@ -83,3 +83,10 @@ struct CBDefaultObject_ChangesPerFrame
 	DirectX::XMFLOAT3	m_lightPos;
 	float				m_intensity;
 };
+
+__declspec(align(16))
+struct CBGenerateGrass_RarelyChanges
+{
+	unsigned int numVerts;
+	unsigned int grassDensity; 
+};

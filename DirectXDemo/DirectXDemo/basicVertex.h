@@ -10,3 +10,4 @@ struct BezierVertex
 	DirectX::XMFLOAT3 pos;
 	float tVal;
 };
+

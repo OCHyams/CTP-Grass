@@ -9,6 +9,7 @@
 #include "WindCuboid.h"
 #include "WindSphere.h"
 #include "Input.h"
+#include "MeshInfo.h"
 /*Make large INTs easier to read in code*/
 #define NUM(x0) x0
 #define NUM(x0, x1) x0 ## x1
@@ -23,7 +24,7 @@ BasicDemo::~BasicDemo()
 #define CHECK_FAIL(x) if (!x) return false
 bool BasicDemo::load()
 {	
-	//CHECK_FAIL(m_renderer.load(m_d3dDevice));
+	m_renderer.load(m_d3dDevice);
 
 	/*Load data shared by all wind managers (though there should only be one anyway)*/
 	WindManager::loadShared(m_d3dDevice);
@@ -33,52 +34,23 @@ bool BasicDemo::load()
 	windCuboid->m_extents = { 100.0f, 100.0f, 100.0f };
 	windCuboid->m_initalVelocity = { 0.3f, 0.f, 0.f };
 	windCuboid->m_position = { 0.f, 0.f, 0.f };
-	/*Create a static wind volume, no need to keep track of mem, system does that*/
-	m_demoSphere = m_windManager.createWindSphere();
-	m_demoSphere->m_fallOffPow = 5;
-	m_demoSphere->m_initalStrength = 0.f;;
-	m_demoSphere->m_position = { 0,0,0 };
-	m_demoSphere->m_radius = 2.0f;
 
-
-	//Tweak bar
-	TwBar* GUI = TwNewBar("Settings");
-	TwDefine(" Settings position='10 10' ");
-	TwDefine(" Settings size='300 200' ");
-	TwDefine(" Settings movable= false ");
-	TwDefine(" Settings resizable= true ");
-	TwAddVarRW(GUI, "draw octree", TwType::TW_TYPE_BOOLCPP, &m_field.m_drawOctree, "");
-	TwAddVarRW(GUI, "enable frustum culling", TwType::TW_TYPE_BOOLCPP, &m_field.m_frustumCull, "");
-	TwAddVarRW(GUI, "str", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_initalStrength, "step = 0.05");
-	TwAddVarRW(GUI, "rad", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_radius, "step = 0.05");
-	TwAddVarRW(GUI, "pow", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_fallOffPow, "step = 0.05");
-	TwAddVarRO(GUI, "FPS", TwType::TW_TYPE_FLOAT, &m_fps, "");
-	TwAddVarRO(GUI, "Total Blade count", TwType::TW_TYPE_INT32, &m_numBlades, "");
-	TwAddVarRO(GUI, "Blades Drawn", TwType::TW_TYPE_INT32, &m_numDrawnBlades, "");
 
 	using namespace DirectX;
-	m_fps = 0;
 
 	/*Load data shared by all fields*/
-	CHECK_FAIL(Field::loadShared(m_d3dDevice));
+	CHECK_FAIL(GrassObject::loadShared(m_d3dDevice));
 
 	/*Set up demo field*/
 	m_field.m_halfGrassWidth = 0.02f;
 	m_field.m_windManager = &m_windManager;
 
 	/*Load hills model for grass*/
-	//ObjModel* pModel = m_renderer.getObjModel(MESH::HILL);
-	//CHECK_FAIL(pModel);
-	ObjModel model;
-	XMMATRIX v44_transform = XMMatrixScalingFromVector(VEC3(0.1, 0.1, 0.1));
-	XMFLOAT4X4 f44_transform;
-	XMStoreFloat4x4(&f44_transform, v44_transform);
-	CHECK_FAIL(model.loadPlane(100, 100, 100, 100));
-	//CHECK_FAIL(model.loadOBJ("../Resources/hill_tris.txt", f44_transform, ObjModel::MESH_TOPOLOGY::QUAD_STRIP));
-	CHECK_FAIL(m_field.load(m_d3dDevice, &model, NUM(100), XMFLOAT3(0, -0.5, 0), { 10.f, 10, 10.f}));
-	m_numBlades = m_field.getMaxNumBlades();
-	/*Only needed the hill model to place the grass (FOR NOW ANYWAY)*/
-	model.release();
+	MeshInfo* pMesh = m_renderer.getMeshInfo(MESH::HILL);
+	CHECK_FAIL(pMesh);
+
+	CHECK_FAIL(m_field.load(m_d3dDevice, pMesh->m_vbs.at(0), pMesh->m_vCount, 100));
+
 
 	m_cam = new ArcCamera({ 0.f, 0.f, 0.f });
 	m_objects.push_back(m_cam);
@@ -118,24 +90,17 @@ void BasicDemo::update()
 	}
 
 	/*Move the demo wind sphere around*/
-	using namespace DirectX;
+	/*using namespace DirectX;
 	XMVECTOR windSphereNewPos = VEC3(	(int)m_input->getKey(DIK_LEFT) * -1 + (int)m_input->getKey(DIK_RIGHT),
 										(int)m_input->getKey(DIK_DOWN) * -1 + (int)m_input->getKey(DIK_UP),
 										0);
 	windSphereNewPos *= m_time.deltaTime * 0.5f;
-	windSphereNewPos += LF3(&m_demoSphere->m_position);
-	STOREF3(&m_demoSphere->m_position, windSphereNewPos);
+	windSphereNewPos += LF3(&m_demoSphere->m_position);*/
 	
 	
 	//Field::updateCameraPosition(m_cam->getPos());
 	//m_field.s_viewproj = GameObject::getViewProj();//@move this out onto camera, and call this function in draw instead of out here...
 	//m_field.update();
-
-	if (m_time.deltaTime > 0)
-	{
-		m_fps = 1 / m_time.deltaTime;
-	}
-	m_numDrawnBlades = m_field.getCurNumBlades();
 }
 
 void BasicDemo::render()

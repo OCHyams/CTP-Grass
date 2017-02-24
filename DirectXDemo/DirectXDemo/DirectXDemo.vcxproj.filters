@@ -81,6 +81,9 @@
     <ClCompile Include="DefaultObjectRenderInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GrassObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DX11Demo.h">
@@ -179,6 +182,9 @@
     <ClInclude Include="DefaultObjectRenderInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GrassObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="SolidGreenColour.fx">
@@ -200,6 +206,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="DefaultObjectPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="GenerateGrassCS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

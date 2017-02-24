@@ -126,8 +126,11 @@ bool Renderer::load(ID3D11Device* _device)
 
 
 
-	/*Models!*/
-	if (!loadMesh("../Resources/hill_tris.txt", ObjModel::QUAD_STRIP, MESH::HILL, _device))
+	/*Models!*/ //@This bit should be moved out of the renderer so that models are added by user & use int instead of Enum for internal id
+	XMMATRIX v44_transform = XMMatrixScalingFromVector(VEC3(0.1, 0.1, 0.1));
+	XMFLOAT4X4 f44_transform;
+	XMStoreFloat4x4(&f44_transform, v44_transform);
+	if (!loadMesh("../Resources/hill_tris.txt", ObjModel::QUAD_STRIP, MESH::HILL, _device, f44_transform))
 	{
 		MessageBox(0, "Error loading or creating model", "Mesh object", MB_OK);
 		return false;
@@ -217,6 +220,16 @@ ObjModel* Renderer::getObjModel(MESH meshIdx)
 	return nullptr;
 }
 
+MeshInfo* Renderer::getMeshInfo(MESH meshIdx)
+{
+	auto itr = m_meshes.find(meshIdx);
+	if (itr != m_meshes.end())
+	{
+		return itr->second;
+	}
+	return nullptr;
+}
+
 MeshInfo* Renderer::loadMeshHelper(const ObjModel& model, ID3D11Device* _device)
 {
 	MeshInfo* mesh = new MeshInfo();
@@ -252,7 +265,7 @@ MeshInfo* Renderer::loadMeshHelper(const ObjModel& model, ID3D11Device* _device)
 	D3D11_BUFFER_DESC vDesc;
 	ZeroMemory(&vDesc, sizeof(vDesc));
 	vDesc.Usage = D3D11_USAGE_DEFAULT;
-	vDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER | D3D11_BIND_SHADER_RESOURCE;//@this should be an option somewhere 
 	vDesc.ByteWidth = sizeof(DefaultVertex) * vertCount;
 	D3D11_SUBRESOURCE_DATA resourceData;
 	ZeroMemory(&resourceData, sizeof(resourceData));
@@ -269,8 +282,8 @@ MeshInfo* Renderer::loadMeshHelper(const ObjModel& model, ID3D11Device* _device)
 	mesh->m_vbs.push_back(vertexBufferPtr);
 
 	/*Create index buffer*///@What's wrong here?!!??!
-	WORD* idxBuffer = new WORD[model.getTotalVerts()];
-	for (WORD i = 0; i < model.getTotalVerts(); ++i)
+	WORD* idxBuffer = new WORD[vertCount];
+	for (int i = 0; i < vertCount; ++i)
 	{
 		idxBuffer[i] = i;
 	}
@@ -297,17 +310,18 @@ MeshInfo* Renderer::loadMeshHelper(const ObjModel& model, ID3D11Device* _device)
 	mesh->m_ibOffset = 0;
 
 	delete[] vBuffer;
+	delete[] idxBuffer;
 
 	return mesh;
 }
 
-MeshInfo* Renderer::loadMesh(const std::string& _fpath, ObjModel::MESH_TOPOLOGY inputTopology, MESH idx, ID3D11Device* _device)
+MeshInfo* Renderer::loadMesh(const std::string& _fpath, ObjModel::MESH_TOPOLOGY inputTopology, MESH idx, ID3D11Device* _device, const DirectX::XMFLOAT4X4& _transform)
 {
 	/*Load the model and build the vertex buffer*/
 	ObjModel* model = new ObjModel;
 
 
-	bool result = model->loadOBJ(_fpath.c_str(), inputTopology);
+	bool result = model->loadOBJ(_fpath.c_str(), _transform, inputTopology);
 	if (!result)
 	{
 		MessageBox(0, "Couldn't load obj.", "Mesh Object", MB_OK);
@@ -317,6 +331,7 @@ MeshInfo* Renderer::loadMesh(const std::string& _fpath, ObjModel::MESH_TOPOLOGY 
 
 	MeshInfo* mesh = loadMeshHelper(*model, _device);
 	if (mesh == nullptr) MessageBox(0, "Couldn't create mesh info", "Mesh Object", MB_OK);
+
 	m_meshes.insert(std::pair<MESH, MeshInfo*>(idx, mesh));
 	m_objModels.insert(std::pair<MESH, ObjModel*>(idx, model));
 

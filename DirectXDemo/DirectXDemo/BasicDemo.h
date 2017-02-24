@@ -4,6 +4,7 @@
 #include <DirectXMath.h>
 #include "Field.h"
 #include "WindManager.h"
+#include "GrassObject.h"
 #include "Renderer.h"
 //Testing branching...
 class GameObject;
@@ -24,7 +25,7 @@ public:
 private:
 	std::vector<GameObject*> m_objects;
 	ArcCamera* m_cam;
-	Field m_field;
+	GrassObject m_field;
 	WindManager m_windManager;
 	WindSphere* m_demoSphere;
 	float m_fps;
