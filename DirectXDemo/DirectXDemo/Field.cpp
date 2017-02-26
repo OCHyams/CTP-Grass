@@ -603,7 +603,8 @@ void Field::updateConstBuffers(const DrawData& _data)
 	
 	m_CBcpu_light.intensity = 1.0f;
 	m_CBcpu_light.camera = XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.f);
-	m_CBcpu_light.light = XMFLOAT4(0 , 3 , 0 , 1);//m_CBcpu_light.camera;
+	XMVECTOR lightdir = XMVector3Normalize(VEC4(0, 1, 1, 1));
+	STOREF4(&m_CBcpu_light.light, lightdir);
 
 }
 

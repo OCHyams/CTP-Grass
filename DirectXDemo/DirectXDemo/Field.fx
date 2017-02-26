@@ -337,16 +337,15 @@ float4 PS_Main(PS_INPUT input) : SV_TARGET
 	//return float4(final * TEX_0.Sample(SAMPLER_STATE, input.texcoord), 1.0f);
 
 	//Hey this looks a bit better... very similar to all the other implementations except i sat down and worked through the Phong model to see what was gonig on.
-	float3 lightDir = normalize(float3(0 ,1, 1));
 	float3 ambientIntensity = 0.3f;
-	float3 specIntensity = 0.2f;
-	float3 diffuseIntensity = 1.f;
+	float3 specIntensity = 0.1f;
+	float3 diffuseIntensity = 0.9f;
 	float shininess = 8;
-	float3 LdotN = dot(lightDir, input.normal);
-	float3 R = 2 * LdotN * input.normal - lightDir;
+	float3 LdotN = dot(light, input.normal);
+	float3 R = 2 * LdotN * input.normal - light;
 	float3 illumination = ambientIntensity + (diffuseIntensity * LdotN) + (specIntensity * pow(dot(R, input.viewVec), shininess));
 	//Back faces
-	LdotN = dot(lightDir, -input.normal);
+	LdotN = dot(light, -input.normal);
 	R *= -1;
 	illumination += ambientIntensity + diffuseIntensity * LdotN + specIntensity * pow(dot(R, input.viewVec), shininess);
 
