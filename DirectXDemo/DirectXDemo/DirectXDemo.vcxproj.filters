@@ -211,4 +211,9 @@
       <Filter>Assets</Filter>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="hlsl_rand.txt">
+      <Filter>Shaders</Filter>
+    </Text>
+  </ItemGroup>
 </Project>

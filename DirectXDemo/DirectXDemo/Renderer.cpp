@@ -71,7 +71,7 @@ bool Renderer::load(ID3D11Device* _device)
 	D3D11_RASTERIZER_DESC rasterDesc;
 	ZeroMemory(&rasterDesc, sizeof(rasterDesc));
 	rasterDesc.AntialiasedLineEnable = false;
-	rasterDesc.CullMode = D3D11_CULL_BACK;
+	rasterDesc.CullMode = D3D11_CULL_BACK;//@weird model problems
 	rasterDesc.DepthBias = 0;
 	rasterDesc.DepthBiasClamp = 0.0f;
 	rasterDesc.DepthClipEnable = true;
@@ -128,6 +128,8 @@ bool Renderer::load(ID3D11Device* _device)
 
 	/*Models!*/
 	XMMATRIX v44_transform = XMMatrixScalingFromVector(VEC3(0.3, 0.3, 0.3));
+	XMMATRIX v44_translation = XMMatrixTranslation(0.0f, -3.0f, 0.0f);
+	v44_transform = XMMatrixMultiply(v44_transform, v44_translation);
 	XMFLOAT4X4 f44_transform;
 	XMStoreFloat4x4(&f44_transform, v44_transform);
 	if (!loadMesh("../Resources/hill_tris.txt", ObjModel::QUAD_STRIP, MESH::HILL, _device, f44_transform))

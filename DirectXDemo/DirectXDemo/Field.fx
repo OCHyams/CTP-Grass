@@ -43,6 +43,7 @@ struct HS_DS_INPUT
 	float4	b1			: BINORMAL_WORLDPOS0;
 	float4	b2			: BINORMAL_WORLDPOS1;
 	float3	normal		: NORMAL;
+	float3	basePos		: INSTANCE_LOCATION;
 	float	tessDensity : TESS_DENSITY;
 };
 
@@ -67,6 +68,7 @@ struct GS_INPUT
 	float4	b1			: BINORMAL_WORLDPOS0;
 	float4	b2			: BINORMAL_WORLDPOS1;
 	float3	normal		: NORMAL;
+	float3	basePos		: INSTANCE_LOCATION;
 	float	tVal		: T_VAL;
 };
 
@@ -77,6 +79,7 @@ struct PS_INPUT
 	float3	normal		: NORMAL;
 	float3  lightVec	: TEXCOORD1;
 	float3	viewVec		: TEXCOORD2;
+	float3	basePos		: TEXCOORD3;
 };
 
 const static float4 translationFrequency = float4(1.975, 0.793, 0.375, 0.193);
@@ -148,11 +151,12 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	output.cpoint += (windForce(vertex.location, vertex.wind) * vertex.flexibility);
 
 	/*Rotation of vectors under wind force*/ //-@->NOT WORKING ATM
-	float4 rot = quatFromTwoVec(vertex.pos, output.cpoint.xyz);
+	float4 rot = quatFromTwoVec(normalize(vertex.pos), normalize(output.cpoint.xyz));
 
 	//@when better wind simulation is in, use twisting to manipulate normal
 	/*Normals*/
-	output.normal = quatRotateVector(/*@quatMul(rot, */vertex.rotation/*)*/, vertex.normal);
+	//output.normal = quatRotateVector(quatMul(rot,vertex.rotation), vertex.normal);
+	output.normal = quatRotateVector(vertex.rotation, vertex.normal);
 	output.normal = normalize(output.normal);
 
 	/*Binormals*/
@@ -185,6 +189,8 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	distance = clamp((distance- nearTess)/(farTess - nearTess), 0, 1);
 	output.tessDensity = maxTessDensity - (distance * (maxTessDensity - minTessDensity));
 
+	output.basePos = vertex.location;
+
 	return output;
 }
 
@@ -194,7 +200,7 @@ HS_CONSTANT_OUTPUT HSConst(InputPatch<HS_DS_INPUT, 4> input, uint id : SV_Primit
 {
 	HS_CONSTANT_OUTPUT output;
 
-	output.edges[0] = 1.0f;				// Detail factor
+	output.edges[0] = 1.0f;						// Detail factor
 	output.edges[1] = input[id].tessDensity;		// tess density
 	return output;
 }
@@ -240,6 +246,7 @@ GS_INPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_DS_INPUT, 4> op, float
 	output.b1 = co[0] * op[0].b1 + co[1] * op[1].b1 + co[2] * op[2].b1 + co[3] * op[3].b1; //<<@@VECTORIZING potential, that's a 4-vector dot, matrix?
 	output.b2 = co[0] * op[0].b2 + co[1] * op[1].b2 + co[2] * op[2].b2 + co[3] * op[3].b2;
 
+	output.basePos = op[0].basePos;
 
 	return output;
 }
@@ -254,6 +261,8 @@ void GS_Main(line GS_INPUT input[2], inout TriangleStream<PS_INPUT> output)
 	{
 		/*create a vertex to output*/
 		PS_INPUT element;
+
+		element.basePos = input[i].basePos;
 
 		/*texture coords*/
 		element.texcoord = float2(0, 1-input[i].tVal);
@@ -277,61 +286,78 @@ void GS_Main(line GS_INPUT input[2], inout TriangleStream<PS_INPUT> output)
 
 		/*Lighting*/
 		element.viewVec = normalize(camera.xyz - element.pos.xyz);
-		element.lightVec = normalize(light.xyz - element.pos.xyz);
+		element.lightVec = normalize(-light.xyz - element.pos.xyz);
 
 		/*output the vertex*/
 		output.Append(element);
 	}
 }
 
+float3 rand(uint3 seed)
+{
+	// Xorshift algorithm from George Marsaglia's paper
+	seed ^= (seed << 13);
+	seed ^= (seed >> 17);
+	seed ^= (seed << 5);
 
-
+	float3 rnd = float3(seed * (1.0 / 4294967296.0));
+	return rnd;
+}
 
 Texture2D TEX_0;
 SamplerState SAMPLER_STATE;
 //PIXEL SHADER-----------------------------------------------------------
 float4 PS_Main(PS_INPUT input) : SV_TARGET
 {
-	/*Lighting*/
-	float3 ambientColour = 0.2f;
+	///*Lighting*/
+	//float3 ambientColour = 0.2f;
 
-	//@Trying to do twoside shading
-	float diffuseTerm1 = clamp(dot(input.normal, input.lightVec), 0.0f, 1.0f);
-	float diffuseTerm2 = clamp(dot(-input.normal, input.lightVec), 0.0f, 1.0f);
-	float diffuseTerm = diffuseTerm1;
-	float3 normal = input.normal;
+	////@Trying to do twoside shading
+	//float diffuseTerm1 = clamp(dot(input.normal, input.lightVec), 0.0f, 1.0f);
+	//float diffuseTerm2 = clamp(dot(-input.normal, input.lightVec), 0.0f, 1.0f);
+	//float diffuseTerm = diffuseTerm1;
+	//float3 normal = input.normal;
 
-	if (diffuseTerm1 < diffuseTerm2)
-	{
-		normal *= -1;
-		diffuseTerm = diffuseTerm2;
-		ambientColour = 0.2;
-	}
-	
-	float specularTerm = 0;
-	//@@for now do this but maybe get rid of the if later!
-	//if (diffuseTerm > 0.0f)
+	//if (diffuseTerm1 < diffuseTerm2)
 	//{
-		float specularPow = 4;
-		specularTerm = pow(saturate(dot(/*input.*/normal, normalize(input.lightVec + input.viewVec))), specularPow);
+	//	normal *= -1;
+	//	diffuseTerm = diffuseTerm2;
+	//	ambientColour = 0.2;
 	//}
-	float3 final = ambientColour + intensity * diffuseTerm + intensity * specularTerm;
-	/*NOTE: remove tex coords to test just lighting*/
-	return float4(final * TEX_0.Sample(SAMPLER_STATE, input.texcoord), 1.0f);
+	//
+	//float specularTerm = 0;
+	////@@for now do this but maybe get rid of the if later!
+	////if (diffuseTerm > 0.0f)
+	////{
+	//	float specularPow = 4;
+	//	specularTerm = pow(saturate(dot(/*input.*/normal, normalize(input.lightVec + input.viewVec))), specularPow);
+	////}
+	//float3 final = ambientColour + intensity * diffuseTerm + intensity * specularTerm;
+	///*NOTE: remove tex coords to test just lighting*/
+	//return float4(final * TEX_0.Sample(SAMPLER_STATE, input.texcoord), 1.0f);
+
+	//Hey this looks a bit better... very similar to all the other implementations except i sat down and worked through the Phong model to see what was gonig on.
+	float3 lightDir = normalize(float3(0 ,1, 1));
+	float3 ambientIntensity = 0.3f;
+	float3 specIntensity = 0.2f;
+	float3 diffuseIntensity = 1.f;
+	float shininess = 8;
+	float3 LdotN = dot(lightDir, input.normal);
+	float3 R = 2 * LdotN * input.normal - lightDir;
+	float3 illumination = ambientIntensity + (diffuseIntensity * LdotN) + (specIntensity * pow(dot(R, input.viewVec), shininess));
+	//Back faces
+	LdotN = dot(lightDir, -input.normal);
+	R *= -1;
+	illumination += ambientIntensity + diffuseIntensity * LdotN + specIntensity * pow(dot(R, input.viewVec), shininess);
+
+	//add some colour variation
+	float3 colour = TEX_0.Sample(SAMPLER_STATE, input.texcoord);
+	colour += rand(asuint(input.basePos)) * 0.1f;
+
+	return float4(illumination * colour, 1.0f);
 
 
-	///////*Trying lighting from Outline shader project*/
-	//////float4 diffuse	= TEX_0.Sample(SAMPLER_STATE, input.texcoord);
-	//////float4 ambient	= { 0.1f, 0.1f, 0.0f, 1.0f };
-	//////float diff		= clamp(dot(input.normal, input.lightVec), 0, 1); // diffuse component
-	//////float reversedDiff = clamp(dot(-input.normal, input.lightVec), 0, 1);
-	//////diff += reversedDiff;
-
-	//////float3 Reflect	= normalize(2 * diff * input.normal - input.lightVec);
-	//////float4 specular = pow(saturate(dot(Reflect, input.viewVec)), specularPow); // R.V^n
-
-	//////																		  // I = Acolor + Dcolor * N.L + (R.V)n
-	//////return ambient + diffuse * diff + specular;
+	//Trying lighting from http://richardssoftware.net/Home/Post/59
 }
 
 /*technique11 RenderField

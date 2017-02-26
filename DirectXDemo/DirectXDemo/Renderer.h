@@ -16,6 +16,10 @@ class MeshObject : public GameObject
 public:
 	unsigned int	m_renderFlags;
 	MESH			m_meshID;
+
+	bool load(ID3D11Device*) override { return true; }
+	void unload() override { }
+	void draw(const DrawData&) override {}
 };
 
 
@@ -27,6 +31,7 @@ public:
 	void cleanup();
 
 	void render(const DrawData& data);
+	void addObj(MeshObject* _obj) { m_meshObjects.push_back(_obj); }
 
 	ObjModel* getObjModel(MESH meshIdx);
 protected:

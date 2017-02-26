@@ -69,16 +69,15 @@ bool BasicDemo::load()
 	/*Load hills model for grass*/
 	ObjModel* pModel = m_renderer.getObjModel(MESH::HILL);
 	CHECK_FAIL(pModel);
-	//ObjModel model;
-	XMMATRIX v44_transform = XMMatrixScalingFromVector(VEC3(0.1, 0.1, 0.1));
-	XMFLOAT4X4 f44_transform;
-	XMStoreFloat4x4(&f44_transform, v44_transform);
-	//CHECK_FAIL(model.loadPlane(100, 100, 100, 100));
-	//CHECK_FAIL(model.loadOBJ("../Resources/hill_tris.txt", f44_transform, ObjModel::MESH_TOPOLOGY::QUAD_STRIP));
-	CHECK_FAIL(m_field.load(m_d3dDevice, pModel, NUM(100), XMFLOAT3(0, -0.5, 0), { 10.f, 10, 10.f}));
+	CHECK_FAIL(m_field.load(m_d3dDevice, pModel, NUM(100), XMFLOAT3(0, 0, 0), { 10.f, 10, 10.f}));
 	m_numBlades = m_field.getMaxNumBlades();
-	/*Only needed the hill model to place the grass (FOR NOW ANYWAY)*/
-	//model.release();
+
+	MeshObject* mesh = new MeshObject();
+	mesh->m_meshID = MESH::HILL;
+	mesh->m_renderFlags = (int)FX::DEFAULT;
+	m_renderer.addObj(mesh);
+	m_objects.push_back(mesh);
+	mesh->setScale({ 0.8f, 0.8f, 0.8f });
 
 	m_cam = new ArcCamera({ 0.f, 0.f, 0.f });
 	m_objects.push_back(m_cam);
@@ -152,7 +151,8 @@ void BasicDemo::render()
 	m_windManager.updateResources(m_d3dContext);
 	m_field.draw(data);
 
-	m_renderer.render(data);
+	//@the model or the renderer acting up
+	//m_renderer.render(data);
 
 	TwDraw();
 	m_swapChain->Present(0, 0);

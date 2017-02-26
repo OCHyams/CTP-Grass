@@ -603,7 +603,7 @@ void Field::updateConstBuffers(const DrawData& _data)
 	
 	m_CBcpu_light.intensity = 1.0f;
 	m_CBcpu_light.camera = XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.f);
-	m_CBcpu_light.light = XMFLOAT4(0,2,0,1);//m_CBcpu_light.camera;
+	m_CBcpu_light.light = XMFLOAT4(0 , 3 , 0 , 1);//m_CBcpu_light.camera;
 
 }
 
@@ -651,9 +651,7 @@ field::Instance* Field::generateInstanceData()
 			float angle = randAngle();
 			XMVECTOR euler = XMLoadFloat3(&XMFLOAT3(0, angle,0));
 			XMVECTOR quat = XMQuaternionRotationRollPitchYawFromVector(euler);
-			//XMFLOAT4 quat = XMFLOAT4(0,1,0, randAngle());
-			//data[index].rotation = quat;
-			XMStoreFloat4(&data[index].rotation,quat);
+			XMStoreFloat4(&data[index].rotation, quat);
 
 			//translation
 			XMFLOAT3 position = XMFLOAT3(m_pos.x + xoffset, m_pos.y, m_pos.z + zoffset);
