@@ -33,15 +33,18 @@ public:
 	void render(const DrawData& data);
 	void addObj(MeshObject* _obj) { m_meshObjects.push_back(_obj); }
 
-	ObjModel* getObjModel(MESH meshIdx);
+	bool registerMesh(int _id, const std::string& _fpath, ObjModel::MESH_TOPOLOGY _inputTopology, DirectX::XMFLOAT4X4 _transform, ID3D11Device* _device);
+
+
+	ObjModel* getObjModel(int meshIdx);
 protected:
 
-	std::map<MESH, MeshInfo*>	m_meshes;
-	std::map<MESH, ObjModel*>	m_objModels;
+	std::map<int, MeshInfo*>	m_meshes;
+	std::map<int, ObjModel*>	m_objModels;
 	std::map<FX, RenderInfo*>	m_fx;
 	std::vector<MeshObject*>	m_meshObjects;
 
-	MeshInfo* Renderer::loadMesh(const std::string& _fpath, ObjModel::MESH_TOPOLOGY inputTopology, MESH idx, ID3D11Device* _device, const DirectX::XMFLOAT4X4& _transform);
+	MeshInfo* Renderer::loadMesh(const std::string& _fpath, ObjModel::MESH_TOPOLOGY inputTopology, int idx, ID3D11Device* _device, const DirectX::XMFLOAT4X4& _transform);
 	
 private:
 	MeshInfo* Renderer::loadMeshHelper(const ObjModel& model, ID3D11Device* _device);

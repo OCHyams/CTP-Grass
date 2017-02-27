@@ -125,18 +125,6 @@ bool Renderer::load(ID3D11Device* _device)
 	m_fx.insert(std::pair<FX, RenderInfo*>(FX::DEFAULT, defaultData));
 
 
-
-	/*Models!*/
-	XMMATRIX v44_transform = XMMatrixScalingFromVector(VEC3(0.3, 0.3, 0.3));
-	XMMATRIX v44_translation = XMMatrixTranslation(0.0f, -3.0f, 0.0f);
-	v44_transform = XMMatrixMultiply(v44_transform, v44_translation);
-	XMFLOAT4X4 f44_transform;
-	XMStoreFloat4x4(&f44_transform, v44_transform);
-	if (!loadMesh("../Resources/hill_tris.txt", ObjModel::QUAD_STRIP, MESH::HILL, _device, f44_transform))
-	{
-		MessageBox(0, "Error loading or creating model", "Mesh object", MB_OK);
-		return false;
-	}
 	return true;
 }
 
@@ -194,7 +182,7 @@ void Renderer::render(const DrawData& data)
 			if (object->m_renderFlags & (unsigned int)pass.first)
 			{
 				pass.second->updatePerObjectBuffers(data, *object);
-				MeshInfo* mesh = m_meshes[object->m_meshID];
+				MeshInfo* mesh = m_meshes[(int)object->m_meshID];
 				if (mesh)
 				{
 					mesh->apply(data.m_dc);
@@ -211,7 +199,25 @@ void Renderer::render(const DrawData& data)
 	RenderInfo::remove(data.m_dc);
 }
 
-ObjModel* Renderer::getObjModel(MESH meshIdx)
+bool Renderer::registerMesh(int _id, const std::string& _fpath, ObjModel::MESH_TOPOLOGY _inputTopology, DirectX::XMFLOAT4X4 _transform, ID3D11Device* _device)
+{
+	if (getObjModel(_id))
+	{
+#ifdef DEBUG
+		MessageBox(0, "Mesh has been registered already", "Mesh object", MB_OK);
+#endif
+		return true;
+	}
+
+	if (!loadMesh(_fpath, _inputTopology, _id, _device, _transform))
+	{
+		MessageBox(0, "Error loading or creating model", "Mesh object", MB_OK);
+		return false;
+	}
+	return true;
+}
+
+ObjModel* Renderer::getObjModel(int meshIdx)
 {
 	auto itr = m_objModels.find(meshIdx);
 	if (itr != m_objModels.end())
@@ -306,7 +312,7 @@ MeshInfo* Renderer::loadMeshHelper(const ObjModel& model, ID3D11Device* _device)
 	return mesh;
 }
 
-MeshInfo* Renderer::loadMesh(const std::string& _fpath, ObjModel::MESH_TOPOLOGY inputTopology, MESH idx, ID3D11Device* _device, const DirectX::XMFLOAT4X4& _transform)
+MeshInfo* Renderer::loadMesh(const std::string& _fpath, ObjModel::MESH_TOPOLOGY inputTopology, int idx, ID3D11Device* _device, const DirectX::XMFLOAT4X4& _transform)
 {
 	/*Load the model and build the vertex buffer*/
 	ObjModel* model = new ObjModel;
@@ -322,8 +328,8 @@ MeshInfo* Renderer::loadMesh(const std::string& _fpath, ObjModel::MESH_TOPOLOGY 
 
 	MeshInfo* mesh = loadMeshHelper(*model, _device);
 	if (mesh == nullptr) MessageBox(0, "Couldn't create mesh info", "Mesh Object", MB_OK);
-	m_meshes.insert(std::pair<MESH, MeshInfo*>(idx, mesh));
-	m_objModels.insert(std::pair<MESH, ObjModel*>(idx, model));
+	m_meshes.insert(std::pair<int, MeshInfo*>(idx, mesh));
+	m_objModels.insert(std::pair<int, ObjModel*>(idx, model));
 
 	return mesh;
 }

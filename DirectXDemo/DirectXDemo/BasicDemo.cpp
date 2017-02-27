@@ -24,6 +24,14 @@ BasicDemo::~BasicDemo()
 bool BasicDemo::load()
 {	
 	CHECK_FAIL(m_renderer.load(m_d3dDevice));
+	/*Models!*/
+	using namespace DirectX;
+	XMMATRIX v44_transform = XMMatrixScalingFromVector(VEC3(0.3, 0.3, 0.3));
+	XMMATRIX v44_translation = XMMatrixTranslation(0.0f, -3.0f, 0.0f);
+	v44_transform = XMMatrixMultiply(v44_transform, v44_translation);
+	XMFLOAT4X4 f44_transform;
+	XMStoreFloat4x4(&f44_transform, v44_transform);
+	CHECK_FAIL(m_renderer.registerMesh((int)MESH::HILL, "../Resources/hill_tris.txt", ObjModel::QUAD_STRIP, f44_transform, m_d3dDevice));
 
 	/*Load data shared by all wind managers (though there should only be one anyway)*/
 	WindManager::loadShared(m_d3dDevice);
@@ -67,17 +75,16 @@ bool BasicDemo::load()
 	m_field.m_windManager = &m_windManager;
 
 	/*Load hills model for grass*/
-	ObjModel* pModel = m_renderer.getObjModel(MESH::HILL);
+	ObjModel* pModel = m_renderer.getObjModel((int)MESH::HILL);
 	CHECK_FAIL(pModel);
 	CHECK_FAIL(m_field.load(m_d3dDevice, pModel, NUM(100), XMFLOAT3(0, 0, 0), { 10.f, 10, 10.f}));
 	m_numBlades = m_field.getMaxNumBlades();
 
-	MeshObject* mesh = new MeshObject();
-	mesh->m_meshID = MESH::HILL;
-	mesh->m_renderFlags = (int)FX::DEFAULT;
-	m_renderer.addObj(mesh);
-	m_objects.push_back(mesh);
-	mesh->setScale({ 0.8f, 0.8f, 0.8f });
+	//MeshObject* mesh = new MeshObject();
+	//mesh->m_meshID = MESH::HILL;
+	//mesh->m_renderFlags = (int)FX::DEFAULT;
+	//m_renderer.addObj(mesh);
+	//m_objects.push_back(mesh);
 
 	m_cam = new ArcCamera({ 0.f, 0.f, 0.f });
 	m_objects.push_back(m_cam);
@@ -152,7 +159,7 @@ void BasicDemo::render()
 	m_field.draw(data);
 
 	//@the model or the renderer acting up
-	//m_renderer.render(data);
+	m_renderer.render(data);
 
 	TwDraw();
 	m_swapChain->Present(0, 0);
