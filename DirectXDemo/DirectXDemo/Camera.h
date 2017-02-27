@@ -1,6 +1,8 @@
 #pragma once
 #include "GameObject.h"
 #include <DirectXMath.h>
+#include "Shorthand.h"
+
 //basic boring static camera
 class ArcCamera : public GameObject
 {
@@ -20,6 +22,11 @@ public:
 	const DirectX::XMFLOAT4X4& getViewMatrix() const;
 	const DirectX::XMFLOAT4X4& getProjMatrix() const;
 	const DirectX::XMMATRIX calcLargeProjMatrix() const;
+
+	DirectX::XMVECTOR calcViewDir() const
+	{
+		return DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(LF3(&m_target), LF3(&m_pos)));
+	}
 private:
 	DirectX::XMFLOAT3 m_target;
 	DirectX::XMFLOAT3 m_offset;

@@ -130,6 +130,7 @@ inline float3 project(float3 v0, float3 v1)
 	return v1* dot(v0, v1) / pow(length(v1), 2);
 }
 
+
 float4 quatMul(float4 q1, float4 q2)
 {
 	float4 result;
@@ -138,6 +139,43 @@ float4 quatMul(float4 q1, float4 q2)
 	result.z = q1.x * q2.y - q1.y * q2.x + q1.z * q2.w + q1.w * q2.z;
 	result.w = -q1.x * q2.x - q1.y * q2.y - q1.z * q2.z + q1.w * q2.w;
 	return result;
+}
+
+//https://en.wikipedia.org/wiki/Slerp
+float4 slerp(float4 v0, float4 v1, double t) {
+	// Only unit quaternions are valid rotations.
+	// Normalize to avoid undefined behavior.
+	normalize(v0);
+	normalize(v1);
+
+	// Compute the cosine of the angle between the two vectors.
+	float _dot = dot(v0, v1);
+
+	const float DOT_THRESHOLD = 0.9995;
+	if (_dot > DOT_THRESHOLD) {
+		// If the inputs are too close for comfort, linearly interpolate
+		// and normalize the result.
+		//float4 r =v0 + t * (v1 – v0);
+		float4 r = v0 + t * (v1 - v0);
+		return normalize(r);
+	}
+
+	// If the dot product is negative, the quaternions
+	// have opposite handed-ness and slerp won't take
+	// the shorter path. Fix by reversing one quaternion.
+	if (_dot < 0.0f) {
+		v1 = -v1;
+		_dot = -_dot;
+	}
+
+	clamp(_dot, -1, 1);           // Robustness: Stay within domain of acos()
+	float theta_0 = acos(_dot);  // theta_0 = angle between input vectors
+	float theta = theta_0*t;    // theta = angle between v0 and result 
+
+	float4 v2 = v1-v0*_dot;
+	normalize(v2);              // { v0, v2 } is now an orthonormal basis
+
+	return v0*cos(theta) + v2*sin(theta);
 }
 
 HS_DS_INPUT VS_Main(VS_INPUT vertex)
@@ -153,15 +191,27 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	/*Rotation of vectors under wind force*/ //-@->NOT WORKING ATM
 	float4 rot = quatFromTwoVec(normalize(vertex.pos), normalize(output.cpoint.xyz));
 
+
+
+	/*Binormals*/
+	output.binormal = float4(quatRotateVector(vertex.rotation, vertex.binormal),0.f);
+	/*experimental twisting*///@
+	//float4 twistingQuat = quatFromTwoVec(output.binormal, cross(vertex.wind, float3(0, 1, 0)));
+	/*float phase = (time *length(vertex.wind)) + dot(normalize(vertex.wind), vertex.location);
+	float4 ts = smoothf(trianglef(translationFrequency * phase));
+	twistingQuat *= pow(vertex.flexibility, 0.25) * ts;
+	output.binormal = float4(quatRotateVector(twistingQuat, output.binormal.xyz), 0.f);*/
+	/*end exp*/
+	output.binormal = float4(normalize(output.binormal.xyz), 0);
+
 	//@when better wind simulation is in, use twisting to manipulate normal
 	/*Normals*/
 	//output.normal = quatRotateVector(quatMul(rot,vertex.rotation), vertex.normal);
 	output.normal = quatRotateVector(vertex.rotation, vertex.normal);
+	/*experimental twisting*/
+	//output.normal = float4(quatRotateVector(twistingQuat, output.normal.xyz), 0.f);@
+	/*end exp*/
 	output.normal = normalize(output.normal);
-
-	/*Binormals*/
-	output.binormal = float4(quatRotateVector(vertex.rotation, vertex.binormal),0.f);
-	output.binormal = float4(normalize(output.binormal.xyz), 0);
 
 	///*Quad verts*///@working
 	//output.b1 = output.cpoint + binormal * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
@@ -337,18 +387,18 @@ float4 PS_Main(PS_INPUT input) : SV_TARGET
 	//return float4(final * TEX_0.Sample(SAMPLER_STATE, input.texcoord), 1.0f);
 
 	//Hey this looks a bit better... very similar to all the other implementations except i sat down and worked through the Phong model to see what was gonig on.
+	//@@Link these up to constbuffer so they can be fiddled with!
 	float3 ambientIntensity = 0.3f;
 	float3 specIntensity = 0.1f;
 	float3 diffuseIntensity = 0.9f;
-	float shininess = 8;
+	float shininess = 4;
 	float3 LdotN = dot(light, input.normal);
 	float3 R = 2 * LdotN * input.normal - light;
 	float3 illumination = ambientIntensity + (diffuseIntensity * LdotN) + (specIntensity * pow(dot(R, input.viewVec), shininess));
 	//Back faces
 	LdotN = dot(light, -input.normal);
-	R *= -1;
+	R = 2 * LdotN * -input.normal - light;
 	illumination += ambientIntensity + diffuseIntensity * LdotN + specIntensity * pow(dot(R, input.viewVec), shininess);
-
 	//add some colour variation
 	float3 colour = TEX_0.Sample(SAMPLER_STATE, input.texcoord);
 	colour += rand(asuint(input.basePos)) * 0.1f;

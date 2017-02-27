@@ -217,6 +217,23 @@ bool Renderer::registerMesh(int _id, const std::string& _fpath, ObjModel::MESH_T
 	return true;
 }
 
+bool Renderer::registerMesh(int _id, const ObjModel& model, ID3D11Device * _device)
+{
+	if (getObjModel(_id))
+	{
+#ifdef DEBUG
+		MessageBox(0, "Mesh has been registered already", "Mesh object", MB_OK);
+#endif
+		return true;
+	}
+
+	MeshInfo* mesh = loadMeshHelper(model, _device);
+	if (mesh == nullptr) MessageBox(0, "Couldn't create mesh info", "Mesh Object", MB_OK);
+	m_meshes.insert(std::pair<int, MeshInfo*>(_id, mesh));
+
+	return true;
+}
+
 ObjModel* Renderer::getObjModel(int meshIdx)
 {
 	auto itr = m_objModels.find(meshIdx);

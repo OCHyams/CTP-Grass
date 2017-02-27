@@ -36,7 +36,7 @@ PS_INPUT main(VS_INPUT vert)
 	PS_INPUT output;
 
 	output.pos = mul(float4(vert.pos, 1.0f), wvp);
-	output.normal = vert.normal;
+	output.normal = vert.normal;//uhm...needs to get rotated...!
 	output.viewVec = normalize(cameraPos - vert.pos);
 	output.lightVec = normalize(lightPos - vert.pos);
 	output.texCoord = vert.texCoord;

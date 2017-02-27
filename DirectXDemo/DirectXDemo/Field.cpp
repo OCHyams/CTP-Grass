@@ -483,6 +483,7 @@ void Field::draw(const DrawData& _data)
 {
 	using namespace DirectX;	
 	updateConstBuffers(_data);
+	STOREF4(&m_CBcpu_light.light, XMVectorMultiply(_data.m_cam->calcViewDir() ,VEC3(-1, -1, -1)));
 
 	/*Culling*/
 	if (m_frustumCull)

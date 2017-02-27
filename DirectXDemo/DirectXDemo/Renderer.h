@@ -34,7 +34,8 @@ public:
 	void addObj(MeshObject* _obj) { m_meshObjects.push_back(_obj); }
 
 	bool registerMesh(int _id, const std::string& _fpath, ObjModel::MESH_TOPOLOGY _inputTopology, DirectX::XMFLOAT4X4 _transform, ID3D11Device* _device);
-
+	//Creates vertex buffer etc for given obj model but does not store a reference to the objmodel as the other registerMesh() overload does.
+	bool registerMesh(int _id, const ObjModel& model, ID3D11Device* _device);
 
 	ObjModel* getObjModel(int meshIdx);
 protected:
