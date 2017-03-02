@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include "Shorthand.h"
 #include "WindManager.h"
-
+#include "AntTweakBar.h"
 //statics
 //DirectX::XMFLOAT3		Field::s_cameraPos		= DirectX::XMFLOAT3();
 //DirectX::XMFLOAT4X4		Field::s_viewproj		= DirectX::XMFLOAT4X4();
@@ -456,6 +456,23 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		return false;
 	}
 
+	/*Default light settings*/
+	m_CBcpu_light.ambient = { 100.f/255.f, 100.f/255.f, 100/255.f, 0.0f };
+	m_CBcpu_light.diffuse = { 120.f/255.f, 120.f/255.f, 100.f/255.f, 0.0f };
+	m_CBcpu_light.specular = { 20/255.f, 20.f/255.f, 20.f/255.f, 0.0f };
+	m_CBcpu_light.shiny = 8.0f;
+
+	/*Set up GUI*/
+	TwBar* GUI = TwNewBar("Field");
+	TwDefine(" Settings position='10 10' ");
+	TwDefine(" Settings size='300 200' ");
+	TwDefine(" Settings movable= true ");
+	TwDefine(" Settings resizable= true ");
+	TwAddVarRW(GUI, "Ambient", TwType::TW_TYPE_COLOR4F, &m_CBcpu_light.ambient, "");
+	TwAddVarRW(GUI, "Diffuse", TwType::TW_TYPE_COLOR4F, &m_CBcpu_light.diffuse, "");
+	TwAddVarRW(GUI, "Specular", TwType::TW_TYPE_COLOR4F, &m_CBcpu_light.specular, "");
+	TwAddVarRW(GUI, "Shiny", TwType::TW_TYPE_FLOAT, &m_CBcpu_light.shiny, "");
+
 	return loadBuffers(_device);
 }
 
@@ -483,7 +500,7 @@ void Field::draw(const DrawData& _data)
 {
 	using namespace DirectX;	
 	updateConstBuffers(_data);
-	STOREF4(&m_CBcpu_light.light, XMVectorMultiply(_data.m_cam->calcViewDir() ,VEC3(-1, -1, -1)));
+
 
 	/*Culling*/
 	if (m_frustumCull)
@@ -602,11 +619,9 @@ void Field::updateConstBuffers(const DrawData& _data)
 	XMMATRIX viewproj = XMMatrixTranspose(XMLoadFloat4x4(&_data.m_cam->getViewProj()));
 	XMStoreFloat4x4(&m_CBcpu_viewproj.m_wvp, viewproj);
 	
-	m_CBcpu_light.intensity = 1.0f;
+	/*light*/
 	m_CBcpu_light.camera = XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.f);
-	XMVECTOR lightdir = XMVector3Normalize(VEC4(0, 1, 1, 1));
-	STOREF4(&m_CBcpu_light.light, lightdir);
-
+	STOREF4(&m_CBcpu_light.light, XMVectorMultiply(_data.m_cam->calcViewDir(), VEC3(-1, -1, -1)));
 }
 
 #define MAX(x,y)    (x)>(y)?(x):(y)
@@ -723,12 +738,12 @@ bool Field::loadBuffers(ID3D11Device* _device)
 
 	//Light
 	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
-	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferdesc.ByteWidth = sizeof(CBFieldLight);
-	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	bufferdesc.CPUAccessFlags = 0;
-	bufferdesc.MiscFlags = 0;
-	bufferdesc.StructureByteStride = 0;
+	bufferdesc.Usage				= D3D11_USAGE_DEFAULT;
+	bufferdesc.ByteWidth			= sizeof(CBFieldLight);
+	bufferdesc.BindFlags			= D3D11_BIND_CONSTANT_BUFFER;
+	bufferdesc.CPUAccessFlags		= 0;
+	bufferdesc.MiscFlags			= 0;
+	bufferdesc.StructureByteStride	= 0;
 	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_light);
 	if (FAILED(result))
 	{

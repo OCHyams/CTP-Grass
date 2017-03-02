@@ -43,8 +43,11 @@ __declspec(align(16))
 struct CBFieldLight
 {
 	DirectX::XMFLOAT4	camera;//@change to float3s
-	DirectX::XMFLOAT4	light;	//@
-	float				intensity;
+	DirectX::XMFLOAT4	light;
+	DirectX::XMFLOAT4	ambient;
+	DirectX::XMFLOAT4	diffuse; 
+	DirectX::XMFLOAT4	specular;
+	float				shiny;
 };
 
 __declspec(align(16))

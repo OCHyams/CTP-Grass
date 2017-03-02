@@ -36,7 +36,7 @@ bool BasicDemo::load()
 	ObjModel plane;
 	plane.loadPlane(25,25,25,25);
 	CHECK_FAIL(m_renderer.registerMesh((int)MESH::PLANE, plane, m_d3dDevice));
-	//plane.release();
+	
 
 	/*Load data shared by all wind managers (though there should only be one anyway)*/
 	WindManager::loadShared(m_d3dDevice);
@@ -83,8 +83,8 @@ bool BasicDemo::load()
 	//ObjModel* pModel = m_renderer.getObjModel((int)MESH::PLANE);
 	//CHECK_FAIL(pModel);
 	CHECK_FAIL(m_field.load(m_d3dDevice, &plane, NUM(150), XMFLOAT3(0, 0, 0), { 10.f, 10, 10.f}));
-	m_numBlades = m_field.getMaxNumBlades();
 	plane.release();
+	m_numBlades = m_field.getMaxNumBlades();
 
 	MeshObject* mesh = new MeshObject();
 	mesh->m_meshID = MESH::PLANE;

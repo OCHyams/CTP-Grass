@@ -17,9 +17,12 @@ cbuffer CBViewProj : register (b1)
 
 cbuffer CBLight : register (b2)
 {
-	float4	camera;//@change to float3s
-	float4	light;	//@
-	float	intensity;
+	float4	camera; //alignment doesn't play nice with float3s
+	float4	lightDir;
+	float4	ambient;
+	float4  diffuse;
+	float4	specular;
+	float	shiny;
 }
 //INPUT/OUTPUT STRUCTS-----------------------------------------------------------------
 struct VS_INPUT
@@ -195,22 +198,22 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 
 	/*Binormals*/
 	output.binormal = float4(quatRotateVector(vertex.rotation, vertex.binormal),0.f);
-	/*experimental twisting*///@
-	//float4 twistingQuat = quatFromTwoVec(output.binormal, cross(vertex.wind, float3(0, 1, 0)));
-	/*float phase = (time *length(vertex.wind)) + dot(normalize(vertex.wind), vertex.location);
+	/*/experimental twisting
+	float4 twistingQuat = quatFromTwoVec(output.binormal, cross(vertex.wind, float3(0, 1, 0)));
+	float phase = (time *length(vertex.wind)) + dot(normalize(vertex.wind), vertex.location);
 	float4 ts = smoothf(trianglef(translationFrequency * phase));
-	twistingQuat *= pow(vertex.flexibility, 0.25) * ts;
-	output.binormal = float4(quatRotateVector(twistingQuat, output.binormal.xyz), 0.f);*/
-	/*end exp*/
+	twistingQuat *= vertex.flexibility * ts;
+	output.binormal = float4(quatRotateVector(twistingQuat, output.binormal.xyz), 0.f);
+	/*/
 	output.binormal = float4(normalize(output.binormal.xyz), 0);
 
 	//@when better wind simulation is in, use twisting to manipulate normal
 	/*Normals*/
 	//output.normal = quatRotateVector(quatMul(rot,vertex.rotation), vertex.normal);
 	output.normal = quatRotateVector(vertex.rotation, vertex.normal);
-	/*experimental twisting*/
-	//output.normal = float4(quatRotateVector(twistingQuat, output.normal.xyz), 0.f);@
-	/*end exp*/
+	/*experimental twisting - I think this works but the twisting calc is bad
+	output.normal = float4(quatRotateVector(twistingQuat, output.normal.xyz), 0.f);
+	//*/
 	output.normal = normalize(output.normal);
 
 	///*Quad verts*///@working
@@ -322,7 +325,7 @@ void GS_Main(line GS_INPUT input[2], inout TriangleStream<PS_INPUT> output)
 
 		/*Lighting*/
 		element.viewVec = normalize(camera.xyz - element.pos.xyz);
-		element.lightVec = normalize(light.xyz - element.pos.xyz);
+		element.lightVec = normalize(lightDir.xyz - element.pos.xyz);
 		element.normal = input[i].normal;
 
 		/*output the vertex*/
@@ -336,7 +339,7 @@ void GS_Main(line GS_INPUT input[2], inout TriangleStream<PS_INPUT> output)
 
 		/*Lighting*/
 		element.viewVec = normalize(camera.xyz - element.pos.xyz);
-		element.lightVec = normalize(-light.xyz - element.pos.xyz);
+		element.lightVec = normalize(-lightDir.xyz - element.pos.xyz);
 
 		/*output the vertex*/
 		output.Append(element);
@@ -387,36 +390,24 @@ float4 PS_Main(PS_INPUT input) : SV_TARGET
 	//return float4(final * TEX_0.Sample(SAMPLER_STATE, input.texcoord), 1.0f);
 
 	//Hey this looks a bit better... very similar to all the other implementations except i sat down and worked through the Phong model to see what was gonig on.
-	//@@Link these up to constbuffer so they can be fiddled with!
-	float3 ambientIntensity = 0.3f;
-	float3 specIntensity = 0.1f;
-	float3 diffuseIntensity = 0.9f;
-	float shininess = 4;
-	float3 LdotN = dot(light, input.normal);
-	float3 R = 2 * LdotN * input.normal - light;
-	float3 illumination = ambientIntensity + (diffuseIntensity * LdotN) + (specIntensity * pow(dot(R, input.viewVec), shininess));
+	float3 LdotN = dot(lightDir.xyz, input.normal);
+	float3 R = 2 * LdotN * input.normal - lightDir.xyz;
+	float3 highlight = clamp(specular * pow(dot(R, input.viewVec), shiny),0 , 1);
+	float3 illumination = ambient + (diffuse * LdotN) + highlight;
 	//Back faces
-	LdotN = dot(light, -input.normal);
-	R = 2 * LdotN * -input.normal - light;
-	illumination += ambientIntensity + diffuseIntensity * LdotN + specIntensity * pow(dot(R, input.viewVec), shininess);
-	//add some colour variation
+	if (LdotN.x <= 0)
+	{
+		//*/
+		LdotN = dot(lightDir.xyz, -input.normal);
+		R = 2 * LdotN * -input.normal - lightDir.xyz;
+		highlight = clamp(specular * pow(dot(R, input.viewVec), shiny), 0, 1);
+		illumination = ambient + (diffuse * LdotN) + highlight;
+		//*/
+	}
+
+	/*Add some colour variation*/
 	float3 colour = TEX_0.Sample(SAMPLER_STATE, input.texcoord);
 	colour += rand(asuint(input.basePos)) * 0.1f;
 
 	return float4(illumination * colour, 1.0f);
-
-
-	//Trying lighting from http://richardssoftware.net/Home/Post/59
 }
-
-/*technique11 RenderField
-{
-	pass P0
-	{
-		SetVertexShader(	CompileShader(vs_5_0, VS_Main())	);
-		SetHullShader(		CompileShader(hs_5_0, HS_Main())	);
-		SetDomainShader(	CompileShader(ds_5_0, DS_Main())	);
-		SetGeometryShader(	CompileShader(gs_5_0, GS_Main())	);
-		SetPixelShader(		CompileShader(ps_5_0, PS_Main())	);
-	}
-}*/
