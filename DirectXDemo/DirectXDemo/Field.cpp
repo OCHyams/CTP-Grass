@@ -587,6 +587,7 @@ void Field::draw(const DrawData& _data)
 	_data.m_dc->PSSetSamplers(0, 1, &s_samplerState);
 	//texture
 	_data.m_dc->PSSetShaderResources(0, 1, &s_texture);
+	/*Draw call*/
 	_data.m_dc->DrawInstanced(4, m_curInstanceCount, 0, 0);
 	
 	/*Cleanup*/

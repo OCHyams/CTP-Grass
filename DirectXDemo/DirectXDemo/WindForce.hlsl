@@ -80,7 +80,6 @@ float3 windFromSpheres(float3 pos)
 [numthreads(256, 1, 1)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
-	//if (DTid.x > numInstances) return;//@Might not need this
 	uint address	= DTid.x * (42 + 6);
 	float3 pos		= asfloat(inGrass.Load3(address + 16));
 	float3 windVec	= windFromCuboids(pos) + windFromSpheres(pos);
@@ -88,5 +87,4 @@ void main( uint3 DTid : SV_DispatchThreadID )
 	outGrass.Store4(address + 0, inGrass.Load4(address));
 	outGrass.Store3(address + 16, asuint(pos));
 	outGrass.Store3(address + 28, asuint(windVec));
-
 }

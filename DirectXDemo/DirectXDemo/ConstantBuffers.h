@@ -86,3 +86,24 @@ struct CBDefaultObject_ChangesPerFrame
 	DirectX::XMFLOAT3	m_lightPos;
 	float				m_intensity;
 };
+
+
+__declspec(align(16))
+struct CBGrassWindFrustum_ChangesPerFrameRO
+{
+	unsigned int numCuboids;
+	unsigned int numSpheres;
+	float time;
+	float deltaTime;
+}; 
+
+struct CBGrassWindFrustum_NeverChanges
+{
+	unsigned int maxInstances;
+};
+
+__declspec(align(16))
+struct CBGrassWindFrustum_ChangesPerFrameRW
+{
+	unsigned int numInstances;
+};

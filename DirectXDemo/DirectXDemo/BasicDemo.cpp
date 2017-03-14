@@ -79,9 +79,6 @@ bool BasicDemo::load()
 	m_field.m_halfGrassWidth = 0.02f;
 	m_field.m_windManager = &m_windManager;
 
-	/*Load hills model for grass*/
-	//ObjModel* pModel = m_renderer.getObjModel((int)MESH::PLANE);
-	//CHECK_FAIL(pModel);
 	CHECK_FAIL(m_field.load(m_d3dDevice, &plane, NUM(150), XMFLOAT3(0, 0, 0), { 10.f, 10, 10.f}));
 	plane.release();
 	m_numBlades = m_field.getMaxNumBlades();
@@ -158,7 +155,7 @@ void BasicDemo::render()
 	m_d3dContext->ClearRenderTargetView(m_backBufferTarget, col);
 	m_d3dContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0xff);
 
-	DrawData data = { m_cam, m_d3dContext };
+	DrawData data = { m_cam, m_d3dContext, m_time.time, m_time.deltaTime };
 
 	/*Update wind resources*/
 	m_windManager.updateResources(m_d3dContext);
