@@ -24,21 +24,21 @@ struct Frustum
 
 };
 
-cbuffer CBChangesPerFrameRW
+cbuffer CBChangesPerFrameRW :register(b0)
 {
 	uint numInstances;
 };
 
-cbuffer CBChangePerFrameRO
+cbuffer CBChangePerFrameRO :register(b1)
 {
 	uint numCuboids;
 	uint numSpheres;
 	float time;
 	float deltaTime;
-	Frustum viewFrustum;
+	//Frustum viewFrustum;
 };
 
-cbuffer CBNeverChanges
+cbuffer CBNeverChanges : register(b2)
 {
 	uint maxInstances;
 }
@@ -54,7 +54,7 @@ StructuredBuffer<WindCuboid>	inCuboids	: register(t1);
 StructuredBuffer<WindSphere>	inSpheres	: register(t2);
 //Only way I can think of doing this...
 uniform uint FRONT_ADDRESS_IDX = 0, BACK_ADDRESS_IDX = 32;
-RWStructuredBuffer<uint>		addresses	: register(t3);
+RWStructuredBuffer<uint>		addresses	: register(u1);
 RWByteAddressBuffer				outGrass	: register(u0);
 
 
@@ -127,7 +127,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	float3 currentWindVec = asfloat(outGrass.Load3(fromAddress + WIND_OFFSET));
 	float3 newWindVec = windFromCuboids(pos) + windFromSpheres(pos);
 	newWindVec = windForce(pos, newWindVec);
-	newWindVec = lerp(currentWindVec, newWindVec, deltaTime * LERP_SPEED);
+	newWindVec = lerp(currentWindVec, newWindVec, deltaTime * LERP_SPEED);//prbly don't wana do it like this :P
 
 	uint toAddress = 0;
 	if (inViewFrustum(pos))

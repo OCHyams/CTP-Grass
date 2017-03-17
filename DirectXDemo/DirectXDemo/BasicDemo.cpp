@@ -53,6 +53,20 @@ bool BasicDemo::load()
 	m_demoSphere->m_position = { 0,0,0 };
 	m_demoSphere->m_radius = 2.0f;
 
+	/*NEW WIND MANAGER*/
+	CHECK_FAIL(m_windManager_14_03.load(m_d3dDevice, 1, 1));
+	/*Create a static wind volume, no need to keep track of mem, system does that*/
+	windCuboid = m_windManager_14_03.createWindCuboid();
+	windCuboid->m_extents = { 100.0f, 100.0f, 100.0f };
+	windCuboid->m_initalVelocity = { 0.3f, 0.f, 0.f };
+	windCuboid->m_position = { 0.f, 0.f, 0.f };
+	/*Create a static wind volume, no need to keep track of mem, system does that*/
+	m_demoSphere = m_windManager_14_03.createWindSphere();
+	m_demoSphere->m_fallOffPow = 5;
+	m_demoSphere->m_initalStrength = 0.f;;
+	m_demoSphere->m_position = { 0,0,0 };
+	m_demoSphere->m_radius = 2.0f;
+
 
 	//Tweak bar
 	TwBar* GUI = TwNewBar("Settings");
@@ -80,8 +94,17 @@ bool BasicDemo::load()
 	m_field.m_windManager = &m_windManager;
 
 	CHECK_FAIL(m_field.load(m_d3dDevice, &plane, NUM(150), XMFLOAT3(0, 0, 0), { 10.f, 10, 10.f}));
-	plane.release();
+
 	m_numBlades = m_field.getMaxNumBlades();
+
+	/*New demo field*/
+	CHECK_FAIL(Field_14_03::loadShared(m_d3dDevice));
+	m_field_14_03.m_halfGrassWidth = 0.02f;
+	m_field_14_03.m_windManager = &m_windManager_14_03;
+	CHECK_FAIL(m_field_14_03.load(m_d3dDevice, &plane, NUM(150)));
+
+	//Put this here so other field can use it!!@
+	plane.release();
 
 	MeshObject* mesh = new MeshObject();
 	mesh->m_meshID = MESH::PLANE;
@@ -101,9 +124,11 @@ void BasicDemo::unload()
 {
 	WindManager::unloadShared();
 	m_windManager.unload();
+	m_windManager_14_03.unload();
 	Field::unloadShared();
 	m_field.unload();
-
+	m_field_14_03.unload();
+	m_field_14_03.unloadShared();
 	for (auto obj : m_objects)
 	{
 		if (obj)
@@ -159,8 +184,9 @@ void BasicDemo::render()
 
 	/*Update wind resources*/
 	m_windManager.updateResources(m_d3dContext);
+	m_windManager_14_03.updateResources(m_d3dContext);
 	m_field.draw(data);
-
+	//m_field_14_03.draw(data);
 	//@the model or the renderer acting up
 	m_renderer.render(data);
 

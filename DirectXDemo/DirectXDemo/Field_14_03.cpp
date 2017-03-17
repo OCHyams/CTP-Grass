@@ -22,6 +22,7 @@ ID3D11InputLayout*		Field_14_03::s_inputLayout = nullptr;
 ID3D11Buffer*			Field_14_03::s_vertexBuffer = nullptr;
 ID3D11ShaderResourceView* Field_14_03::s_texture = nullptr;
 ID3D11SamplerState*		Field_14_03::s_samplerState = nullptr;
+ID3D11ComputeShader*	Field_14_03::s_csWind = nullptr;
 
 Field_14_03::Field_14_03()
 {
@@ -147,6 +148,30 @@ bool Field_14_03::loadShared(ID3D11Device* _device)
 		return false;
 	}
 
+	//CS
+	ID3DBlob* errors=nullptr;
+	result = D3DCompileFromFile(L"GrassWindFrustumCS.hlsl", NULL, NULL, "main", "cs_5_0", shaderFlags, 0, &buffer, &errors);
+	if (FAILED(result))
+	{
+		RELEASE(buffer);
+		if (errors)
+		{
+			OutputDebugStringA((char*)errors->GetBufferPointer());
+			errors->Release();
+		}
+		MessageBox(0, "Error loading compute shader.", "Shader compilation", MB_OK);
+		return false;
+	}
+	_device->CreateComputeShader(buffer->GetBufferPointer(), buffer->GetBufferSize(), 0, &s_csWind);
+	if (FAILED(result))
+	{
+		RELEASE(buffer);
+		MessageBox(0, "Couldn't create the compute shader.", "Creating shader", MB_OK);
+		return false;
+	}
+
+	RELEASE(buffer);
+
 	//VERTEX DATA
 	field::Vertex verts[] =
 	{
@@ -230,6 +255,8 @@ bool Field_14_03::loadShared(ID3D11Device* _device)
 		return false;
 	}
 
+
+
 	return true;
 }
 
@@ -241,6 +268,7 @@ void Field_14_03::unloadShared()
 	RELEASE(s_vertexBuffer);
 	RELEASE(s_texture);
 	RELEASE(s_samplerState);
+	RELEASE(s_csWind);
 }
 
 bool Field_14_03::load(ID3D11Device* _device, ObjModel* _model, float _density)
@@ -290,8 +318,9 @@ bool Field_14_03::load(ID3D11Device* _device, ObjModel* _model, float _density)
 	bufferDesc.CPUAccessFlags	= 0;
 	bufferDesc.MiscFlags		= 0;
 	bufferDesc.StructureByteStride = 0;
-
+	
 	m_CB_CS_Consts.maxInstances	= m_maxInstanceCount;
+
 	CHECK_FAIL(m_CB_CS_Consts.init(_device, &bufferDesc));
 
 	/*CBuffers - Default*/
@@ -357,18 +386,18 @@ bool Field_14_03::load(ID3D11Device* _device, ObjModel* _model, float _density)
 
 	/*CS shared mem buffer*/
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
-	bufferDesc.BindFlags = D3D11_USAGE_DEFAULT;
+	bufferDesc.BindFlags = D3D11_USAGE_DEFAULT | D3D11_BIND_UNORDERED_ACCESS;
+	bufferDesc.StructureByteStride = sizeof(unsigned int);
 	bufferDesc.ByteWidth = sizeof(unsigned int) * 2;
-	bufferDesc.MiscFlags = 0;
+	bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 
-	ZeroMemory(&SRVDesc, sizeof(SRVDesc));
-	SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
-	SRVDesc.Format = DXGI_FORMAT_R32_UINT;
-	SRVDesc.BufferEx.Flags = 0;
-	SRVDesc.BufferEx.FirstElement = 0;
-	SRVDesc.BufferEx.NumElements = 2;
-
-	m_CSAddressIdicies.init(_device, &bufferDesc, NULL, NULL, &SRVDesc);
+	ZeroMemory(&UAVDesc, sizeof(UAVDesc));
+	UAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	UAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+	UAVDesc.Buffer.FirstElement = 0;
+	UAVDesc.Buffer.NumElements = 2;
+	UAVDesc.Buffer.Flags = 0;
+	m_CSAddressIdicies.init(_device, &bufferDesc, NULL, &UAVDesc, NULL);
 
 
 	return true;
@@ -389,17 +418,77 @@ void Field_14_03::draw(const DrawData& _data)
 	ID3D11ShaderResourceView*	CS_SRV[] = { m_instanceDoubleBuffer.front()->getSRV(),
 											m_windManager->getCuboidBuffer().getSRV(),    
 											m_windManager->getSphereBuffer().getSRV()
-											
 											};
-	ID3D11UnorderedAccessView*	CS_UAV[] = { m_instanceDoubleBuffer.back()->getUAV() };
+
+
+	ID3D11UnorderedAccessView*	CS_UAV[] = { m_instanceDoubleBuffer.back()->getUAV(), m_CSAddressIdicies.getUAV() };
+
+	ID3D11Buffer* constbuffers[] = { m_CB_CS_RW.getBuffer(), m_CB_CS_RO.getBuffer(), m_CB_CS_Consts.getBuffer() };
 
 	_data.m_dc->CSSetShaderResources(0, ARRAYSIZE(CS_UAV), CS_SRV);
 	_data.m_dc->CSSetUnorderedAccessViews(0, ARRAYSIZE(CS_UAV), CS_UAV, 0);
-	/*/ To-Do @
-	_data.m_dc->Dispatch(csGrassWindFrustum);
-	//*/
+	_data.m_dc->CSSetShader(s_csWind, NULL, 0);
+	_data.m_dc->CSSetConstantBuffers(0, ARRAYSIZE(constbuffers), constbuffers);
+
+	_data.m_dc->Dispatch((unsigned int)ceil((float)m_maxInstanceCount / (float)m_threadsPerGroupX), 1, 1);
+
 	m_instanceDoubleBuffer.swap();
 
+	unsigned unsigned int strides[2];
+	unsigned unsigned int offsets[2];
+	ID3D11Buffer* bufferPointers[2];
+
+
+	// Set the buffer strides.
+	strides[0] = sizeof(field::Vertex);
+	strides[1] = sizeof(field::Instance);
+	// Set the buffer offsets.
+	offsets[0] = 0;
+	offsets[1] = 0;
+	// Set the array of pointers to the vertex and instance buffers.
+	bufferPointers[0] = s_vertexBuffer;
+	bufferPointers[1] = m_instanceDoubleBuffer.front()->getBuffer(); 
+
+	// Set the vertex buffer to active in the input assembler so it can be rendered.
+	_data.m_dc->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
+	_data.m_dc->IASetInputLayout(s_inputLayout);
+	_data.m_dc->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, NULL);
+	_data.m_dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
+
+	//update rasterizer
+	_data.m_dc->RSSetState(s_rasterizer);
+
+	//apply shaders
+	s_shaders.apply(_data.m_dc);
+
+	//set constant buffers
+	ID3D11Buffer* VSBuffers[] = { m_CB_geometry.getBuffer(), m_CB_viewproj.getBuffer(), m_CB_light.getBuffer() };
+	ID3D11Buffer* HSBuffers[] = { m_CB_geometry.getBuffer() };
+	ID3D11Buffer* DSBuffers[] = { m_CB_geometry.getBuffer() };
+	ID3D11Buffer* GSBuffers[] = { m_CB_geometry.getBuffer(), m_CB_viewproj.getBuffer(), m_CB_light.getBuffer() };
+	ID3D11Buffer* PSBuffers[] = { nullptr, nullptr, m_CB_light.getBuffer() };
+	_data.m_dc->VSSetConstantBuffers(0, ARRAYSIZE(VSBuffers), VSBuffers);
+	_data.m_dc->HSSetConstantBuffers(0, ARRAYSIZE(HSBuffers), HSBuffers);
+	_data.m_dc->DSSetConstantBuffers(0, ARRAYSIZE(DSBuffers), DSBuffers);
+	_data.m_dc->GSSetConstantBuffers(0, ARRAYSIZE(GSBuffers), GSBuffers);
+	_data.m_dc->PSSetConstantBuffers(0, ARRAYSIZE(PSBuffers), PSBuffers);
+
+	//sampler
+	_data.m_dc->PSSetSamplers(0, 1, &s_samplerState);
+	//texture
+	_data.m_dc->PSSetShaderResources(0, 1, &s_texture);
+	/*Draw call*/
+	//@for now just render all of them 
+	m_curInstanceCount = m_maxInstanceCount;
+	_data.m_dc->DrawInstanced(4, m_curInstanceCount, 0, 0);
+
+	/*Cleanup*/
+	bufferPointers[0] = nullptr;
+	bufferPointers[1] = nullptr;
+	strides[0] = 0;
+	strides[1] = 0;
+	_data.m_dc->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
+	_data.m_dc->IASetInputLayout(nullptr);
 }
 
 void Field_14_03::updateConstBuffers(const DrawData& _data)
@@ -421,7 +510,7 @@ void Field_14_03::updateConstBuffers(const DrawData& _data)
 
 	/*Geometry stuff (and other random things)*/
 	m_CB_geometry.halfGrassWidth = m_halfGrassWidth;
-	m_CB_geometry.time = static_cast<float>(_data.m_time);
+	m_CB_geometry.time = 0; //Need this to not change for the new field stuffs static_cast<float>(_data.m_time);
 	m_CB_geometry.farTess = 6.0f;
 	m_CB_geometry.nearTess = 0.4f;
 	m_CB_geometry.minTessDensity = 3.0f;
@@ -432,4 +521,5 @@ void Field_14_03::updateConstBuffers(const DrawData& _data)
 	DirectX::XMFLOAT3 camPos = _data.m_cam->getPos();
 	m_CB_light.camera = DirectX::XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.f);
 	STOREF4(&m_CB_light.light, DirectX::XMVectorMultiply(_data.m_cam->calcViewDir(), VEC3(-1, -1, -1)));
+	m_CB_light.mapUpdate(_data.m_dc);
 }

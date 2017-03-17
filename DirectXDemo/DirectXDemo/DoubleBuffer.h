@@ -7,6 +7,9 @@ class DoubleBuffer
 {
 public:
 
+	DoubleBuffer() = default;
+	~DoubleBuffer() { cleanup(); }
+
 	void swap();
 	//use front buffer for processing
 	const Buffer* front();

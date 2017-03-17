@@ -30,6 +30,7 @@ void field::generateField(ID3D11Device* _device, ObjModel* _model, float _densit
 		/*Calc number of blades*/
 		unsigned int numBlades = (int)std::truncf(sa * _density);
 		/*Deal with trunc rounding accumulation*/
+		//That's not right...?! This was changed?!
 		truncationAccumulator += std::fmodf(_density, sa);
 		if (truncationAccumulator >= 1.0f)
 		{

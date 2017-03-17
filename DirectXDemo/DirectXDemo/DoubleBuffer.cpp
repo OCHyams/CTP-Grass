@@ -20,8 +20,14 @@ const Buffer* DoubleBuffer::back()
 
 bool DoubleBuffer::init(ID3D11Device* _device, const D3D11_BUFFER_DESC* _bufferDesc, const D3D11_SUBRESOURCE_DATA* _initialData, const D3D11_UNORDERED_ACCESS_VIEW_DESC* _UAVDesc, const D3D11_SHADER_RESOURCE_VIEW_DESC* _SRVDesc)
 {
-	return m_first.init(_device, _bufferDesc, _initialData, _UAVDesc, _SRVDesc)
-		&& m_second.init(_device, _bufferDesc, _initialData, _UAVDesc, _SRVDesc);
+	if (m_first.init(_device, _bufferDesc, _initialData, _UAVDesc, _SRVDesc)
+		&& m_second.init(_device, _bufferDesc, _initialData, _UAVDesc, _SRVDesc))
+	{
+		m_front = &m_first;
+		m_back = &m_second;
+		return true;
+	}
+	return false;
 }
 
 void DoubleBuffer::cleanup()

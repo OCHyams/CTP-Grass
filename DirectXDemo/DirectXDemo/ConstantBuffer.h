@@ -5,16 +5,21 @@
 
 //Kind of ironically, don't use this if you want your cbuffers to be constant
 //because it stores a cpu-side lump of data which would be unecessary
+
 template <typename TData>
 class CBuffer : public TData
 {
 public:
+	CBuffer() = default;
+	~CBuffer() { cleanup(); }
+
 	void mapUpdate( ID3D11DeviceContext* _dc, ::D3D11_MAP _mapType = D3D11_MAP_WRITE_DISCARD);
 	void subresourceUpdate( ID3D11DeviceContext* _dc );
 	//Size is automatically set to sizeof(TData)
 	bool init( ID3D11Device* _device, const D3D11_BUFFER_DESC* _bufferDesc );
 	void cleanup();
 
+	ID3D11Buffer * getBuffer() { return m_buffer; }
 private:
 	ID3D11Buffer* m_buffer;
 };
@@ -42,12 +47,13 @@ template<typename TData>
 inline bool CBuffer<TData>::init(ID3D11Device* _device, const D3D11_BUFFER_DESC* _bufferDesc)
 {
 	D3D11_BUFFER_DESC newBufferDesc = *_bufferDesc;
-	newBufferDesc.ByteWidth = sizeof(TData);
+	newBufferDesc.ByteWidth = SIZEOF_ROUND_TO_BOUNDARY(TData, 16);
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(data));
 	data.pSysMem = (TData*)this;
 
-	if (FAILED(_device->CreateBuffer(&newBufferDesc, &data, &m_buffer)))
+	HRESULT result = _device->CreateBuffer(&newBufferDesc, &data, &m_buffer);
+	if (FAILED(result))
 	{
 		MessageBox(0, "Error creating buffer.", "CBuffer", MB_OK);
 		return false;

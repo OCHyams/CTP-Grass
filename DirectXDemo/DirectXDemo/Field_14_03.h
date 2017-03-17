@@ -14,6 +14,7 @@ class ObjModel;
 class Field_14_03
 {
 public:
+	const int m_threadsPerGroupX = 256;
 	WindManager_14_03*				m_windManager;
 	float							m_halfGrassWidth;
 	//float m_length; //To-Do@.
@@ -51,6 +52,7 @@ private:
 	static
 		ID3D11ShaderResourceView*		s_texture;
 	static ID3D11SamplerState*		s_samplerState;
+	static ID3D11ComputeShader*		s_csWind;
 	/////////////////////////////////////////////////
 	/// Constant buffers 
 	/////////////////////////////////////////////////

@@ -46,7 +46,6 @@ bool WindManager::loadShared(ID3D11Device* _device)
 	shaderFlags |= D3DCOMPILE_DEBUG;
 #endif
 
-	//VS SHADER
 	result = D3DCompileFromFile(L"WindForce.hlsl", NULL, NULL, "main", "cs_5_0", shaderFlags, 0, &buffer, NULL);
 	if (FAILED(result))
 	{
