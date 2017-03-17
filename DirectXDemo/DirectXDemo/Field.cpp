@@ -353,11 +353,11 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		/*Calc number of blades*/
 		unsigned int numBlades = (int)std::truncf(sa * _density);
 		/*Deal with trunc rounding accumulation*/
-		truncationAccumulator += std::fmodf(_density, sa);
+		truncationAccumulator += std::fmodf(_density *  sa, 1.0f);
 		if (truncationAccumulator >= 1.0f)
 		{
-			++numBlades;
-			--truncationAccumulator;
+			numBlades += (int)truncationAccumulator;
+			truncationAccumulator -= (int)truncationAccumulator;
 		}
 
 		/*Add the patch to the field and octree*/

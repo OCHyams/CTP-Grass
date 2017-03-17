@@ -31,11 +31,11 @@ void field::generateField(ID3D11Device* _device, ObjModel* _model, float _densit
 		unsigned int numBlades = (int)std::truncf(sa * _density);
 		/*Deal with trunc rounding accumulation*/
 		//That's not right...?! This was changed?!
-		truncationAccumulator += std::fmodf(_density, sa);
+		truncationAccumulator += std::fmodf(_density *  sa, 1.0f);
 		if (truncationAccumulator >= 1.0f)
 		{
-			++numBlades;
-			--truncationAccumulator;
+			numBlades += (int)truncationAccumulator;
+			truncationAccumulator  -= (int)truncationAccumulator;
 		}
 
 		_instances.resize(_instances.size() + numBlades);
