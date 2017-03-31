@@ -286,11 +286,11 @@ bool Field_14_03::load(ID3D11Device* _device, ObjModel* _model, float _density)
 	instanceData.SysMemSlicePitch= 0;
 
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
-	bufferDesc.BindFlags =	D3D11_BIND_UNORDERED_ACCESS |
+	bufferDesc.BindFlags		=	D3D11_BIND_UNORDERED_ACCESS |
 									D3D11_BIND_SHADER_RESOURCE |
 									D3D11_BIND_VERTEX_BUFFER;
-	bufferDesc.ByteWidth = sizeof(field::Instance) * m_maxInstanceCount;
-	bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+	bufferDesc.ByteWidth		= sizeof(field::Instance) * m_maxInstanceCount;
+	bufferDesc.MiscFlags		= D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
 
 	D3D11_UNORDERED_ACCESS_VIEW_DESC UAVDesc;
 	ZeroMemory(&UAVDesc, sizeof(UAVDesc));
@@ -390,6 +390,7 @@ bool Field_14_03::load(ID3D11Device* _device, ObjModel* _model, float _density)
 	bufferDesc.StructureByteStride = sizeof(unsigned int);
 	bufferDesc.ByteWidth = sizeof(unsigned int) * 2;
 	bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 	ZeroMemory(&UAVDesc, sizeof(UAVDesc));
 	UAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
@@ -414,18 +415,13 @@ void Field_14_03::unload()
 void Field_14_03::draw(const DrawData& _data)
 {
 	updateConstBuffers(_data);
-
+	
 	ID3D11ShaderResourceView*	CS_SRV[] = { m_instanceDoubleBuffer.front()->getSRV(),
 											m_windManager->getCuboidBuffer().getSRV(),    
-											m_windManager->getSphereBuffer().getSRV()
-											};
-
-
+											m_windManager->getSphereBuffer().getSRV() };
 	ID3D11UnorderedAccessView*	CS_UAV[] = { m_instanceDoubleBuffer.back()->getUAV(), m_CSAddressIdicies.getUAV() };
-
 	ID3D11Buffer* constbuffers[] = { m_CB_CS_RW.getBuffer(), m_CB_CS_RO.getBuffer(), m_CB_CS_Consts.getBuffer() };
-
-	_data.m_dc->CSSetShaderResources(0, ARRAYSIZE(CS_UAV), CS_SRV);
+	_data.m_dc->CSSetShaderResources(0, ARRAYSIZE(CS_SRV), CS_SRV);
 	_data.m_dc->CSSetUnorderedAccessViews(0, ARRAYSIZE(CS_UAV), CS_UAV, 0);
 	_data.m_dc->CSSetShader(s_csWind, NULL, 0);
 	_data.m_dc->CSSetConstantBuffers(0, ARRAYSIZE(constbuffers), constbuffers);
@@ -434,11 +430,18 @@ void Field_14_03::draw(const DrawData& _data)
 
 	m_instanceDoubleBuffer.swap();
 
+	NULLIFY_STATIC_ARRAY_OF_PTR(CS_SRV);
+	NULLIFY_STATIC_ARRAY_OF_PTR(CS_UAV);
+	NULLIFY_STATIC_ARRAY_OF_PTR(constbuffers);
+	_data.m_dc->CSSetShaderResources(0, ARRAYSIZE(CS_SRV), CS_SRV);
+	_data.m_dc->CSSetUnorderedAccessViews(0, ARRAYSIZE(CS_UAV), CS_UAV, 0);
+	_data.m_dc->CSSetShader(nullptr, NULL, 0);
+	_data.m_dc->CSSetConstantBuffers(0, ARRAYSIZE(constbuffers), constbuffers);
+
+
 	unsigned unsigned int strides[2];
 	unsigned unsigned int offsets[2];
 	ID3D11Buffer* bufferPointers[2];
-
-
 	// Set the buffer strides.
 	strides[0] = sizeof(field::Vertex);
 	strides[1] = sizeof(field::Instance);
@@ -463,8 +466,8 @@ void Field_14_03::draw(const DrawData& _data)
 
 	//set constant buffers
 	ID3D11Buffer* VSBuffers[] = { m_CB_geometry.getBuffer(), m_CB_viewproj.getBuffer(), m_CB_light.getBuffer() };
-	ID3D11Buffer* HSBuffers[] = { m_CB_geometry.getBuffer() };
-	ID3D11Buffer* DSBuffers[] = { m_CB_geometry.getBuffer() };
+	ID3D11Buffer* HSBuffers[] = { m_CB_geometry.getBuffer(), nullptr, nullptr };
+	ID3D11Buffer* DSBuffers[] = { m_CB_geometry.getBuffer(), nullptr, nullptr };
 	ID3D11Buffer* GSBuffers[] = { m_CB_geometry.getBuffer(), m_CB_viewproj.getBuffer(), m_CB_light.getBuffer() };
 	ID3D11Buffer* PSBuffers[] = { nullptr, nullptr, m_CB_light.getBuffer() };
 	_data.m_dc->VSSetConstantBuffers(0, ARRAYSIZE(VSBuffers), VSBuffers);
@@ -489,6 +492,19 @@ void Field_14_03::draw(const DrawData& _data)
 	strides[1] = 0;
 	_data.m_dc->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
 	_data.m_dc->IASetInputLayout(nullptr);
+
+	VSBuffers[0] = VSBuffers[1] = VSBuffers[2] = nullptr;
+	HSBuffers[0] = HSBuffers[1] = HSBuffers[2] = nullptr;
+	DSBuffers[0] = DSBuffers[1] = DSBuffers[2] = nullptr;
+	GSBuffers[0] = GSBuffers[1] = GSBuffers[2] = nullptr;
+	PSBuffers[0] = PSBuffers[1] = PSBuffers[2] = nullptr;
+
+	_data.m_dc->VSSetConstantBuffers(0, ARRAYSIZE(VSBuffers), VSBuffers);
+	_data.m_dc->HSSetConstantBuffers(0, ARRAYSIZE(HSBuffers), HSBuffers);
+	_data.m_dc->DSSetConstantBuffers(0, ARRAYSIZE(DSBuffers), DSBuffers);
+	_data.m_dc->GSSetConstantBuffers(0, ARRAYSIZE(GSBuffers), GSBuffers);
+	_data.m_dc->PSSetConstantBuffers(0, ARRAYSIZE(PSBuffers), PSBuffers);
+
 }
 
 void Field_14_03::updateConstBuffers(const DrawData& _data)
@@ -510,7 +526,7 @@ void Field_14_03::updateConstBuffers(const DrawData& _data)
 
 	/*Geometry stuff (and other random things)*/
 	m_CB_geometry.halfGrassWidth = m_halfGrassWidth;
-	m_CB_geometry.time = 0; //Need this to not change for the new field stuffs static_cast<float>(_data.m_time);
+	m_CB_geometry.time = 0; //Need this to not change for the new field stuffs, ill remove if it works i guess? static_cast<float>(_data.m_time);
 	m_CB_geometry.farTess = 6.0f;
 	m_CB_geometry.nearTess = 0.4f;
 	m_CB_geometry.minTessDensity = 3.0f;
@@ -522,4 +538,8 @@ void Field_14_03::updateConstBuffers(const DrawData& _data)
 	m_CB_light.camera = DirectX::XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.f);
 	STOREF4(&m_CB_light.light, DirectX::XMVectorMultiply(_data.m_cam->calcViewDir(), VEC3(-1, -1, -1)));
 	m_CB_light.mapUpdate(_data.m_dc);
+
+	/*Not really a constbuffer but it needs to be updated all the same*/
+	unsigned int addrIdx[] = { 0, m_maxInstanceCount - 1 };
+	_data.m_dc->UpdateSubresource(m_CSAddressIdicies.getBuffer(), 0, NULL, addrIdx, 0,0);
 }

@@ -24,3 +24,5 @@
 #define CHECK_FAIL(x) if (!x) return false
 //sizeof() for buffers
 #define SIZEOF_ROUND_TO_BOUNDARY(type, boundary) (sizeof(type) % boundary == 0? sizeof(type) : (std::ceil((double)sizeof(type) / (double)boundary) * boundary))
+//nullify an array of points
+#define NULLIFY_STATIC_ARRAY_OF_PTR(staticArray) for (int i=0; i < ARRAYSIZE(staticArray); ++i) { staticArray[i] = nullptr; }  

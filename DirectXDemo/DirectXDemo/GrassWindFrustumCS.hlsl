@@ -53,7 +53,7 @@ ByteAddressBuffer				inGrass		: register(t0);
 StructuredBuffer<WindCuboid>	inCuboids	: register(t1);
 StructuredBuffer<WindSphere>	inSpheres	: register(t2);
 //Only way I can think of doing this...
-uniform uint FRONT_ADDRESS_IDX = 0, BACK_ADDRESS_IDX = 32;
+uniform uint FRONT_ADDRESS_IDX = 0, BACK_ADDRESS_IDX = 1;
 RWStructuredBuffer<uint>		addresses	: register(u1);
 RWByteAddressBuffer				outGrass	: register(u0);
 
@@ -124,7 +124,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 
 	uint fromAddress = DTid.x * SIZE_OF_INSTANCE;
 	float3 pos = asfloat(inGrass.Load3(fromAddress + POS_OFFSET));
-	float3 currentWindVec = asfloat(outGrass.Load3(fromAddress + WIND_OFFSET));
+	float3 currentWindVec = asfloat(inGrass.Load3(fromAddress + WIND_OFFSET));
 	float3 newWindVec = windFromCuboids(pos) + windFromSpheres(pos);
 	newWindVec = windForce(pos, newWindVec);
 	newWindVec = lerp(currentWindVec, newWindVec, deltaTime * LERP_SPEED);//prbly don't wana do it like this :P
@@ -132,7 +132,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	uint toAddress = 0;
 	if (inViewFrustum(pos))
 	{
-		toAddress = addresses[FRONT_ADDRESS_IDX] * SIZE_OF_INSTANCE;
+		toAddress = addresses[FRONT_ADDRESS_IDX] * SIZE_OF_INSTANCE;//this will just cause issues... was not very well thought out :C Should just use an append buffer and indrect
 		InterlockedAdd(addresses[FRONT_ADDRESS_IDX], 1);
 	}
 	else
@@ -141,7 +141,8 @@ void main(uint3 DTid : SV_DispatchThreadID)
 		InterlockedAdd(addresses[BACK_ADDRESS_IDX], -1);
 	}
 
-	outGrass.Store4(toAddress + 0, inGrass.Load4(fromAddress));
-	outGrass.Store3(toAddress + 16, asuint(pos));
-	outGrass.Store3(toAddress + 28, asuint(newWindVec));
+
+	outGrass.Store4(toAddress + ROT_OFFSET, inGrass.Load4(fromAddress));
+	outGrass.Store3(toAddress + POS_OFFSET, asuint(pos));
+	outGrass.Store3(toAddress + WIND_OFFSET, asuint(newWindVec));
 }

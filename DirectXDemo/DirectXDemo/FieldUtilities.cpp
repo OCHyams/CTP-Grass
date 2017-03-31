@@ -38,7 +38,7 @@ void field::generateField(ID3D11Device* _device, ObjModel* _model, float _densit
 			truncationAccumulator  -= (int)truncationAccumulator;
 		}
 
-		_instances.resize(_instances.size() + numBlades);
+		//_instances.resize(_instances.size() + numBlades);//<<<---oops
 		/*Add the patch to the field and octree*/
 		addPatch(_instances,(float*)triVerts, numBlades);
 	}
