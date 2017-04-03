@@ -17,6 +17,7 @@
 #include "WindManager.h"
 #include "Buffer.h"
 #include "AntTweakBar.h"
+#include <chrono>
 //statics
 //DirectX::XMFLOAT3		Field::s_cameraPos		= DirectX::XMFLOAT3();
 //DirectX::XMFLOAT4X4		Field::s_viewproj		= DirectX::XMFLOAT4X4();
@@ -484,7 +485,7 @@ void Field::draw(const DrawData& _data)
 	_data.m_dc->UpdateSubresource(m_indirectArgs.getBuffer(), NULL, NULL, indirectArgsReset, sizeof(unsigned int)*ARRAYSIZE(indirectArgsReset), 0);
 
 	/*Update wind resources*/
-	m_windManager->updateResources(_data.m_dc, m_maxInstanceCount);
+	m_windManager->updateResources(_data.m_dc, m_maxInstanceCount, _data.m_time, _data.m_deltaTime );
 	//Dispatch the wind update //@with new octree
 	m_windManager->applyWindForces(m_instanceDoubleBuffer.back()->getUAV() , m_pseudoAppend.getUAV(), m_indirectArgs.getUAV(), m_instanceDoubleBuffer.front()->getSRV(), m_gpuOctree.getTreeBuffer().getSRV(),_data.m_dc, m_maxInstanceCount);
 	//The resource is now already on the GPU
@@ -631,12 +632,12 @@ void Field::addPatch(std::vector<field::Instance>& _field, float* verts, unsigne
 {
 	using namespace DirectX;
 	
-	//RNG
-	std::default_random_engine generator;
+	//RNGs
+	std::mt19937 rng(std::chrono::system_clock::now().time_since_epoch().count());
 	std::uniform_real_distribution<float> distribution(0, 1);
 	std::uniform_real_distribution<float> angleDistribution(0, 2 * XM_PI);
-	auto rand = std::bind(distribution, generator);
-	auto randAngle = std::bind(angleDistribution, generator);
+	auto rand = std::bind(distribution, rng);
+	auto randAngle = std::bind(angleDistribution, rng);
 
 	XMVECTOR a = VEC3(*(verts), *(verts + 1), *(verts + 2));
 	XMVECTOR b = VEC3(*(verts + 3), *(verts + 4), *(verts + 5));

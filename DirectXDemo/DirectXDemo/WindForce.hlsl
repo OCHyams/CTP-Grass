@@ -37,6 +37,8 @@ cbuffer CBChangePerFrame
 	uint numCuboids;
 	uint numSpheres;
 	uint numInstances;
+	float time;
+	float deltaTime;
 };
 
 
@@ -55,6 +57,8 @@ static uint ROT_OFFSET = 0;
 static uint POS_OFFSET = 16;
 static uint WIND_OFFSET = 28;
 static uint OCT_IDX_OFFSET = 40;
+
+
 
 float3 windFromCuboids(float3 pos)
 {
@@ -99,20 +103,20 @@ float3 windFromSpheres(float3 pos)
 [numthreads(256, 1, 1)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
-	if (DTid.x > numInstances) return;//This is required because rounding to int means that more - than - necessary number of threads are run! This pushes out the chance for some instances to get put into the append buffer
+	if (DTid.x >= numInstances) return;//This is required because rounding to int means that more - than - necessary number of threads are run! This pushes out the chance for some instances to get put into the append buffer
 
 	Instance instance;
 	uint inAddress = DTid.x * SIZE_OF_INSTANCE;
 	uint outAddress = 0;
 
+	instance.rot		= asfloat(inGrass.Load4(inAddress + ROT_OFFSET));
 	instance.pos		= asfloat(inGrass.Load3(inAddress + POS_OFFSET));
 	instance.wind		= windFromCuboids(instance.pos) + windFromSpheres(instance.pos);
-	instance.rot		= asfloat(inGrass.Load4(inAddress + ROT_OFFSET));
 	instance.octreeIdx	= asint(inGrass.Load(inAddress + OCT_IDX_OFFSET));
-	instance.padding	= 0;
+	instance.padding = 0;
 
 	//emulate append buffer
-	//If visble, ~~add to front of output buffer~~ add to the pseudo append buffer
+	//If visble, add to the pseudo append buffer
 	if (inNodes[instance.octreeIdx].visible > 0)
 	{
 		InterlockedAdd(indirectArgs[ARGS_INST_COUNT], 1, outAddress);
@@ -128,36 +132,4 @@ void main( uint3 DTid : SV_DispatchThreadID )
 	outGrass.Store3(inAddress + POS_OFFSET, asuint(instance.pos));
 	outGrass.Store3(inAddress + WIND_OFFSET, asuint(instance.wind));
 	outGrass.Store(inAddress + OCT_IDX_OFFSET, asuint(instance.octreeIdx));
-
-	////Hmm, it didn't like this!
-	////if (DTid.x > numInstances) return;//This is required because rounding to int means that more - than - necessary number of threads are run! This pushes out the chance for some instances to get put into the append buffer
-
-	////Instance instance;
-	////uint inAddress = DTid.x * SIZE_OF_INSTANCE;
-	////uint outAddress = 0;
-
-	////instance.pos = asfloat(inGrass.Load3(inAddress + POS_OFFSET));
-	////instance.wind = windFromCuboids(instance.pos) + windFromSpheres(instance.pos);
-	////instance.rot = asfloat(inGrass.Load4(inAddress + ROT_OFFSET));
-	////instance.octreeIdx = asint(inGrass.Load(inAddress + OCT_IDX_OFFSET));
-	////instance.padding = 0;
-
-	//////emulate append buffer
-	//////If visble, ~~add to front of output buffer~~ add to the pseudo append buffer
-	////if (inNodes[instance.octreeIdx].visible > 0)
-	////{
-	////	InterlockedAdd(indirectArgs[ARGS_INST_COUNT], 1, outAddress);
-	////	outAddress *= SIZE_OF_INSTANCE;
-	////}
-	////else //else add to back of buffer
-	////{
-	////	InterlockedAdd(indirectArgs[ARGS_BACK_COUNTER],- 1, outAddress);
-	////	outAddress *= SIZE_OF_INSTANCE;
-	////}
-
-	//////add all grass to outbuff
-	////outGrass.Store4(outAddress + ROT_OFFSET, asuint(instance.rot));
-	////outGrass.Store3(outAddress + POS_OFFSET, asuint(instance.pos));
-	////outGrass.Store3(outAddress + WIND_OFFSET, asuint(instance.wind));
-	////outGrass.Store(outAddress + OCT_IDX_OFFSET, asuint(instance.octreeIdx));
 }

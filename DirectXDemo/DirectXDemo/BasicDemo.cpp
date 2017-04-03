@@ -32,12 +32,15 @@ bool BasicDemo::load()
 	v44_transform = XMMatrixMultiply(v44_transform, v44_translation);
 	XMFLOAT4X4 f44_transform;
 	XMStoreFloat4x4(&f44_transform, v44_transform);
-	CHECK_FAIL(m_renderer.registerMesh((int)MESH::HILL, "../Resources/hill_tris.txt", ObjModel::QUAD_STRIP, f44_transform, m_d3dDevice));
+	XMStoreFloat4x4(&f44_transform, XMMatrixIdentity());
+	CHECK_FAIL(m_renderer.registerMesh((int)MESH::HILL, "../Resources/SmallHills.obj", ObjModel::TRIANGLE_STRIP, f44_transform, m_d3dDevice));
 
 	ObjModel plane;
 	plane.loadPlane(100,100,20,20);
 	CHECK_FAIL(m_renderer.registerMesh((int)MESH::PLANE, plane, m_d3dDevice));
 	
+
+
 	CHECK_FAIL(GPUOctreeDebugger::loadShared(m_d3dDevice));//@new octree
 
 	/*Load data shared by all wind managers (though there should only be one anyway)*/
@@ -82,8 +85,8 @@ bool BasicDemo::load()
 	m_field.m_windManager = &m_windManager;
 
 	MESH meshToUse = MESH::HILL;
-	ObjModel* meshObj = &plane; //m_renderer.getObjModel((int)meshToUse);
-	CHECK_FAIL(m_field.load(m_d3dDevice, meshObj, NUM(150), XMFLOAT3(0, 0, 0), { 5.f, 5.f, 5.f}));
+	ObjModel* meshObj =/* &plane;*/ m_renderer.getObjModel((int)meshToUse);
+	CHECK_FAIL(m_field.load(m_d3dDevice, meshObj, NUM(50), XMFLOAT3(0, 0, 0), { 5.f, 5.f, 5.f}));
 	m_numBlades = m_field.getMaxNumBlades();
 
 	//Put this here so other field can use it!!@

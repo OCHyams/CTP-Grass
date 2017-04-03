@@ -68,6 +68,8 @@ struct CBWindForceChangesPerFrame
 	unsigned int numCuboids;
 	unsigned int numSpheres;
 	unsigned int numInstances;
+	float time;
+	float deltaTime;
 };
 
 __declspec(align(16))

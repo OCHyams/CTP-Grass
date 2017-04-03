@@ -16,7 +16,7 @@ public:
 	///	if all zones are immobile and none are created
 	/// or destroyed.
 	/////////////////////////////////////////////////
-	void updateResources(ID3D11DeviceContext*, unsigned int _numInstances);
+	void updateResources(ID3D11DeviceContext*, unsigned int _numInstances, float _time, float _deltaTime);
 
 	/////////////////////////////////////////////////
 	/// Load wind shader and shared resources.

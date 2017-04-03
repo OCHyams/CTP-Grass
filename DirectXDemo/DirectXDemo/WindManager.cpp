@@ -6,8 +6,9 @@
 
 ID3D11ComputeShader* WindManager::s_cs = nullptr;
 
-void WindManager::updateResources(ID3D11DeviceContext* _dc, unsigned int _numInstances)
+void WindManager::updateResources(ID3D11DeviceContext* _dc, unsigned int _numInstances, float _time, float _deltaTime)
 {
+	
 	/*Update buffers*/
 	//Cuboids
 	if (m_cuboids.size())
@@ -32,7 +33,7 @@ void WindManager::updateResources(ID3D11DeviceContext* _dc, unsigned int _numIns
 	}
 
 	//moved this here from update resources for testing
-	CBWindForceChangesPerFrame cb = { m_cuboids.size(), m_spheres.size(), _numInstances };//Should be in it's own buffer for sure
+	CBWindForceChangesPerFrame cb = { m_cuboids.size(), m_spheres.size(), _numInstances, _time, _deltaTime };//Should be in it's own buffer for sure
 	_dc->UpdateSubresource(m_CB_changesPerFrame, 0, 0, &cb, 0, 0);
 
 }
