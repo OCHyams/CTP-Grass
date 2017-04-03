@@ -32,8 +32,15 @@ bool BasicDemo::load()
 	v44_transform = XMMatrixMultiply(v44_transform, v44_translation);
 	XMFLOAT4X4 f44_transform;
 	XMStoreFloat4x4(&f44_transform, v44_transform);
-	XMStoreFloat4x4(&f44_transform, XMMatrixIdentity());
-	CHECK_FAIL(m_renderer.registerMesh((int)MESH::HILL, "../Resources/SmallHills.obj", ObjModel::TRIANGLE_STRIP, f44_transform, m_d3dDevice));
+	CHECK_FAIL(m_renderer.registerMesh((int)MESH::HILL, "../Resources/hill_tris.txt", ObjModel::QUAD_STRIP, f44_transform, m_d3dDevice));
+
+	
+	v44_transform = XMMatrixScalingFromVector(VEC3(4, 2, 4));
+	v44_translation = XMMatrixTranslation(0.0f, -2, 4);
+	v44_transform = XMMatrixMultiply(v44_transform, v44_translation);
+	XMStoreFloat4x4(&f44_transform, v44_transform);
+	CHECK_FAIL(m_renderer.registerMesh((int)MESH::SMALL_HILLS, "../Resources/SmallHills.obj", ObjModel::TRIANGLE_STRIP, f44_transform, m_d3dDevice));
+
 
 	ObjModel plane;
 	plane.loadPlane(100,100,20,20);
@@ -84,9 +91,9 @@ bool BasicDemo::load()
 	m_field.m_halfGrassWidth = 0.02f;
 	m_field.m_windManager = &m_windManager;
 
-	MESH meshToUse = MESH::HILL;
+	MESH meshToUse = MESH::SMALL_HILLS;
 	ObjModel* meshObj =/* &plane;*/ m_renderer.getObjModel((int)meshToUse);
-	CHECK_FAIL(m_field.load(m_d3dDevice, meshObj, NUM(50), XMFLOAT3(0, 0, 0), { 5.f, 5.f, 5.f}));
+	CHECK_FAIL(m_field.load(m_d3dDevice, meshObj, NUM(150), XMFLOAT3(0, 0, 0), { 5.f, 5.f, 5.f}));
 	m_numBlades = m_field.getMaxNumBlades();
 
 	//Put this here so other field can use it!!@
