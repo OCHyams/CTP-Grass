@@ -9,6 +9,7 @@
 #include "WindCuboid.h"
 #include "WindSphere.h"
 #include "Input.h"
+#include "GPUOctreeDebugger.h"
 /*Make large INTs easier to read in code*/
 #define NUM(x0) x0
 #define NUM(x0, x1) x0 ## x1
@@ -34,9 +35,10 @@ bool BasicDemo::load()
 	CHECK_FAIL(m_renderer.registerMesh((int)MESH::HILL, "../Resources/hill_tris.txt", ObjModel::QUAD_STRIP, f44_transform, m_d3dDevice));
 
 	ObjModel plane;
-	plane.loadPlane(25,25,25,25);
+	plane.loadPlane(100,100,75,75);
 	CHECK_FAIL(m_renderer.registerMesh((int)MESH::PLANE, plane, m_d3dDevice));
 	
+	CHECK_FAIL(GPUOctreeDebugger::loadShared(m_d3dDevice));//@new octree
 
 	/*Load data shared by all wind managers (though there should only be one anyway)*/
 	WindManager::loadShared(m_d3dDevice);
@@ -53,20 +55,6 @@ bool BasicDemo::load()
 	m_demoSphere->m_position = { 0,0,0 };
 	m_demoSphere->m_radius = 2.0f;
 
-	///*NEW WIND MANAGER*/
-	//CHECK_FAIL(m_windManager_14_03.load(m_d3dDevice, 1, 1));
-	///*Create a static wind volume, no need to keep track of mem, system does that*/
-	//windCuboid = m_windManager_14_03.createWindCuboid();
-	//windCuboid->m_extents = { 100.0f, 100.0f, 100.0f };
-	//windCuboid->m_initalVelocity = { 0.3f, 0.f, 0.f };
-	//windCuboid->m_position = { 0.f, 0.f, 0.f };
-	///*Create a static wind volume, no need to keep track of mem, system does that*/
-	//m_demoSphere = m_windManager_14_03.createWindSphere();
-	//m_demoSphere->m_fallOffPow = 5;
-	//m_demoSphere->m_initalStrength = 0.f;;
-	//m_demoSphere->m_position = { 0,0,0 };
-	//m_demoSphere->m_radius = 2.0f;
-
 
 	//Tweak bar
 	TwBar* GUI = TwNewBar("Settings");
@@ -74,7 +62,7 @@ bool BasicDemo::load()
 	TwDefine(" Settings size='300 200' ");
 	TwDefine(" Settings movable= false ");
 	TwDefine(" Settings resizable= true ");
-	TwAddVarRW(GUI, "draw octree", TwType::TW_TYPE_BOOLCPP, &m_field.m_drawOctree, "");
+	TwAddVarRW(GUI, "draw gpu  octree", TwType::TW_TYPE_BOOLCPP, &m_field.m_drawGPUOctree, "");//@new octree
 	TwAddVarRW(GUI, "enable frustum culling", TwType::TW_TYPE_BOOLCPP, &m_field.m_frustumCull, "");
 	TwAddVarRW(GUI, "str", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_initalStrength, "step = 0.05");
 	TwAddVarRW(GUI, "rad", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_radius, "step = 0.05");
@@ -93,16 +81,10 @@ bool BasicDemo::load()
 	m_field.m_halfGrassWidth = 0.02f;
 	m_field.m_windManager = &m_windManager;
 
-	MESH	 meshToUse = MESH::PLANE;
-	ObjModel* meshObj = &plane;// m_renderer.getObjModel((int)meshToUse);
-	CHECK_FAIL(m_field.load(m_d3dDevice, meshObj/* &plane*/, NUM(150), XMFLOAT3(0, 0, 0), { 10.f, 10, 10.f}));
+	MESH meshToUse = MESH::HILL;
+	ObjModel* meshObj = /*&plane; */m_renderer.getObjModel((int)meshToUse);
+	CHECK_FAIL(m_field.load(m_d3dDevice, meshObj /*&plane*/, NUM(150), XMFLOAT3(0, 0, 0), { 10.f, 10, 10.f}));
 	m_numBlades = m_field.getMaxNumBlades();
-
-	/*New demo field*/
-	/*CHECK_FAIL(Field_14_03::loadShared(m_d3dDevice));
-	m_field_14_03.m_halfGrassWidth = 0.02f;
-	m_field_14_03.m_windManager = &m_windManager_14_03;
-	CHECK_FAIL(m_field_14_03.load(m_d3dDevice, &plane, NUM(150)));*/
 
 	//Put this here so other field can use it!!@
 	plane.release();
@@ -113,7 +95,7 @@ bool BasicDemo::load()
 	m_renderer.addObj(mesh);
 	m_objects.push_back(mesh);
 
-	m_cam = new ArcCamera({ 0.f, 0.f, 0.f });
+	m_cam = new ArcCamera({ 0.f, 0.1f, 0.f });
 	m_objects.push_back(m_cam);
 	CHECK_FAIL(m_cam->load(m_d3dDevice));
 
@@ -125,11 +107,8 @@ void BasicDemo::unload()
 {
 	WindManager::unloadShared();
 	m_windManager.unload();
-	//m_windManager_14_03.unload();
 	Field::unloadShared();
 	m_field.unload();
-	//m_field_14_03.unload();
-	//m_field_14_03.unloadShared();
 	for (auto obj : m_objects)
 	{
 		if (obj)
@@ -138,8 +117,8 @@ void BasicDemo::unload()
 			delete obj;
 		}
 	}
-
-	OctreeDebugger::unloadShared();
+	
+	GPUOctreeDebugger::unloadShared();//@new octree debugger
 	m_renderer.cleanup();
 }
 
@@ -183,8 +162,6 @@ void BasicDemo::render()
 
 	DrawData data = { m_cam, m_d3dContext, m_time.time, m_time.deltaTime };
 
-	/*Update wind resources*/
-	m_windManager.updateResources(m_d3dContext);
 	//m_windManager_14_03.updateResources(m_d3dContext);
 	m_field.draw(data);
 	//m_field_14_03.draw(data);

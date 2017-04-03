@@ -103,8 +103,10 @@ inline float4 windForce(float3 p, float3 windVec)
 	// the current wind strength and direction
 	//float phase = (time * length(windVec)) + dot(windVec, p);*/ //HAD TO MODIFY THIS SO BECAUSE PER_INSTANCE wind vectors can now change suddenly!
 
-	//				@@NEED TO SOLVE THIS ISSUE@@
-	float phase = (time *length(windVec)) + dot(normalize(windVec), p);  //HAD TO MODIFY THIS SO BECAUSE PER_INSTANCE wind vectors can now change suddenly!
+	//				@@version below works@@
+	float phase = (time *length(windVec)) + dot(normalize(windVec), p);
+	//float phase = (time + length(p))  * 0.3f;  //<<<-- This kind of works but you don't get increased frequency /w big winds which looks odd...
+
 	// Compute the four translation strengths.
 	float4 ts = smoothf(trianglef(translationFrequency * phase));
 	// Compute the mean of the four values and
@@ -181,6 +183,30 @@ float4 slerp(float4 v0, float4 v1, double t) {
 	return v0*cos(theta) + v2*sin(theta);
 }
 
+
+float4 OCHWind(float3 vertex, float3 pos, float3 wind, float flex)
+{
+
+	float phase = (time *length(wind)) + dot(normalize(wind), pos);
+	//float phase = (time + length(pos))  * 0.3f;  //<<<-- This kind of works but you don't get increased frequency /w big winds which looks odd...nah doesn't work :/
+
+	// Compute the four translation strengths.
+	float4 ts = smoothf(trianglef(translationFrequency * phase));
+	// Compute the mean of the four values and
+	// return the translation vector.
+	float4 displacement = float4(wind * dot(ts, 0.25), 0.0f) ;
+
+	float len = 0.0001;// length(displacement);
+	displacement.xy *= flex;
+	displacement.xyz = normalize(displacement.xyz) * len;
+
+	//displacement.y = 0;
+	//float height =  clamp(-length(displacement), -vertex.y, 0);
+	//displacement.y = height;
+
+	return displacement;
+}
+
 HS_DS_INPUT VS_Main(VS_INPUT vertex)
 {
 	HS_DS_INPUT output;
@@ -189,7 +215,8 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	output.cpoint = float4(quatRotateVector(vertex.rotation, vertex.pos), 1.0f);//@new
 
 	/*Wind displacement*/ //[Orthomans technique]
-	output.cpoint += (windForce(vertex.location, vertex.wind) * vertex.flexibility);
+	float4 windDisplacement = (windForce(vertex.location, vertex.wind) * vertex.flexibility);
+	output.cpoint += windDisplacement;
 
 	/*Rotation of vectors under wind force*/ //-@->NOT WORKING ATM
 	float4 rot = quatFromTwoVec(normalize(vertex.pos), normalize(output.cpoint.xyz));

@@ -16,7 +16,7 @@ public:
 	///	if all zones are immobile and none are created
 	/// or destroyed.
 	/////////////////////////////////////////////////
-	void updateResources(ID3D11DeviceContext*);
+	void updateResources(ID3D11DeviceContext*, unsigned int _numInstances);
 
 	/////////////////////////////////////////////////
 	/// Load wind shader and shared resources.
@@ -66,7 +66,9 @@ public:
 	/////////////////////////////////////////////////
 	void removeAll();
 
-	void applyWindForces(ID3D11UnorderedAccessView* _outGrass, ID3D11ShaderResourceView* _inGrass, ID3D11DeviceContext* _dc, int _numInstances);
+	void applyWindForces(	ID3D11UnorderedAccessView* _outGrass, ID3D11UnorderedAccessView* _frustumCulled, ID3D11UnorderedAccessView* _indirectArgs,
+							ID3D11ShaderResourceView* _inGrass, ID3D11ShaderResourceView* _inOctree, 
+							ID3D11DeviceContext* _dc, int _numInstances);
 
 	ID3D11ShaderResourceView* getRectSRV() { return m_cuboidSRV;  }
 	ID3D11ShaderResourceView* getSphereSRV() { return m_sphereSRV; }

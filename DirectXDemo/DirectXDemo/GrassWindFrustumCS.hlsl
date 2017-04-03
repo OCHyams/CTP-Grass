@@ -44,7 +44,7 @@ cbuffer CBNeverChanges : register(b2)
 }
 
 uniform float4 translationFrequency = float4(1.975, 0.793, 0.375, 0.193);
-uniform uint SIZE_OF_INSTANCE = 42 /*Raw*/ + 6 /*Padding*/;
+uniform uint SIZE_OF_INSTANCE = 40 /*Raw*/ + 8 /*Padding*/;
 uniform uint ROT_OFFSET = 0;
 uniform uint POS_OFFSET = 16;
 uniform uint WIND_OFFSET = 28;

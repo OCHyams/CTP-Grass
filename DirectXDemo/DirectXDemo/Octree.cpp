@@ -271,7 +271,7 @@ Octree::Node* Octree::addGrass(Node* _root, const field::Instance& _instance)
 	return nullptr;
 }
 
-void Octree::frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, field::Instance* _buffer, int _bufferSize, int& _numInstances)
+void Octree::frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, field::Instance* _buffer, int _bufferSize, unsigned int& _numInstances)
 {
 	/*Early out if _root ptr is null*/
 	if (_root == nullptr) return;
@@ -312,7 +312,7 @@ void Octree::frustumCull(Node* _root, const DirectX::BoundingFrustum& _frustum, 
 	}
 }
 
-void Octree::noCull(Node * _root, field::Instance * _buffer, int _bufferSize, int & _numInstances)
+void Octree::noCull(Node * _root, field::Instance * _buffer, int _bufferSize, unsigned int& _numInstances)
 {/*Early out if _root ptr is null*/
 	if (_root == nullptr) return;
 

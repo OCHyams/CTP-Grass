@@ -20,6 +20,7 @@ namespace field
 		XMFLOAT4		rotation;
 		XMFLOAT3		location;
 		XMFLOAT3		wind;
+		int				octreeIdx =-1;
 	};
 
 

@@ -1,18 +1,17 @@
-#include "OctreeDebugger.h"
+#include "GPUOctreeDebugger.h"
 #include "basicVertex.h"
 #include <stack>
 #include "ConstantBuffers.h"
 #include "Shorthand.h"
 
-field::Shaders			OctreeDebugger::s_shaders = field::Shaders();
-ID3D11RasterizerState*	OctreeDebugger::s_rasterizer = nullptr;
-ID3D11InputLayout*		OctreeDebugger::s_inputLayout = nullptr;
-ID3D11Buffer*			OctreeDebugger::s_vertexBuffer = nullptr;
-ID3D11Buffer*			OctreeDebugger::s_indexBuffer = nullptr;
-ID3D11Buffer*			OctreeDebugger::s_m_CB_wvp = nullptr;
+field::Shaders			GPUOctreeDebugger::s_shaders = field::Shaders();
+ID3D11RasterizerState*	GPUOctreeDebugger::s_rasterizer = nullptr;
+ID3D11InputLayout*		GPUOctreeDebugger::s_inputLayout = nullptr;
+ID3D11Buffer*			GPUOctreeDebugger::s_vertexBuffer = nullptr;
+ID3D11Buffer*			GPUOctreeDebugger::s_indexBuffer = nullptr;
+ID3D11Buffer*			GPUOctreeDebugger::s_m_CB_wvp = nullptr;
 
-
-bool OctreeDebugger::loadShared(ID3D11Device* _device)
+bool GPUOctreeDebugger::loadShared(ID3D11Device* _device)
 {
 	/*Early out if we've already loaded stuff*/
 	if (s_m_CB_wvp) return true;
@@ -177,7 +176,7 @@ bool OctreeDebugger::loadShared(ID3D11Device* _device)
 	return true;
 }
 
-void OctreeDebugger::unloadShared()
+void GPUOctreeDebugger::unloadShared()
 {
 	s_shaders.release();
 	RELEASE(s_rasterizer);
@@ -187,7 +186,7 @@ void OctreeDebugger::unloadShared()
 	RELEASE(s_m_CB_wvp);
 }
 
-void OctreeDebugger::draw(ID3D11DeviceContext* _dc, const DirectX::XMFLOAT4X4& _viewproj, Octree::Node* _root)
+void GPUOctreeDebugger::draw(ID3D11DeviceContext* _dc, const DirectX::XMFLOAT4X4& _viewproj, const GPUOctree& _tree)
 {
 	unsigned int stride = sizeof(BasicVertex);
 	unsigned int offset = 0;
@@ -208,34 +207,39 @@ void OctreeDebugger::draw(ID3D11DeviceContext* _dc, const DirectX::XMFLOAT4X4& _
 	_dc->VSSetConstantBuffers(0, 1, &s_m_CB_wvp);
 	_dc->PSSetConstantBuffers(0, 1, &s_m_CB_wvp);
 
-	std::stack<Octree::Node*> tree;
-	tree.push(_root);
+
+	std::stack<int> tree;
+	tree.push(0);
+
 	/*Depth first traversal of nodes*/
-	while (tree.size())
+	while (!tree.empty())
 	{
 		//Pop top node
-		Octree::Node* current = tree.top();
+		const int currentIdx = tree.top();
 		tree.pop();
-		
-		//If this is a leaf node
-		if (current->m_children.empty())
+
+		const GPUOctree::Node current = _tree.getNode(currentIdx);
+
+		//If not leaf node
+		if (current.hasChildren())
+		{		//Push child nodes
+			for (int childIdx : current.m_childIdx)
+			{
+				if (GPUOctree::Node::idxNotNull(childIdx)) tree.push(childIdx);
+			}
+		}
+		else
 		{
 			//Draw it
 			using namespace DirectX;
 			CBWorldViewProj cbuff;
-			XMMATRIX wvp = XMMatrixScalingFromVector(LF3(&current->m_AABB.Extents)*2);
-			wvp = XMMatrixMultiply(wvp, XMMatrixTranslationFromVector(LF3(&current->m_AABB.Center)));
+			XMMATRIX wvp = XMMatrixScalingFromVector(LF3(&current.m_AABB.Extents) * 2);
+			wvp = XMMatrixMultiply(wvp, XMMatrixTranslationFromVector(LF3(&current.m_AABB.Center)));
 			wvp = XMMatrixMultiply(wvp, LF44(&_viewproj));
 			XMStoreFloat4x4(&cbuff.m_wvp, TRANSPOSE(wvp));
 
 			_dc->UpdateSubresource(s_m_CB_wvp, 0, 0, &cbuff, 0, 0);
 			_dc->DrawIndexed(36, 0, 0);
-		}
-		//Else if not leaf 
-		//Push child nodes
-		for (Octree::Node* child : current->m_children)
-		{
-			tree.push(child);
 		}
 	}
 }

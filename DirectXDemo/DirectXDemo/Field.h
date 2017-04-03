@@ -1,13 +1,14 @@
 #pragma once
-#include "GameObject.h"
+#include "DrawData.h"
 #include "basicVertex.h"
 #include <d3d11_2.h>
 #include <math.h>
 #include "ConstantBuffers.h"
 #include "FieldRenderData.h"
-#include "Octree.h"
 #include <vector>
-#include "OctreeDebugger.h"
+#include "GPUOctree.h"
+#include "DoubleBuffer.h"
+#include "GPUOctreeDebugger.h"
 class ObjModel;
 class WindManager;
 
@@ -20,7 +21,7 @@ public:
 	/////////////////////////////////////////////////
 	/// Should draw the Octree?
 	/////////////////////////////////////////////////
-	bool m_drawOctree = true;
+	bool m_drawGPUOctree = false;
 
 	/////////////////////////////////////////////////
 	/// Should apply frustum culling?
@@ -57,13 +58,18 @@ public:
 	unsigned int getMaxNumBlades() { return m_maxInstanceCount; }
 	unsigned int getCurNumBlades() { return m_curInstanceCount; }
 
-	//public for now cus lazy
-	//static DirectX::XMFLOAT4X4		s_viewproj;
 	float							m_length;
-	//float							m_sdLength;//standard diviation
 	float							m_halfGrassWidth;
-	//float							m_sdHlafGrassWidth;//standard diviation
 private:
+	/////////////////////////////////////////////////
+	/// New octree
+	/////////////////////////////////////////////////
+	GPUOctreeDebugger	m_gpuOctreeDebugger;
+	GPUOctree			m_gpuOctree;	
+	std::vector <field::Instance> m_field;
+	Buffer				m_pseudoAppend;
+	Buffer				m_indirectArgs;
+
 	/////////////////////////////////////////////////
 	/// Shared data
 	/////////////////////////////////////////////////
@@ -89,10 +95,9 @@ private:
 	/////////////////////////////////////////////////
 	/// Instance data
 	/////////////////////////////////////////////////
-	field::Instance*		m_instances = nullptr;
-	ID3D11Buffer*			m_instanceBuffer;
-	int						m_maxInstanceCount;
-	int						m_curInstanceCount;
+	DoubleBuffer			m_instanceDoubleBuffer;
+	unsigned int			m_maxInstanceCount;
+	unsigned int			m_curInstanceCount;
 	/////////////////////////////////////////////////
 	/// LOD factors
 	/////////////////////////////////////////////////
@@ -100,33 +105,16 @@ private:
 	float					m_minDensity;
 	float					m_curDensity;
 	/////////////////////////////////////////////////
-	/// Octree root node
+	/// 
 	/////////////////////////////////////////////////
-	Octree::Node*			m_octreeRoot = nullptr;
-	OctreeDebugger			m_octreeDebugger;
-	//static
 	DirectX::XMFLOAT3		m_cameraPos;
-	/////////////////////////////////////////////////
-	/// Wind data for per-instance wind
-	/////////////////////////////////////////////////
-	ID3D11UnorderedAccessView*	m_instancesUAV;//@
-	ID3D11Buffer*				m_instanceUAVBufferOut;
-	ID3D11ShaderResourceView*	m_instanceSRV;
-	ID3D11Buffer*				m_instanceSRVBufferIn;
 	/////////////////////////////////////////////////
 	///	Field data
 	/////////////////////////////////////////////////
-	//rectangle dimentions of field
-	DirectX::XMFLOAT2		m_size;
-	DirectX::XMFLOAT3		m_pos;
+	DirectX::XMFLOAT3		m_pos;//@should get wvp to parent the nodes & grass so objcs can move!
 
 	void updateConstBuffers(const DrawData&);
 
-	/////////////////////////////////////////////////
-	///	Allocates m_instanceCount of Instance, don't forget to clear up mem!
-	/////////////////////////////////////////////////
-	field::Instance* generateInstanceData();//@not in use atm...
-	void buildInstanceBuffer();
 	bool loadBuffers(ID3D11Device*);
 
 	/*Stuff for proc gen grass*/
@@ -165,7 +153,7 @@ private:
 		}
 
 	};
-	void addPatch(/*std::vector<field::Instance>& _field,*//* const Triangle& _tri*/float* verts, unsigned int _numBlade, Octree::Node* _nodeCache);
+	void addPatch(float* verts, unsigned int _numBlade);
 };
 
 

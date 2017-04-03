@@ -6,7 +6,7 @@
 
 ID3D11ComputeShader* WindManager::s_cs = nullptr;
 
-void WindManager::updateResources(ID3D11DeviceContext* _dc)
+void WindManager::updateResources(ID3D11DeviceContext* _dc, unsigned int _numInstances)
 {
 	/*Update buffers*/
 	//Cuboids
@@ -32,7 +32,7 @@ void WindManager::updateResources(ID3D11DeviceContext* _dc)
 	}
 
 	//moved this here from update resources for testing
-	CBWindForceChangesPerFrame cb = { m_cuboids.size(), m_spheres.size(), 0 };
+	CBWindForceChangesPerFrame cb = { m_cuboids.size(), m_spheres.size(), _numInstances };//Should be in it's own buffer for sure
 	_dc->UpdateSubresource(m_CB_changesPerFrame, 0, 0, &cb, 0, 0);
 
 }
@@ -181,22 +181,27 @@ void WindManager::removeAll()
 	m_cuboids.shrink_to_fit();
 }
 
-void WindManager::applyWindForces(ID3D11UnorderedAccessView* _outGrass, ID3D11ShaderResourceView* _inGrass, ID3D11DeviceContext* _dc, int _numInstances)
+void WindManager::applyWindForces(ID3D11UnorderedAccessView* _outGrass, ID3D11UnorderedAccessView* _frustumCulled, ID3D11UnorderedAccessView* _indirectArgs,
+									ID3D11ShaderResourceView* _inGrass, ID3D11ShaderResourceView* _inOctree, ID3D11DeviceContext* _dc, int _numInstances)
 {
-	////moved this here from update resources for testing
-	//CBWindForceChangesPerFrame cb = { m_cuboids.size(), m_spheres.size(), _numInstances };
-	//_dc->UpdateSubresource(m_CB_changesPerFrame, 0, 0, &cb, 0, 0);
-	ID3D11ShaderResourceView* views[3] =
+	ID3D11ShaderResourceView* views[4] =
 	{	
 		_inGrass,
 		m_cuboidSRV,
-		m_sphereSRV
+		m_sphereSRV,
+		_inOctree
+	};
+	ID3D11UnorderedAccessView* uav[3] =
+	{
+		_outGrass,
+		_frustumCulled,
+		_indirectArgs
 	};
 
 	/*Dispatch*/
 	_dc->CSSetShader(s_cs, NULL, 0);
-	_dc->CSSetShaderResources(0, 3, views);
-	_dc->CSSetUnorderedAccessViews(0, 1, &_outGrass, nullptr);
+	_dc->CSSetShaderResources(0, ARRAYSIZE(views), views);
+	_dc->CSSetUnorderedAccessViews(0, ARRAYSIZE(uav), uav, nullptr);
 	_dc->CSSetConstantBuffers(0, 1, &m_CB_changesPerFrame);
 	_dc->Dispatch((unsigned int)ceil((float)_numInstances/ (float)m_threadsPerGroupX), 1, 1);
 
@@ -204,9 +209,9 @@ void WindManager::applyWindForces(ID3D11UnorderedAccessView* _outGrass, ID3D11Sh
 	views[0] = nullptr;
 	views[1] = nullptr;
 	views[2] = nullptr;
-
-	ID3D11UnorderedAccessView* nullUAV[1] = { nullptr };
+	views[3] = nullptr;
+	ID3D11UnorderedAccessView* nullUAV[3] = { nullptr, nullptr, nullptr};
 	_dc->CSSetShader(nullptr, NULL, 0);
-	_dc->CSSetShaderResources(0, 3, views);
-	_dc->CSSetUnorderedAccessViews(0, 1, nullUAV, nullptr);
+	_dc->CSSetShaderResources(0, ARRAYSIZE(views), views);
+	_dc->CSSetUnorderedAccessViews(0, ARRAYSIZE(nullUAV), nullUAV, nullptr);
 }
