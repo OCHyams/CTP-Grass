@@ -35,7 +35,7 @@ bool BasicDemo::load()
 	CHECK_FAIL(m_renderer.registerMesh((int)MESH::HILL, "../Resources/hill_tris.txt", ObjModel::QUAD_STRIP, f44_transform, m_d3dDevice));
 
 	ObjModel plane;
-	plane.loadPlane(100,100,75,75);
+	plane.loadPlane(100,100,20,20);
 	CHECK_FAIL(m_renderer.registerMesh((int)MESH::PLANE, plane, m_d3dDevice));
 	
 	CHECK_FAIL(GPUOctreeDebugger::loadShared(m_d3dDevice));//@new octree
@@ -63,13 +63,13 @@ bool BasicDemo::load()
 	TwDefine(" Settings movable= false ");
 	TwDefine(" Settings resizable= true ");
 	TwAddVarRW(GUI, "draw gpu  octree", TwType::TW_TYPE_BOOLCPP, &m_field.m_drawGPUOctree, "");//@new octree
-	TwAddVarRW(GUI, "enable frustum culling", TwType::TW_TYPE_BOOLCPP, &m_field.m_frustumCull, "");
+	TwAddVarRW(GUI, "no frustum culling", TwType::TW_TYPE_BOOLCPP, &m_field.m_noCulling, "");
 	TwAddVarRW(GUI, "str", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_initalStrength, "step = 0.05");
 	TwAddVarRW(GUI, "rad", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_radius, "step = 0.05");
 	TwAddVarRW(GUI, "pow", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_fallOffPow, "step = 0.05");
 	TwAddVarRO(GUI, "FPS", TwType::TW_TYPE_FLOAT, &m_fps, "");
 	TwAddVarRO(GUI, "Total Blade count", TwType::TW_TYPE_INT32, &m_numBlades, "");
-	TwAddVarRO(GUI, "Blades Drawn", TwType::TW_TYPE_INT32, &m_numDrawnBlades, "");
+	///TwAddVarRO(GUI, "Blades Drawn", TwType::TW_TYPE_INT32, &m_numDrawnBlades, "");//Could get this from indirect args but it'd be slow...
 
 	using namespace DirectX;
 	m_fps = 0;
@@ -82,8 +82,8 @@ bool BasicDemo::load()
 	m_field.m_windManager = &m_windManager;
 
 	MESH meshToUse = MESH::HILL;
-	ObjModel* meshObj = /*&plane; */m_renderer.getObjModel((int)meshToUse);
-	CHECK_FAIL(m_field.load(m_d3dDevice, meshObj /*&plane*/, NUM(150), XMFLOAT3(0, 0, 0), { 10.f, 10, 10.f}));
+	ObjModel* meshObj = &plane; //m_renderer.getObjModel((int)meshToUse);
+	CHECK_FAIL(m_field.load(m_d3dDevice, meshObj, NUM(150), XMFLOAT3(0, 0, 0), { 5.f, 5.f, 5.f}));
 	m_numBlades = m_field.getMaxNumBlades();
 
 	//Put this here so other field can use it!!@

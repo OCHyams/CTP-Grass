@@ -24,9 +24,9 @@ public:
 	bool m_drawGPUOctree = false;
 
 	/////////////////////////////////////////////////
-	/// Should apply frustum culling?
+	/// Should stop frustum culling?
 	/////////////////////////////////////////////////
-	bool m_frustumCull = true;
+	bool m_noCulling = false;
 
 	/////////////////////////////////////////////////
 	/// This shouldn't be public *oops*@
@@ -66,7 +66,6 @@ private:
 	/////////////////////////////////////////////////
 	GPUOctreeDebugger	m_gpuOctreeDebugger;
 	GPUOctree			m_gpuOctree;	
-	std::vector <field::Instance> m_field;
 	Buffer				m_pseudoAppend;
 	Buffer				m_indirectArgs;
 
@@ -153,7 +152,7 @@ private:
 		}
 
 	};
-	void addPatch(float* verts, unsigned int _numBlade);
+	void addPatch(std::vector<field::Instance>& _field, float* verts, unsigned int _numBlade);
 };
 
 

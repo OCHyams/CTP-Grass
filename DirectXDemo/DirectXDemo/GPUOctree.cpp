@@ -123,46 +123,18 @@ void GPUOctree::build(const ObjModel & _model, DirectX::XMVECTOR _position, cons
 
 	//add grass
 	std::vector<int> containsGrass;
-	std::stack<int> tree;
+	addGrass(_instances, containsGrass);
 
-	tree.push(0);
-	for (auto& instance : _instances)
-	{
-		tree.push(0);
-		/*Depth first traversal of nodes*/
-		while (tree.size())
-		{
-			//Pop top node
-			int currentIdx = tree.top();
-			tree.pop();
+	//prune tree
+	prune(_instances, containsGrass);
 
-			//If this node contains the grass
-			if (m_nodes[currentIdx].m_AABB.Contains(LF3(&instance.location)))
-			{
-				//If this is a leaf node
-				if (!m_nodes[currentIdx].hasChildren())
-				{
-					instance.octreeIdx = currentIdx;
-					containsGrass.push_back(currentIdx);
-					break;
-				}
-				//Else if not leaf node
-				//Push child nodes
-				for (int childIdx : m_nodes[currentIdx].m_childIdx)
-				{
-					if (Node::idxNotNull(childIdx)) tree.push(childIdx);
-				}
-			}
-		}
-	}
-
-	prune(containsGrass);
-
+	//create gpu nodes
 	for (auto& node : m_nodes)
 	{
 		m_gpuNodes.push_back(node);
 	}
 
+	//init gpu resources
 	initResources(_device);
 }
 
@@ -173,7 +145,7 @@ void GPUOctree::cleanup()
 	m_gpuBuffer.cleanup();
 }
 
-void GPUOctree::frustumCull(const DirectX::BoundingFrustum& _frustum)
+void GPUOctree::frustumCull(const DirectX::BoundingFrustum& _frustum, bool _noCull)
 {
 	/*Early out if _root ptr is null*/
 	if (m_nodes.empty()) return;
@@ -190,7 +162,7 @@ void GPUOctree::frustumCull(const DirectX::BoundingFrustum& _frustum)
 		tree.pop();
 
 		//If this node is within the frustum 
-		if (_frustum.Intersects(m_nodes[currentIdx].m_AABB))
+		if (_noCull || _frustum.Intersects(m_nodes[currentIdx].m_AABB))
 		{
 			m_gpuNodes[currentIdx].m_visible = 1;
 			//If not leaf node
@@ -221,7 +193,13 @@ void GPUOctree::updateResources(const DrawData& _data)
 	assert(!FAILED(result));
 }
 
-void GPUOctree::prune(std::vector<int>& _containsGrassIdx)
+static void fixIdx(int& _cur, std::map<int, int>& _map)
+{
+	if (_cur < 0) return;
+	_cur = _map[_cur];
+}
+
+void GPUOctree::prune(std::vector<field::Instance>& _field, std::vector<int>& _containsGrassIdx)
 {
 	/*Early out if _root ptr is null*/
 	if (m_nodes.empty()) return;
@@ -252,13 +230,10 @@ void GPUOctree::prune(std::vector<int>& _containsGrassIdx)
 				{
 					//Iterate at least once more
 					complete = false;
-
 					int parentIdx = m_nodes[currentIdx].m_parentIdx;
 					//Remove node from parent, delete it
 					for (int i = 0; i < 8; ++i)
 					{
-						//if child exists, remove it -->For now keep them but remove their references!@@@
-						//if (m_nodes[parent].m_childIdx[i] != -1) m_nodes.erase(m_nodes.begin() + m_nodes[parent].m_childIdx[i]);
 						if (m_nodes[parentIdx].m_childIdx[i] == currentIdx)
 						{
 							m_nodes[parentIdx].m_childIdx[i] = -1;
@@ -277,6 +252,65 @@ void GPUOctree::prune(std::vector<int>& _containsGrassIdx)
 			}
 		}
 	}
+
+	//Now just iterate over the remaining tree, add to new structure
+	std::vector<Node> prunedOctree;
+	//store the changes so the grass and internal idx can be updated
+	std::map<int, int> indexMap;
+	//Tree will alywas be empty, since it's a condition for leaving the previous nested loop
+	tree.push(0);
+
+	/*Depth first traversal of nodes*/
+	while (!tree.empty())
+	{
+		//Pop top node
+		int currentIdx = tree.top();
+		tree.pop();
+
+		//Add to fresh container
+		int prunedIdx = prunedOctree.size();
+		prunedOctree.push_back(m_nodes[currentIdx]);
+
+		//map the index change
+		std::pair<int,int> pair(currentIdx, prunedIdx);
+		indexMap.insert(pair);
+
+
+		//If node is not a leaf
+		if (m_nodes[currentIdx].hasChildren())
+		{
+			//Push children
+			const int numChildren = ARRAYSIZE(prunedOctree[prunedIdx].m_childIdx);
+			for (int i=0; i< numChildren; ++i)
+			{
+				int originalChildIdx = prunedOctree[prunedIdx].m_childIdx[i];
+				//if there is a child
+				if (Node::idxNotNull(originalChildIdx))
+				{
+					//add to tree traversal stack
+					tree.push(originalChildIdx);
+				}
+			}
+		}
+	}
+
+	m_nodes.clear();
+	//m_nodes = prunedOctree;
+	for (int i =0; i < prunedOctree.size(); ++i)
+	{
+		for (int j = 0; j < ARRAYSIZE(prunedOctree[i].m_childIdx); ++j) fixIdx(prunedOctree[i].m_childIdx[j], indexMap);
+		fixIdx(prunedOctree[i].m_idx, indexMap);
+		fixIdx(prunedOctree[i].m_parentIdx, indexMap);
+		m_nodes.push_back(prunedOctree[i]);
+	}
+	m_nodes.shrink_to_fit();
+
+	//finally, fix up the idx value for the grass instances
+	for (auto& instance : _field)
+	{
+		fixIdx(instance.octreeIdx, indexMap);
+	}
+
 	return;
 }
 
@@ -303,4 +337,41 @@ void GPUOctree::initResources(ID3D11Device* _device)
 	srvDesc.ViewDimension			= D3D11_SRV_DIMENSION_BUFFEREX;
 	
 	m_gpuBuffer.init(_device,&bufferDesc, &subresourceData, nullptr, &srvDesc);
+}
+
+void GPUOctree::addGrass(std::vector<field::Instance>& _field, std::vector<int>& _containsGrass)
+{
+	_containsGrass.clear();
+	std::stack<int> tree;
+
+	tree.push(0);
+	for (auto& instance : _field)
+	{
+		tree.push(0);
+		/*Depth first traversal of nodes*/
+		while (tree.size())
+		{
+			//Pop top node
+			int currentIdx = tree.top();
+			tree.pop();
+
+			//If this node contains the grass
+			if (m_nodes[currentIdx].m_AABB.Contains(LF3(&instance.location)))
+			{
+				//If this is a leaf node
+				if (!m_nodes[currentIdx].hasChildren())
+				{
+					instance.octreeIdx = currentIdx;
+					_containsGrass.push_back(currentIdx);
+					break;
+				}
+				//Else if not leaf node
+				//Push child nodes
+				for (int childIdx : m_nodes[currentIdx].m_childIdx)
+				{
+					if (Node::idxNotNull(childIdx)) tree.push(childIdx);
+				}
+			}
+		}
+	}
 }

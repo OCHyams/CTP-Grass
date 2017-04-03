@@ -68,7 +68,7 @@ public:
 				DirectX::XMVECTOR			_position,
 				const DirectX::XMFLOAT3&	_minSize,
 				float						_minGrassLength,
-				std::vector<field::Instance>& _instances,
+				std::vector<field::Instance>& _field,
 				ID3D11Device* _device);
 
 	/////////////////////////////////////////////////
@@ -79,7 +79,7 @@ public:
 	/////////////////////////////////////////////////
 	///	Marks GPUNodes as visible if in frusutm.
 	/////////////////////////////////////////////////
-	void frustumCull(const DirectX::BoundingFrustum& _frustum);
+	void frustumCull(const DirectX::BoundingFrustum& _frustum, bool _noCull = false);
 
 	/////////////////////////////////////////////////
 	///	Update GPU resources after a frustum cull.
@@ -96,12 +96,15 @@ private:
 	///	Removes child nodes who contain no grass.
 	/// Call after build, before creating gpu resources.
 	/////////////////////////////////////////////////
-	void prune(std::vector<int>& _emptyIdx);
+	void prune(std::vector<field::Instance>& _field, std::vector<int>& _emptyIdx);
 	/////////////////////////////////////////////////
 	///	Initialise GPU resources.
 	/////////////////////////////////////////////////
 	void initResources(ID3D11Device* _device);
-
+	/////////////////////////////////////////////////
+	///	Adds the grass instances to tree by giving them a node idx, second param will contain idx of nodes that do contain grass
+	/////////////////////////////////////////////////
+	void addGrass(std::vector<field::Instance>& _field, std::vector<int>& _containsGrass);
 
 	
 	std::vector<Node>		m_nodes;

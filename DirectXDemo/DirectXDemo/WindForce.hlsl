@@ -47,7 +47,7 @@ StructuredBuffer<OctreeNode>	inNodes		: register(t3);
 
 RWByteAddressBuffer				outGrass		: register(u0);
 RWByteAddressBuffer				outGrassFrustumCulled : register (u1);
-static uint ARGS_VCOUNT = 0, ARGS_INST_COUNT = 1, ARGS_VERT_START = 2, ARGS_INST_START = 3;
+static uint ARGS_VCOUNT = 0, ARGS_INST_COUNT = 1, ARGS_VERT_START = 2, ARGS_INST_START = 3/*, ARGS_BACK_COUNTER*/;
 RWBuffer<uint>					indirectArgs	: register(u2);
 
 static uint SIZE_OF_INSTANCE = 48; //44 /*Raw*/ +4 /*Padding*/;
@@ -122,12 +122,42 @@ void main( uint3 DTid : SV_DispatchThreadID )
 		outGrassFrustumCulled.Store3(outAddress + WIND_OFFSET, asuint(instance.wind));
 		outGrassFrustumCulled.Store(outAddress + OCT_IDX_OFFSET, asuint(instance.octreeIdx));
 	}
-	else //else add to back of buffer
-	{}
 
 	//add all grass to outbuff
 	outGrass.Store4(inAddress + ROT_OFFSET, asuint(instance.rot));
 	outGrass.Store3(inAddress + POS_OFFSET, asuint(instance.pos));
 	outGrass.Store3(inAddress + WIND_OFFSET, asuint(instance.wind));
 	outGrass.Store(inAddress + OCT_IDX_OFFSET, asuint(instance.octreeIdx));
+
+	////Hmm, it didn't like this!
+	////if (DTid.x > numInstances) return;//This is required because rounding to int means that more - than - necessary number of threads are run! This pushes out the chance for some instances to get put into the append buffer
+
+	////Instance instance;
+	////uint inAddress = DTid.x * SIZE_OF_INSTANCE;
+	////uint outAddress = 0;
+
+	////instance.pos = asfloat(inGrass.Load3(inAddress + POS_OFFSET));
+	////instance.wind = windFromCuboids(instance.pos) + windFromSpheres(instance.pos);
+	////instance.rot = asfloat(inGrass.Load4(inAddress + ROT_OFFSET));
+	////instance.octreeIdx = asint(inGrass.Load(inAddress + OCT_IDX_OFFSET));
+	////instance.padding = 0;
+
+	//////emulate append buffer
+	//////If visble, ~~add to front of output buffer~~ add to the pseudo append buffer
+	////if (inNodes[instance.octreeIdx].visible > 0)
+	////{
+	////	InterlockedAdd(indirectArgs[ARGS_INST_COUNT], 1, outAddress);
+	////	outAddress *= SIZE_OF_INSTANCE;
+	////}
+	////else //else add to back of buffer
+	////{
+	////	InterlockedAdd(indirectArgs[ARGS_BACK_COUNTER],- 1, outAddress);
+	////	outAddress *= SIZE_OF_INSTANCE;
+	////}
+
+	//////add all grass to outbuff
+	////outGrass.Store4(outAddress + ROT_OFFSET, asuint(instance.rot));
+	////outGrass.Store3(outAddress + POS_OFFSET, asuint(instance.pos));
+	////outGrass.Store3(outAddress + WIND_OFFSET, asuint(instance.wind));
+	////outGrass.Store(outAddress + OCT_IDX_OFFSET, asuint(instance.octreeIdx));
 }

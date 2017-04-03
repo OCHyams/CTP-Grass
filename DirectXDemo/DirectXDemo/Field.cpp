@@ -319,6 +319,8 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	XMFLOAT3 triNorms[3];
 	XMVECTOR posVec = LF3(&m_pos);
 	
+	std::vector<field::Instance> field;
+
 	/*For every triangle, currently testing faster implementation*/
 	for (unsigned int i = 0; i < numVerts; i += 3)
 	{
@@ -353,7 +355,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		}
 
 		/*Add the patch to the field and octree*/
-		addPatch((float*)triVerts, numBlades);
+		addPatch(field,(float*)triVerts, numBlades);
 		m_maxInstanceCount += numBlades;
 	}
 
@@ -377,7 +379,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 
 
 	//gpu octree@
-	m_gpuOctree.build(*_model, VEC3(0, 0, 0), _minOctreeNodeSize, 1.0f, m_field, _device);
+	m_gpuOctree.build(*_model, VEC3(0, 0, 0), _minOctreeNodeSize, 1.0f, field, _device);
 
 	///*build instance buffer...*/
 	D3D11_BUFFER_DESC bufferDesc;
@@ -387,7 +389,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 
 	/*Create instance buffers*/
 	ZeroMemory(&initialData, sizeof(initialData));
-	initialData.pSysMem = m_field.data();
+	initialData.pSysMem = field.data();
 
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
 	bufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS |
@@ -471,14 +473,14 @@ void Field::draw(const DrawData& _data)
 	XMMATRIX		transform = XMMatrixMultiply(XMMatrixRotationRollPitchYawFromVector(LF3(&_data.m_cam->getRot())), XMMatrixTranslationFromVector(LF3(&_data.m_cam->getPos())));
 	BoundingFrustum frustum(_data.m_cam->calcLargeProjMatrix());
 	frustum.Transform(frustum, transform);
-	m_gpuOctree.frustumCull(frustum);
+	m_gpuOctree.frustumCull(frustum, m_noCulling);
 	m_gpuOctree.updateResources(_data);
 	
 	/*Draw Octree*/
 	if (m_drawGPUOctree) m_gpuOctreeDebugger.draw(_data.m_dc, _data.m_cam->getViewProj(), m_gpuOctree);
 
 	//@@@refresh indirect args buffer
-	unsigned int indirectArgsReset[] = { 4, 0, 0, 0 };
+	unsigned int indirectArgsReset[] = { 4, 0, 0, 0/*, m_maxInstanceCount -1 */};
 	_data.m_dc->UpdateSubresource(m_indirectArgs.getBuffer(), NULL, NULL, indirectArgsReset, sizeof(unsigned int)*ARRAYSIZE(indirectArgsReset), 0);
 
 	/*Update wind resources*/
@@ -502,7 +504,7 @@ void Field::draw(const DrawData& _data)
 	offsets[1] = 0;
 	// Set the array of pointers to the vertex and instance buffers.
 	bufferPointers[0] = s_vertexBuffer;
-	bufferPointers[1] = m_pseudoAppend.getBuffer(); //@trying out indirect draw!
+	bufferPointers[1] = /*m_instanceDoubleBuffer.front()->getBuffer(); */ m_pseudoAppend.getBuffer(); //@trying out ignoring the pseudo append buffer
 
 	// Set the vertex buffer to active in the input assembler so it can be rendered.
 	_data.m_dc->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
@@ -625,7 +627,7 @@ bool Field::loadBuffers(ID3D11Device* _device)
 	return true;
 }
 
-void Field::addPatch(float* verts, unsigned int _numBlades)
+void Field::addPatch(std::vector<field::Instance>& _field, float* verts, unsigned int _numBlades)
 {
 	using namespace DirectX;
 	
@@ -668,7 +670,7 @@ void Field::addPatch(float* verts, unsigned int _numBlades)
 		instance.wind = { 0 ,0, 0 };
 
 		/*Add to octree*/
-		m_field.push_back(instance);
+		_field.push_back(instance);
 	}
 }
 
