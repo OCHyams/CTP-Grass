@@ -10,10 +10,6 @@
 #include "WindSphere.h"
 #include "Input.h"
 #include "GPUOctreeDebugger.h"
-/*Make large INTs easier to read in code*/
-#define NUM(x0) x0
-#define NUM(x0, x1) x0 ## x1
-#define NUM(x0, x1, x2) x0 ## x1 ## x2
 
 BasicDemo::BasicDemo()
 {}
@@ -21,7 +17,7 @@ BasicDemo::BasicDemo()
 BasicDemo::~BasicDemo()
 {}
 
-#define CHECK_FAIL(x) if (!x) return false
+static const float GEN_HILL_HEIGHT = 20.f;
 bool BasicDemo::load()
 {	
 	CHECK_FAIL(m_renderer.load(m_d3dDevice));
@@ -41,23 +37,22 @@ bool BasicDemo::load()
 	XMStoreFloat4x4(&f44_transform, v44_transform);
 	CHECK_FAIL(m_renderer.registerMesh((int)MESH::SMALL_HILLS, "../Resources/SmallHills.obj", ObjModel::TRIANGLE_STRIP, f44_transform, m_d3dDevice));
 
-
 	ObjModel plane;
-	plane.loadPlane(100,100,20,20);
+	plane.loadPlane(200,200,20,20);
 	CHECK_FAIL(m_renderer.registerMesh((int)MESH::PLANE, plane, m_d3dDevice));
 	
 	ObjModel hill;
-	hill.loadHill(20, 20, 1, 1, 3);
+	hill.loadHill(150, 150, 10, 10, GEN_HILL_HEIGHT);
 	CHECK_FAIL(m_renderer.registerMesh((int)MESH::GEN_HILL, hill, m_d3dDevice));
 
-	CHECK_FAIL(GPUOctreeDebugger::loadShared(m_d3dDevice));//@new octree
+	CHECK_FAIL(GPUOctreeDebugger::loadShared(m_d3dDevice));
 
 	/*Load data shared by all wind managers (though there should only be one anyway)*/
 	WindManager::loadShared(m_d3dDevice);
 	CHECK_FAIL(m_windManager.load(m_d3dDevice, 1, 1));
 	/*Create a static wind volume, no need to keep track of mem, system does that*/
 	WindCuboid* windCuboid = m_windManager.createWindCuboid();
-	windCuboid->m_extents = { 100.0f, 100.0f, 100.0f };
+	windCuboid->m_extents = { 1000.0f, 1000.0f, 1000.0f };
 	windCuboid->m_initalVelocity = { 0.3f, 0.f, 0.f };
 	windCuboid->m_position = { 0.f, 0.f, 0.f };
 	/*Create a static wind volume, no need to keep track of mem, system does that*/
@@ -66,7 +61,6 @@ bool BasicDemo::load()
 	m_demoSphere->m_initalStrength = 0.f;;
 	m_demoSphere->m_position = { 0,0,0 };
 	m_demoSphere->m_radius = 2.0f;
-
 
 	//Tweak bar
 	TwBar* GUI = TwNewBar("Settings");
@@ -81,7 +75,6 @@ bool BasicDemo::load()
 	TwAddVarRW(GUI, "pow", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_fallOffPow, "step = 0.05");
 	TwAddVarRO(GUI, "FPS", TwType::TW_TYPE_FLOAT, &m_fps, "");
 	TwAddVarRO(GUI, "Total Blade count", TwType::TW_TYPE_INT32, &m_numBlades, "");
-	///TwAddVarRO(GUI, "Blades Drawn", TwType::TW_TYPE_INT32, &m_numDrawnBlades, "");//Could get this from indirect args but it'd be slow...
 
 	using namespace DirectX;
 	m_fps = 0;
@@ -95,10 +88,11 @@ bool BasicDemo::load()
 
 	MESH meshToUse = MESH::GEN_HILL;
 	ObjModel* meshObj = &hill;/* &plane;*/// m_renderer.getObjModel((int)meshToUse);
-	CHECK_FAIL(m_field.load(m_d3dDevice, meshObj, NUM(150), XMFLOAT3(0, 0, 0), { 5.f, 5.f, 5.f}));
+	CHECK_FAIL(m_field.load(m_d3dDevice, meshObj, 100, XMFLOAT3(0, 0, 0), { 6.f, 6.f, 6.f}));
+	
 	m_numBlades = m_field.getMaxNumBlades();
 
-	//Put this here so other field can use it!!@
+	/* Free mem of intermidiate representation */
 	plane.release();
 	hill.release();
 
@@ -108,7 +102,8 @@ bool BasicDemo::load()
 	m_renderer.addObj(mesh);
 	m_objects.push_back(mesh);
 
-	m_cam = new ArcCamera({ 0.f, 0.1f, 0.f });
+	m_cam = new ArcCamera({ 0.f, GEN_HILL_HEIGHT + 0.2f, -3.f });
+	m_cam->m_arcSpeed = 1.5;
 	m_objects.push_back(m_cam);
 	CHECK_FAIL(m_cam->load(m_d3dDevice));
 
@@ -131,7 +126,7 @@ void BasicDemo::unload()
 		}
 	}
 	
-	GPUOctreeDebugger::unloadShared();//@new octree debugger
+	GPUOctreeDebugger::unloadShared();
 	m_renderer.cleanup();
 }
 
@@ -147,22 +142,17 @@ void BasicDemo::update()
 	/*Move the demo wind sphere around*/
 	using namespace DirectX;
 	XMVECTOR windSphereNewPos = VEC3(	(int)m_input->getKey(DIK_LEFT) * -1 + (int)m_input->getKey(DIK_RIGHT),
-										(int)m_input->getKey(DIK_DOWN) * -1 + (int)m_input->getKey(DIK_UP),
-										0);
+										0,
+										(int)m_input->getKey(DIK_DOWN) * -1 + (int)m_input->getKey(DIK_UP));
 	windSphereNewPos *= m_time.deltaTime * 0.5f;
 	windSphereNewPos += LF3(&m_demoSphere->m_position);
 	STOREF3(&m_demoSphere->m_position, windSphereNewPos);
-	
-	
-	//Field::updateCameraPosition(m_cam->getPos());
-	//m_field.s_viewproj = GameObject::getViewProj();//@move this out onto camera, and call this function in draw instead of out here...
-	//m_field.update();
+	m_demoSphere->m_position.y = GEN_HILL_HEIGHT;
 
 	if (m_time.deltaTime > 0)
 	{
 		m_fps = 1 / m_time.deltaTime;
 	}
-	m_numDrawnBlades = m_field.getCurNumBlades();
 }
 
 void BasicDemo::render()
@@ -175,11 +165,10 @@ void BasicDemo::render()
 
 	DrawData data = { m_cam, m_d3dContext, m_time.time, m_time.deltaTime };
 
-	//m_windManager_14_03.updateResources(m_d3dContext);
-	m_field.draw(data);
-	//m_field_14_03.draw(data);
-	//@the model or the renderer acting up
+
 	m_renderer.render(data);
+	m_field.draw(data);
+	
 
 	TwDraw();
 	m_swapChain->Present(0, 0);

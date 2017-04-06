@@ -14,6 +14,8 @@ public:
 	ArcCamera(const DirectX::XMFLOAT3& _target, const DirectX::XMFLOAT3& _up, const DirectX::XMFLOAT3& _offset) : m_target(_target), m_up(_up), m_offset(_offset) {}
 	virtual ~ArcCamera() {}
 
+	float m_arcSpeed;
+
 	virtual bool load(ID3D11Device*) override;
 	virtual void unload() override;
 

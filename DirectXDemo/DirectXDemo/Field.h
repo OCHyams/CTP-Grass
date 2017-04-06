@@ -50,6 +50,9 @@ public:
 	/////////////////////////////////////////////////
 	bool load(ID3D11Device*, ObjModel*, float density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize);
 
+	void updateLODAndWidth(CBField_RarelyChanges& _newBuffer);
+	const CBField_RarelyChanges& getCurrentLODAndWidth() const { return m_CBField_RarelyChanges; };
+
 	void unload();
 
 	//void update();
@@ -60,6 +63,7 @@ public:
 
 	float							m_length;
 	float							m_halfGrassWidth;
+
 private:
 	/////////////////////////////////////////////////
 	/// New octree
@@ -82,6 +86,7 @@ private:
 	/////////////////////////////////////////////////
 	/// Constant buffers
 	/////////////////////////////////////////////////
+	bool								m_CBField_RarelyChanges_dirty;
 	CBuffer<CBField_RarelyChanges>		m_CBField_RarelyChanges;
 	CBuffer<CBField_ChangesPerFrame>	m_CBField_ChangesPerFrame;
 	CBuffer<CBField_Light>				m_CBField_Light;
@@ -91,12 +96,6 @@ private:
 	DoubleBuffer			m_instanceDoubleBuffer;
 	unsigned int			m_maxInstanceCount;
 	unsigned int			m_curInstanceCount;
-	/////////////////////////////////////////////////
-	/// LOD factors
-	/////////////////////////////////////////////////
-	float					m_maxDensity;
-	float					m_minDensity;
-	float					m_curDensity;
 	/////////////////////////////////////////////////
 	/// 
 	/////////////////////////////////////////////////
@@ -146,6 +145,7 @@ private:
 		}
 
 	};
+
 	void addPatch(std::vector<field::Instance>& _field, float* verts, unsigned int _numBlade);
 };
 

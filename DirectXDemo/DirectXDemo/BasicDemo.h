@@ -30,6 +30,5 @@ private:
 	WindSphere* m_demoSphere;
 	float m_fps;
 	int m_numBlades;
-	int m_numDrawnBlades;
 	Renderer m_renderer;
 };

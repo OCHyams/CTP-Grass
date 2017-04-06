@@ -302,20 +302,23 @@ SamplerState SAMPLER_STATE;
 float4 PS_Main(PS_INPUT input) : SV_TARGET
 {
 	/* Apply somewhat home-brew Phong implementation /w an attempt at two sided lighting */
-	//REMOVE THE LLIGHTDIR FROM THE OTHER STAGES!!!!!!@@??
+	/* This doesn't actually work properly, first improvement: fix this! */
 	float3 LdotN = dot(lightDir.xyz, input.normal);
 	float3 R;
+	float3 view;
 	float3 highlight;
 	float3 illumination;
 	/* Back face adjustments */ 
 	if (LdotN.x < 0)
 	{
+		view = input.viewVec;
 		LdotN = dot(lightDir.xyz, -input.normal);
 		R = 2 * LdotN * -input.normal - lightDir.xyz;
 		highlight = clamp(specular * pow(dot(R, input.viewVec), shiny), 0, 1);
 	}
 	else
 	{
+		view = -input.viewVec;
 		R = 2 * LdotN * input.normal - lightDir.xyz;
 		highlight = clamp(specular * pow(dot(R, input.viewVec), shiny), 0, 1);
 	}
@@ -324,9 +327,9 @@ float4 PS_Main(PS_INPUT input) : SV_TARGET
 	float3 colour = TEX_0.Sample(SAMPLER_STATE, input.texcoord);
 	colour += rand(asuint(input.basePos)) * 0.1f;
 
-	/* Deal with some directional light */
-	float directionalLightVal = clamp(-dot(input.viewVec.xyz, lightDir.xyz), 0, 1);
-	illumination = ambient + diffuse * LdotN * directionalLightVal + highlight *directionalLightVal;
+	//float directionalLightVal = clamp(-dot(input.viewVec.xyz, lightDir.xyz), 0, 1);
+	illumination = clamp(ambient + diffuse * LdotN  + highlight, 0, 1);
+
 
 	return float4(illumination * colour, 1.0f);
 }

@@ -1,7 +1,7 @@
 /*Global Data*/
 cbuffer CBDefaultObject_ChangesPerObject : register(b0)
 {
-	matrix	wvp;//@test
+	matrix	wvp;
 	float3	worldPos;
 	float	specularPow;
 }

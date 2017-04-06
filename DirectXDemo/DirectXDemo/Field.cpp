@@ -49,7 +49,7 @@ bool Field::loadShared(ID3D11Device* _device)
 	if (FAILED(result))
 	{
 		RELEASE(buffer);
-		MessageBox(0, "Error loading vertex shader.", "Shader compilation", MB_OK);
+		MessageBox(0, "Error loading grass vertex shader.", "Shader compilation", MB_OK);
 		return false;
 	}
 	_device->CreateVertexShader(buffer->GetBufferPointer(), buffer->GetBufferSize(), 0, &s_shaders.m_vs);
@@ -248,54 +248,6 @@ void Field::unloadShared()
 }
 
 
-//bool Field::load(	ID3D11Device*		_device, 
-//					int					_instanceCount, 
-//					DirectX::XMFLOAT2	_size, 
-//					DirectX::XMFLOAT3	_pos)
-//{
-//	m_maxInstanceCount = _instanceCount;
-//	m_size = _size;
-//	m_pos = _pos;
-//
-//	using namespace DirectX;
-//	HRESULT result;
-//
-//	field::Instance* instances;
-//	D3D11_BUFFER_DESC instanceBufferDesc;
-//	D3D11_SUBRESOURCE_DATA instanceData;
-//
-//	// Create the instance array.
-//	instances = generateInstanceData();
-//
-//	// Set up the description of the instance buffer.
-//	instanceBufferDesc.Usage				= D3D11_USAGE_DEFAULT;
-//	instanceBufferDesc.ByteWidth			= sizeof(field::Instance) * m_maxInstanceCount;
-//	instanceBufferDesc.BindFlags			= D3D11_BIND_VERTEX_BUFFER;
-//	instanceBufferDesc.CPUAccessFlags		= 0;
-//	instanceBufferDesc.MiscFlags			= 0;
-//	instanceBufferDesc.StructureByteStride	= 0;
-//	// Give the subresource structure a pointer to the instance data.
-//	instanceData.pSysMem = instances; 
-//	instanceData.SysMemPitch = 0;
-//	instanceData.SysMemSlicePitch = 0;
-//
-//	// Create the instance buffer.
-//	result = _device->CreateBuffer(&instanceBufferDesc, &instanceData, &m_instanceBuffer);
-//	if (FAILED(result))
-//	{
-//		MessageBox(0, "Error creating instance buffer.", "Field", MB_OK);
-//		return false;
-//	}
-//
-//	// Release the instance array now that the instance buffer has been created and loaded.
-//	delete[] instances;
-//	instances = nullptr;
-//
-//
-//	return loadBuffers(_device);
-//}
-
-
 bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize)
 {
 	m_pos = _pos;
@@ -355,41 +307,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	}
 
 
-	///*Default light settings*/
-	//m_CBField_Light.light = {0, 1.f/ std::sqrt(2.f), 1.f/std::sqrt(2.f), 0};
-	//m_CBField_Light.ambient = { 100.f/255.f, 100.f/255.f, 100/255.f, 0.0f };
-	//m_CBField_Light.diffuse = { 120.f/255.f, 120.f/255.f, 100.f/255.f, 0.0f };
-	//m_CBField_Light.specular = { 20/255.f, 20.f/255.f, 20.f/255.f, 0.0f };
-	//m_CBField_Light.shiny = 8.0f;
-
-	/*Set up GUI*/
-	TwBar* GUI = TwNewBar("Field");
-	TwDefine(" Settings position='10 10' ");
-	TwDefine(" Settings size='300 200' ");
-	TwDefine(" Settings movable= true ");
-	TwDefine(" Settings resizable= true ");
-	TwAddVarCB(GUI, "Direction", TwType::TW_TYPE_DIR3F, 
-		[](const void *value, void *clientData)
-	{
-		((float*)clientData)[0] = -((float*)value)[0];
-		((float*)clientData)[1] = -((float*)value)[1];
-		((float*)clientData)[2] = -((float*)value)[2];
-	},
-		[](void *value, void *clientData)
-	{
-		((float*)value)[0] = -((float*)clientData)[0]; 
-		((float*)value)[1] = -((float*)clientData)[1];
-		((float*)value)[2] = -((float*)clientData)[2];
-	}
-	, &m_CBField_Light.light, "");
-
-	TwAddVarRW(GUI, "Ambient", TwType::TW_TYPE_COLOR4F, &m_CBField_Light.ambient, "");
-	TwAddVarRW(GUI, "Diffuse", TwType::TW_TYPE_COLOR4F, &m_CBField_Light.diffuse, "");
-	TwAddVarRW(GUI, "Specular", TwType::TW_TYPE_COLOR4F, &m_CBField_Light.specular, "");
-	TwAddVarRW(GUI, "Shiny", TwType::TW_TYPE_FLOAT, &m_CBField_Light.shiny, "");
-
-
-	//gpu octree@
+	//gpu octree
 	m_gpuOctree.build(*_model, VEC3(0, 0, 0), _minOctreeNodeSize, 1.0f, field, _device);
 
 	///*build instance buffer...*/
@@ -464,6 +382,12 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	return loadBuffers(_device);
 }
 
+void Field::updateLODAndWidth(CBField_RarelyChanges & _newBuffer)
+{
+	memcpy(&m_CBField_RarelyChanges_dirty, &_newBuffer, sizeof(CBField_RarelyChanges));
+	m_CBField_RarelyChanges_dirty = true;
+}
+
 void Field::unload()
 {
 	m_gpuOctree.cleanup();
@@ -481,7 +405,7 @@ void Field::draw(const DrawData& _data)
 	using namespace DirectX;	
 	updateConstBuffers(_data);
 
-	/*Frustum culling@ new octree*/
+	/*Frustum culling - new octree*/
 	XMMATRIX		transform = XMMatrixMultiply(XMMatrixRotationRollPitchYawFromVector(LF3(&_data.m_cam->getRot())), XMMatrixTranslationFromVector(LF3(&_data.m_cam->getPos())));
 	BoundingFrustum frustum(_data.m_cam->calcLargeProjMatrix());
 	frustum.Transform(frustum, transform);
@@ -491,7 +415,7 @@ void Field::draw(const DrawData& _data)
 	/*Draw Octree*/
 	if (m_drawGPUOctree) m_gpuOctreeDebugger.draw(_data.m_dc, _data.m_cam->getViewProj(), m_gpuOctree);
 
-	//@@@refresh indirect args buffer
+	//refresh indirect args buffer
 	unsigned int indirectArgsReset[] = { 4, 0, 0, 0/*, m_maxInstanceCount -1 */};
 	_data.m_dc->UpdateSubresource(m_indirectArgs.getBuffer(), NULL, NULL, indirectArgsReset, sizeof(unsigned int)*ARRAYSIZE(indirectArgsReset), 0);
 
@@ -516,7 +440,7 @@ void Field::draw(const DrawData& _data)
 	offsets[1] = 0;
 	// Set the array of pointers to the vertex and instance buffers.
 	bufferPointers[0] = s_vertexBuffer;
-	bufferPointers[1] = /*m_instanceDoubleBuffer.front()->getBuffer(); */ m_pseudoAppend.getBuffer(); //@trying out ignoring the pseudo append buffer
+	bufferPointers[1] = m_pseudoAppend.getBuffer(); 
 
 	// Set the vertex buffer to active in the input assembler so it can be rendered.
 	_data.m_dc->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
@@ -565,8 +489,11 @@ void Field::updateConstBuffers(const DrawData& _data)
 	m_CBField_Light.camera = XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.f);
 	m_CBField_Light.mapUpdate(_data.m_dc, D3D11_MAP_WRITE_DISCARD);
 
-	//@set up these defualts! let them be changed by user!!! Custom update method for updating this!
-	//m_CBField_RarelyChanges;;
+	if (m_CBField_RarelyChanges_dirty)
+	{
+		m_CBField_RarelyChanges_dirty = false;
+		m_CBField_RarelyChanges.subresourceUpdate(_data.m_dc);
+	}
 
 	XMMATRIX viewproj = XMMatrixTranspose(XMLoadFloat4x4(&_data.m_cam->getViewProj()));
 	XMStoreFloat4x4(&m_CBField_ChangesPerFrame.m_wvp, viewproj);
@@ -588,7 +515,7 @@ bool Field::loadBuffers(ID3D11Device* _device)
 	result = result && m_CBField_ChangesPerFrame.init(_device, &buffDesc);
 
 	/* Default light settings */
-	m_CBField_Light.light = { 0, 1.f / std::sqrt(2.f), 1.f / std::sqrt(2.f), 0 };
+	m_CBField_Light.light = { 0, 0.1f / std::sqrt(2.f), 1.f / std::sqrt(2.f), 0 };
 	m_CBField_Light.ambient = { 100.f / 255.f, 100.f / 255.f, 100 / 255.f, 0.0f };
 	m_CBField_Light.diffuse = { 120.f / 255.f, 120.f / 255.f, 100.f / 255.f, 0.0f };
 	m_CBField_Light.specular = { 20 / 255.f, 20.f / 255.f, 20.f / 255.f, 0.0f };
