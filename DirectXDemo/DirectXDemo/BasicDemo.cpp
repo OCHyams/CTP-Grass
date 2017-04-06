@@ -23,22 +23,22 @@ bool BasicDemo::load()
 	CHECK_FAIL(m_renderer.load(m_d3dDevice));
 	/*Models!*/
 	using namespace DirectX;
-	XMMATRIX v44_transform = XMMatrixScalingFromVector(VEC3(0.2, 0.2, 0.2));
+	/*XMMATRIX v44_transform = XMMatrixScalingFromVector(VEC3(0.2, 0.2, 0.2));
 	XMMATRIX v44_translation = XMMatrixTranslation(0.0f, -3.0f, 0.0f);
 	v44_transform = XMMatrixMultiply(v44_transform, v44_translation);
 	XMFLOAT4X4 f44_transform;
-	XMStoreFloat4x4(&f44_transform, v44_transform);
-	CHECK_FAIL(m_renderer.registerMesh((int)MESH::HILL, "../Resources/hill_tris.txt", ObjModel::QUAD_STRIP, f44_transform, m_d3dDevice));
+	XMStoreFloat4x4(&f44_transform, v44_transform);*/
+	//CHECK_FAIL(m_renderer.registerMesh((int)MESH::HILL, "../Resources/hill_tris.txt", ObjModel::QUAD_STRIP, f44_transform, m_d3dDevice));
 
 	
-	v44_transform = XMMatrixScalingFromVector(VEC3(4, 2, 4));
+	/*v44_transform = XMMatrixScalingFromVector(VEC3(4, 2, 4));
 	v44_translation = XMMatrixTranslation(0.0f, -2, 4);
 	v44_transform = XMMatrixMultiply(v44_transform, v44_translation);
-	XMStoreFloat4x4(&f44_transform, v44_transform);
-	CHECK_FAIL(m_renderer.registerMesh((int)MESH::SMALL_HILLS, "../Resources/SmallHills.obj", ObjModel::TRIANGLE_STRIP, f44_transform, m_d3dDevice));
+	XMStoreFloat4x4(&f44_transform, v44_transform);*/
+	//CHECK_FAIL(m_renderer.registerMesh((int)MESH::SMALL_HILLS, "../Resources/SmallHills.obj", ObjModel::TRIANGLE_STRIP, f44_transform, m_d3dDevice));
 
 	ObjModel plane;
-	plane.loadPlane(200,200,20,20);
+	plane.loadPlane(125,125,20,20);
 	CHECK_FAIL(m_renderer.registerMesh((int)MESH::PLANE, plane, m_d3dDevice));
 	
 	ObjModel hill;
@@ -88,7 +88,7 @@ bool BasicDemo::load()
 
 	MESH meshToUse = MESH::GEN_HILL;
 	ObjModel* meshObj = &hill;/* &plane;*/// m_renderer.getObjModel((int)meshToUse);
-	CHECK_FAIL(m_field.load(m_d3dDevice, meshObj, 100, XMFLOAT3(0, 0, 0), { 6.f, 6.f, 6.f}));
+	CHECK_FAIL(m_field.load(m_d3dDevice, meshObj, 125, XMFLOAT3(0, 0, 0), { 6.f, 6.f, 6.f}));
 	
 	m_numBlades = m_field.getMaxNumBlades();
 
@@ -103,7 +103,7 @@ bool BasicDemo::load()
 	m_objects.push_back(mesh);
 
 	m_cam = new ArcCamera({ 0.f, GEN_HILL_HEIGHT + 0.2f, -3.f });
-	m_cam->m_arcSpeed = 1.5;
+	m_cam->m_arcSpeed = 1;
 	m_objects.push_back(m_cam);
 	CHECK_FAIL(m_cam->load(m_d3dDevice));
 
