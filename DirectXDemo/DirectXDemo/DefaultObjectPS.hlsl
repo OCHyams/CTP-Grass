@@ -1,12 +1,11 @@
 cbuffer CBDefaultObject_ChangesPerObject : register(b0)
 {
-	matrix	wvp;//@
+	matrix	wvp;
 	float3	worldPos;
 	float	specularPow;
 }
 cbuffer CBDefaultObject_ChangesPerFrame : register (b1)
 {
-	//matrix	inverseViewProj;
 	float3	cameraPos;
 	float3	lightPos;
 	float	intensity;
@@ -41,9 +40,6 @@ float4 defaultShading(PS_INPUT vert)
 	// R = 2 * (N.L) * N - L
 	float3 Reflect = normalize(2 * diff * vert.normal - vert.lightVec);
 	float4 specular = pow(saturate(dot(Reflect, vert.viewVec)), specularPow); // R.V^n
-
-																			  // I = Acolor + Dcolor * N.L + (R.V)n
-
 	float4 colour = clamp(ambient + diffuse * diff + specular, 0, 1);
 	return colour;
 }

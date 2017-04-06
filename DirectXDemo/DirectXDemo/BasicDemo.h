@@ -28,8 +28,6 @@ private:
 	Field m_field;
 	WindManager m_windManager;
 	WindSphere* m_demoSphere;
-	Field_14_03 m_field_14_03;
-	WindManager_14_03 m_windManager_14_03;
 	float m_fps;
 	int m_numBlades;
 	int m_numDrawnBlades;

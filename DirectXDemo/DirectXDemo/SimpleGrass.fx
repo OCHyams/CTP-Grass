@@ -13,7 +13,7 @@ cbuffer CONSTS : register(b0)
 	float base_x; 
 	float base_y;
 	float base_z;
-	//tangent for mesh generation
+	//bitangent for mesh generation
 	float tan_x;
 	float tan_y;
 	float tan_z;
@@ -157,13 +157,13 @@ void GS_Main(line DS_OUTPUT input[2], inout TriangleStream<PS_INPUT> output)
 	for (uint i = 0; i < 2; i++)
 	{
 		PS_INPUT element;	//vertex for output
-		float4 tangent = float4(tan_x, tan_y, tan_z, tan_w) * (1 - (input[i].tVal * input[i].tVal)); //parabolic curve for slightly more realistic grass :)
+		float4 bitangent = float4(tan_x, tan_y, tan_z, tan_w) * (1 - (input[i].tVal * input[i].tVal)); //parabolic curve for slightly more realistic grass :)
 
-		float4 pos = input[i].position + tangent;
+		float4 pos = input[i].position + bitangent;
 		element.pos = pos;
 		output.Append(element);
 
-		pos = input[i].position - tangent;
+		pos = input[i].position - bitangent;
 		element.pos = pos;
 		output.Append(element);
 	}

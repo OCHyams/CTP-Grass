@@ -71,7 +71,7 @@ bool Renderer::load(ID3D11Device* _device)
 	D3D11_RASTERIZER_DESC rasterDesc;
 	ZeroMemory(&rasterDesc, sizeof(rasterDesc));
 	rasterDesc.AntialiasedLineEnable = false;
-	rasterDesc.CullMode = D3D11_CULL_BACK;//@weird model problems
+	rasterDesc.CullMode = D3D11_CULL_BACK;
 	rasterDesc.DepthBias = 0;
 	rasterDesc.DepthBiasClamp = 0.0f;
 	rasterDesc.DepthClipEnable = true;
@@ -319,7 +319,7 @@ MeshInfo* Renderer::loadMeshHelper(const ObjModel& model, ID3D11Device* _device)
 		delete[] vBuffer;
 		return nullptr;
 	}
-
+	
 	mesh->m_strides.push_back(sizeof(DefaultVertex));
 	mesh->m_offsets.push_back(0);
 	mesh->m_ibOffset = 0;

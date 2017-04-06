@@ -86,7 +86,6 @@ void GPUOctree::build(const ObjModel & _model, DirectX::XMVECTOR _position, cons
 			std::remove(leaves.begin(), leaves.end(), current);
 
 			int childIdx = 0;
-			//HOURS OF DEBUGGING TO ARRIVE AT THIS
 			for (int i = 0; i < numChildren.x; ++i)
 			{
 				float x0 = current.m_AABB.Center.x - ((current.m_AABB.Extents.x) * (1 - i));

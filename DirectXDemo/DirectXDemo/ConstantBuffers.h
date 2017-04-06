@@ -16,7 +16,7 @@ struct CBGrassGeometry
 	float pos_x;
 	float pos_y;
 	float pos_z;
-	//tangent
+	//bitangent
 	float tan_x;
 	float tan_y;
 	float tan_z;

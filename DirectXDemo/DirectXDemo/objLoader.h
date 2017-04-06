@@ -1,12 +1,13 @@
 /*
+	Originally taken from:
+
     Beginning DirectX 11 Game Programming
     By Allen Sherrod and Wendy Jones
 
     ObjModel - Used to represent an OBJ model.
 
-	Modified for this simulation.
+	This file has been modified for the purposes of the prototype.
 */
-
 
 #ifndef _OBJ_LOADER_H_
 #define _OBJ_LOADER_H_
@@ -26,7 +27,7 @@ class ObjModel
       bool loadOBJ(const char *fileName, const DirectX::XMFLOAT4X4& _transform, MESH_TOPOLOGY inputTopology = TRIANGLE_STRIP );
 	  bool loadOBJ(const char *fileName,  MESH_TOPOLOGY inputTopology = TRIANGLE_STRIP);
 	  bool loadPlane( float x, float z, float subSizeX, float subSizeZ );
-
+	  bool ObjModel::loadHill(float _x, float _z, float _subSizeX, float _subSizeZ, float _height);
 
       float *getVertices()		const { return m_vertices; }
       float *getNormals()		const { return m_normals; }

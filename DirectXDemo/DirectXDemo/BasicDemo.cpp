@@ -46,7 +46,9 @@ bool BasicDemo::load()
 	plane.loadPlane(100,100,20,20);
 	CHECK_FAIL(m_renderer.registerMesh((int)MESH::PLANE, plane, m_d3dDevice));
 	
-
+	ObjModel hill;
+	hill.loadHill(20, 20, 1, 1, 3);
+	CHECK_FAIL(m_renderer.registerMesh((int)MESH::GEN_HILL, hill, m_d3dDevice));
 
 	CHECK_FAIL(GPUOctreeDebugger::loadShared(m_d3dDevice));//@new octree
 
@@ -91,13 +93,14 @@ bool BasicDemo::load()
 	m_field.m_halfGrassWidth = 0.02f;
 	m_field.m_windManager = &m_windManager;
 
-	MESH meshToUse = MESH::SMALL_HILLS;
-	ObjModel* meshObj =/* &plane;*/ m_renderer.getObjModel((int)meshToUse);
+	MESH meshToUse = MESH::GEN_HILL;
+	ObjModel* meshObj = &hill;/* &plane;*/// m_renderer.getObjModel((int)meshToUse);
 	CHECK_FAIL(m_field.load(m_d3dDevice, meshObj, NUM(150), XMFLOAT3(0, 0, 0), { 5.f, 5.f, 5.f}));
 	m_numBlades = m_field.getMaxNumBlades();
 
 	//Put this here so other field can use it!!@
 	plane.release();
+	hill.release();
 
 	MeshObject* mesh = new MeshObject();
 	mesh->m_meshID = meshToUse;

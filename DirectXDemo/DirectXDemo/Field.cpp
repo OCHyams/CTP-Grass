@@ -67,16 +67,12 @@ bool Field::loadShared(ID3D11Device* _device)
 	{
 		//PER_VERTEX
 		{ "SV_POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "FLEX", 0, DXGI_FORMAT_R32_FLOAT ,0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		//PER_INSTANCE
-	/*	{ "INSTANCE_WORLD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_WORLD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_WORLD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_WORLD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },*/
-		{ "INSTANCE_ROTATION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, /*64*/0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, /*80*/16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "INSTANCE_ROTATION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "INSTANCE_LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "INSTANCE_WIND", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 28, D3D11_INPUT_PER_INSTANCE_DATA, 1}
 	};
 	unsigned unsigned int totalLayoutElements = ARRAYSIZE(vsLayout);
@@ -362,6 +358,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 
 
 	/*Default light settings*/
+	m_CBcpu_light.light = {0, 1.f/ std::sqrt(2.f), 1.f/std::sqrt(2.f), 0};
 	m_CBcpu_light.ambient = { 100.f/255.f, 100.f/255.f, 100/255.f, 0.0f };
 	m_CBcpu_light.diffuse = { 120.f/255.f, 120.f/255.f, 100.f/255.f, 0.0f };
 	m_CBcpu_light.specular = { 20/255.f, 20.f/255.f, 20.f/255.f, 0.0f };
@@ -373,6 +370,21 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	TwDefine(" Settings size='300 200' ");
 	TwDefine(" Settings movable= true ");
 	TwDefine(" Settings resizable= true ");
+	TwAddVarCB(GUI, "Direction", TwType::TW_TYPE_DIR3F, 
+		[](const void *value, void *clientData)
+	{
+		((float*)clientData)[0] = -((float*)value)[0];
+		((float*)clientData)[1] = -((float*)value)[1];
+		((float*)clientData)[2] = -((float*)value)[2];
+	},
+		[](void *value, void *clientData)
+	{
+		((float*)value)[0] = -((float*)clientData)[0]; 
+		((float*)value)[1] = -((float*)clientData)[1];
+		((float*)value)[2] = -((float*)clientData)[2];
+	}
+	, &m_CBcpu_light.light, "");
+
 	TwAddVarRW(GUI, "Ambient", TwType::TW_TYPE_COLOR4F, &m_CBcpu_light.ambient, "");
 	TwAddVarRW(GUI, "Diffuse", TwType::TW_TYPE_COLOR4F, &m_CBcpu_light.diffuse, "");
 	TwAddVarRW(GUI, "Specular", TwType::TW_TYPE_COLOR4F, &m_CBcpu_light.specular, "");
@@ -399,12 +411,13 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	bufferDesc.ByteWidth = sizeof(field::Instance) * m_maxInstanceCount;
 	bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
 
+	const int BUFFER_R32_NUM_INSTANCES = m_maxInstanceCount * 12; //(48 (size of aligned instnace) / 4 (size of R32) = 12))
 	//UAV
 	ZeroMemory(&UAVDesc, sizeof(UAVDesc));
 	UAVDesc.ViewDimension		= D3D11_UAV_DIMENSION_BUFFER;
 	UAVDesc.Buffer.FirstElement = 0;
 	UAVDesc.Format				= DXGI_FORMAT_R32_TYPELESS;
-	UAVDesc.Buffer.NumElements	= m_maxInstanceCount * 12;//(48 (size of aligned instnace) / 4 (size of R32) = 12))
+	UAVDesc.Buffer.NumElements	= BUFFER_R32_NUM_INSTANCES;
 	UAVDesc.Buffer.Flags		= D3D11_BUFFER_UAV_FLAG_RAW;
 
 	//SRV
@@ -413,7 +426,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	SRVDesc.Format					= DXGI_FORMAT_R32_TYPELESS;
 	SRVDesc.BufferEx.Flags			= D3D11_BUFFEREX_SRV_FLAG_RAW;
 	SRVDesc.BufferEx.FirstElement	= 0;
-	SRVDesc.BufferEx.NumElements	= m_maxInstanceCount * 12; //(48 (size of aligned instnace) / 4 (size of R32) = 12))
+	SRVDesc.BufferEx.NumElements	= BUFFER_R32_NUM_INSTANCES;
 
 	m_instanceDoubleBuffer.init(_device, &bufferDesc, &initialData, &UAVDesc, &SRVDesc);
 
@@ -429,7 +442,7 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	UAVDesc.ViewDimension			= D3D11_UAV_DIMENSION_BUFFER;
 	UAVDesc.Buffer.FirstElement		= 0;
 	UAVDesc.Format					= DXGI_FORMAT_R32_TYPELESS;
-	UAVDesc.Buffer.NumElements		= m_maxInstanceCount * 12;//instances * (48 (size of aligned instnace) / 4 (size of R32) = 12))
+	UAVDesc.Buffer.NumElements		= BUFFER_R32_NUM_INSTANCES;
 	UAVDesc.Buffer.Flags			= D3D11_BUFFER_UAV_FLAG_RAW;
 	m_pseudoAppend.init(_device, &bufferDesc, NULL, &UAVDesc, NULL);
 
@@ -539,8 +552,8 @@ void Field::draw(const DrawData& _data)
 	_data.m_dc->PSSetSamplers(0, 1, &s_samplerState);
 	//texture
 	_data.m_dc->PSSetShaderResources(0, 1, &s_texture);
+
 	/*Draw call*/
-	//_data.m_dc->DrawInstanced(4, m_curInstanceCount, 0, 0);
 	_data.m_dc->DrawInstancedIndirect(m_indirectArgs.getBuffer(), 0);
 
 	/*Cleanup*/
@@ -573,7 +586,7 @@ void Field::updateConstBuffers(const DrawData& _data)
 	
 	/*light*/
 	m_CBcpu_light.camera = XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.f);
-	STOREF4(&m_CBcpu_light.light, XMVectorMultiply(_data.m_cam->calcViewDir(), VEC3(-1, -1, -1)));
+	//STOREF4(&m_CBcpu_light.light, XMVectorMultiply(_data.m_cam->calcViewDir(), VEC3(-1, -1, -1)));//let the user control the light!@
 }
 
 bool Field::loadBuffers(ID3D11Device* _device)
@@ -670,7 +683,7 @@ void Field::addPatch(std::vector<field::Instance>& _field, float* verts, unsigne
 		XMStoreFloat3(&instance.location, translation);
 		instance.wind = { 0 ,0, 0 };
 
-		/*Add to octree*/
+		/*Add to field*/
 		_field.push_back(instance);
 	}
 }

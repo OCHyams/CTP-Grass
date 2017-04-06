@@ -1,8 +1,12 @@
 /*
+	Originally taken from:
+
     Beginning DirectX 11 Game Programming
     By Allen Sherrod and Wendy Jones
 
     ObjModel - Used to represent an OBJ model.
+
+	This file has been modified for the purposes of the prototype.
 */
 
 #include <d3d11_2.h>
@@ -13,6 +17,7 @@
 #include"objLoader.h"
 #include"TokenStream.h"
 #include "Shorthand.h"
+#include <math.h>
 
 ObjModel::ObjModel( )
 {
@@ -150,6 +155,7 @@ bool ObjModel::loadOBJ( const char *fileName, const DirectX::XMFLOAT4X4& _transf
 				}
 				break;
 			}
+	
 			case ObjModel::QUAD_STRIP:
 			{
 				faceStream.SetTokenStream((char*)tempLine.c_str());
@@ -339,4 +345,59 @@ bool ObjModel::loadPlane(float _x, float _z, float _subSizeX, float _subSizeZ)
 
 	
 	return true;
+}
+
+static float lerp(float x, float y, float s)
+{
+	return x + s * (y - x);
+}
+
+
+bool ObjModel::loadHill(float _x, float _z, float _subSizeX, float _subSizeZ, float _height)
+{
+	bool result = loadPlane(_x, _z, _subSizeX, _subSizeZ);
+
+	if (result)
+	{
+		int vertCount = m_totalVerts;
+
+		float* vertElementPtr = m_vertices;
+		float* normElementPtr =	m_normals;
+		float* texElementPtr = m_texCoords;
+
+		for (int i = 0; i < vertCount; i++)
+		{
+			float xRad = lerp(0, DirectX::XM_PI, (vertElementPtr[0] + (_x / 2)) / _x);
+			float zRad = lerp(0, DirectX::XM_PI, (vertElementPtr[2] + (_z / 2)) / _z);
+			if (vertElementPtr)
+			{
+				float offset = _height * std::sin(xRad) * std::sin(zRad);
+				vertElementPtr[1] += offset;
+				vertElementPtr += 3;
+			}
+			if (normElementPtr)
+			{
+				float partialX = _height * std::cos(xRad) * std::sin(zRad);
+				float partialZ = _height * std::sin(xRad) * std::cos(zRad);
+				
+				DirectX::XMVECTOR px = DirectX::XMVector3Normalize(VEC3(1, partialX, 0));
+				DirectX::XMVECTOR pz = DirectX::XMVector3Normalize(VEC3(0, partialZ, 1));
+				DirectX::XMVECTOR normal = DirectX::XMVector3Normalize(DirectX::XMVectorMultiply(DirectX::XMVector3Cross(px, pz), VEC3(-1,-1,-1)));
+
+				memcpy(normElementPtr, &normal, sizeof(float) * 3);
+				normElementPtr += 3;
+			}
+			if (texElementPtr)
+			{
+			/*	memcpy(&vBuffer[i].m_texCoord, texElementPtr, sizeof(float) * 2);
+				texElementPtr += 2;*/
+			}
+		}
+
+
+
+	}
+
+
+	return result;
 }
