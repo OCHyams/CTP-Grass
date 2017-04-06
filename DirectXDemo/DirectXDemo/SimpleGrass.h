@@ -49,7 +49,7 @@ protected:
 	/////////////////////////////////////////////////
 	/// Constant buffers cpu side
 	/////////////////////////////////////////////////
-	CBWorldViewProj			m_CBcpu_worldviewproj;
+	CBField_ChangesPerFrame			m_CBcpu_worldviewproj;
 	CBGrassGeometry			m_CBcpu_geometry;
 	CBLight					m_CBcpu_light;
 	/////////////////////////////////////////////////

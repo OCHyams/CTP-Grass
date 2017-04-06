@@ -1,30 +1,62 @@
-//CONSTANT BUFFERS-----------------------------------------------------------------
-
+/***** Buffers and global variables ******/
+//cbuffer CBChangesPerFrame : register(b0)
+//{	
+//	float	halfGrassWidth; //this should be in another buffer that never needs to be updated....
+//	float	time;
+//	float	minTessDensity;//this should be in another buffer that never needs to be updated....
+//	float	maxTessDensity;//this should be in another buffer that never needs to be updated....
+//	float	nearTess;//this should be in another buffer that never needs to be updated....
+//	float	farTess;//this should be in another buffer that never needs to be updated....
+//};
+//
+//cbuffer CBViewProj : register (b1)
+//{
+//	matrix view_proj;
+//}
+//
+//cbuffer CBLight : register (b2)
+//{
+//	float4	camera; //Packing doesn't much like float3s
+//	float4	lightDir;
+//	float4	ambient;
+//	float4  diffuse;
+//	float4	specular;
+//	float	shiny;
+//}
+/* This stuff is guarenteed to change every frame */
 cbuffer CBChangesPerFrame : register(b0)
-{	
-	float	halfGrassWidth; //this should be in another buffer that never needs to be updated....
-	float	time;
-	float	minTessDensity;//this should be in another buffer that never needs to be updated....
-	float	maxTessDensity;//this should be in another buffer that never needs to be updated....
-	float	nearTess;//this should be in another buffer that never needs to be updated....
-	float	farTess;//this should be in another buffer that never needs to be updated....
-};
-
-cbuffer CBViewProj : register (b1)
 {
 	matrix view_proj;
+	float	time;
+};
+
+/* This stuff isn't likely to get updated often, if at all.
+It's here so the user can customise the grass to some extent -
+width & LODing control*/
+cbuffer CBRarelyChanges : register (b1)
+{
+	float	halfGrassWidth;
+	float	maxTessDensity;
+	float	minTessDensity;
+	float	nearTess;
+	float	farTess;
 }
 
+/* This was added as a buffer for debug access but was kept so that a user
+can drastically alter light properties if they so wish */
 cbuffer CBLight : register (b2)
 {
-	float4	camera; //Packing doesn't much like float3s
+	float4	camera;
 	float4	lightDir;
 	float4	ambient;
 	float4  diffuse;
 	float4	specular;
 	float	shiny;
 }
-//INPUT/OUTPUT STRUCTS-----------------------------------------------------------------
+
+const static float4 translationFrequency = float4(1.975, 0.793, 0.375, 0.193);
+
+/***** I/O Structures ******/
 struct VS_INPUT
 {
 	/* PER_VERTEX */
@@ -74,9 +106,9 @@ struct PS_INPUT
 	float3	basePos		: TEXCOORD3;
 };
 
-const static float4 translationFrequency = float4(1.975, 0.793, 0.375, 0.193);
 
-//VERTEX SHADER----------------------------------------------------------
+
+/***** Functions ******/
 /* Orthoman & GPU gems */
 inline float4 smoothf(float4 x)
 {
@@ -130,6 +162,8 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	/* Wind displacement */ 
 	float4 windDisplacement = (windForce(vertex.worldPosition, vertex.wind) * vertex.flexibility);
 	output.cpoint += windDisplacement;
+
+	output.normal = float3(0, 0, 0);//@REMOVE
 
 	/* Binormals */
 	output.bitangent = float4(quatRotateVector(vertex.rotation, vertex.bitangent),0.f);

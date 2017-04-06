@@ -246,7 +246,7 @@ bool SimpleGrass::load(ID3D11Device* _device)
 	//World view proj
 	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
 	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferdesc.ByteWidth = sizeof(CBWorldViewProj);
+	bufferdesc.ByteWidth = sizeof(CBField_ChangesPerFrame);
 	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	bufferdesc.CPUAccessFlags = 0;
 	bufferdesc.MiscFlags = 0;

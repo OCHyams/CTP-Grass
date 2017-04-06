@@ -9,6 +9,7 @@
 #include "GPUOctree.h"
 #include "DoubleBuffer.h"
 #include "GPUOctreeDebugger.h"
+#include "ConstantBuffer.h"
 class ObjModel;
 class WindManager;
 
@@ -33,21 +34,20 @@ public:
 	/////////////////////////////////////////////////
 	WindManager* m_windManager;
 	
-
 	Field();
 	~Field();
 
 	/////////////////////////////////////////////////
-	/// Compile and load the grass shader
+	/// Compile and load the grass shaders @Should not compile in build version
 	/////////////////////////////////////////////////
 	static bool loadShared(ID3D11Device*);
 	/////////////////////////////////////////////////
-	/// unload the grass shader
+	/// Unload the grass shaders
 	/////////////////////////////////////////////////
 	static void unloadShared();
-	//Don't use this anymore
-	//bool load(ID3D11Device*, unsigned int _instanceCount, DirectX::XMFLOAT2 _size, DirectX::XMFLOAT3	_pos);
-	/*Model is only used during set-up*/ //@_minOctreeNodeSize should get calculated from collision data
+	/////////////////////////////////////////////////
+	/// Initialise the field
+	/////////////////////////////////////////////////
 	bool load(ID3D11Device*, ObjModel*, float density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize);
 
 	void unload();
@@ -82,15 +82,9 @@ private:
 	/////////////////////////////////////////////////
 	/// Constant buffers
 	/////////////////////////////////////////////////
-	ID3D11Buffer*			m_CB_geometry;
-	ID3D11Buffer*			m_CB_viewproj;
-	ID3D11Buffer*			m_CB_light;
-	/////////////////////////////////////////////////
-	/// Constant buffers cpu side
-	/////////////////////////////////////////////////
-	CBWorldViewProj			m_CBcpu_viewproj;
-	CBField					m_CBcpu_geometry;
-	CBFieldLight			m_CBcpu_light;
+	CBuffer<CBField_RarelyChanges>		m_CBField_RarelyChanges;
+	CBuffer<CBField_ChangesPerFrame>	m_CBField_ChangesPerFrame;
+	CBuffer<CBField_Light>				m_CBField_Light;
 	/////////////////////////////////////////////////
 	/// Instance data
 	/////////////////////////////////////////////////

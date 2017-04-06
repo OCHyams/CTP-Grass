@@ -19,8 +19,6 @@
 #include "AntTweakBar.h"
 #include <chrono>
 //statics
-//DirectX::XMFLOAT3		Field::s_cameraPos		= DirectX::XMFLOAT3();
-//DirectX::XMFLOAT4X4		Field::s_viewproj		= DirectX::XMFLOAT4X4();
 field::Shaders			Field::s_shaders		= field::Shaders();
 ID3D11RasterizerState*	Field::s_rasterizer		= nullptr;
 ID3D11InputLayout*		Field::s_inputLayout	= nullptr;
@@ -357,12 +355,12 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	}
 
 
-	/*Default light settings*/
-	m_CBcpu_light.light = {0, 1.f/ std::sqrt(2.f), 1.f/std::sqrt(2.f), 0};
-	m_CBcpu_light.ambient = { 100.f/255.f, 100.f/255.f, 100/255.f, 0.0f };
-	m_CBcpu_light.diffuse = { 120.f/255.f, 120.f/255.f, 100.f/255.f, 0.0f };
-	m_CBcpu_light.specular = { 20/255.f, 20.f/255.f, 20.f/255.f, 0.0f };
-	m_CBcpu_light.shiny = 8.0f;
+	///*Default light settings*/
+	//m_CBField_Light.light = {0, 1.f/ std::sqrt(2.f), 1.f/std::sqrt(2.f), 0};
+	//m_CBField_Light.ambient = { 100.f/255.f, 100.f/255.f, 100/255.f, 0.0f };
+	//m_CBField_Light.diffuse = { 120.f/255.f, 120.f/255.f, 100.f/255.f, 0.0f };
+	//m_CBField_Light.specular = { 20/255.f, 20.f/255.f, 20.f/255.f, 0.0f };
+	//m_CBField_Light.shiny = 8.0f;
 
 	/*Set up GUI*/
 	TwBar* GUI = TwNewBar("Field");
@@ -383,12 +381,12 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		((float*)value)[1] = -((float*)clientData)[1];
 		((float*)value)[2] = -((float*)clientData)[2];
 	}
-	, &m_CBcpu_light.light, "");
+	, &m_CBField_Light.light, "");
 
-	TwAddVarRW(GUI, "Ambient", TwType::TW_TYPE_COLOR4F, &m_CBcpu_light.ambient, "");
-	TwAddVarRW(GUI, "Diffuse", TwType::TW_TYPE_COLOR4F, &m_CBcpu_light.diffuse, "");
-	TwAddVarRW(GUI, "Specular", TwType::TW_TYPE_COLOR4F, &m_CBcpu_light.specular, "");
-	TwAddVarRW(GUI, "Shiny", TwType::TW_TYPE_FLOAT, &m_CBcpu_light.shiny, "");
+	TwAddVarRW(GUI, "Ambient", TwType::TW_TYPE_COLOR4F, &m_CBField_Light.ambient, "");
+	TwAddVarRW(GUI, "Diffuse", TwType::TW_TYPE_COLOR4F, &m_CBField_Light.diffuse, "");
+	TwAddVarRW(GUI, "Specular", TwType::TW_TYPE_COLOR4F, &m_CBField_Light.specular, "");
+	TwAddVarRW(GUI, "Shiny", TwType::TW_TYPE_FLOAT, &m_CBField_Light.shiny, "");
 
 
 	//gpu octree@
@@ -469,12 +467,12 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 void Field::unload()
 {
 	m_gpuOctree.cleanup();
-	RELEASE(m_CB_geometry);
-	RELEASE(m_CB_viewproj);
-	RELEASE(m_CB_light);
 	m_instanceDoubleBuffer.cleanup();
 	m_pseudoAppend.cleanup();
 	m_indirectArgs.cleanup();
+	m_CBField_RarelyChanges.cleanup();
+	m_CBField_ChangesPerFrame.cleanup();
+	m_CBField_ChangesPerFrame.cleanup();
 }
 
 
@@ -532,21 +530,14 @@ void Field::draw(const DrawData& _data)
 	//apply shaders
 	s_shaders.apply(_data.m_dc);
 
-	//update subresources
-	_data.m_dc->UpdateSubresource(m_CB_viewproj, 0, 0, &m_CBcpu_viewproj, 0, 0);
-	_data.m_dc->UpdateSubresource(m_CB_geometry, 0, 0, &m_CBcpu_geometry, 0, 0);
-	_data.m_dc->UpdateSubresource(m_CB_light, 0, 0, &m_CBcpu_light, 0, 0);
+	/* Set constant buffers */
+	ID3D11Buffer* buffers[] = { m_CBField_ChangesPerFrame.getBuffer(), m_CBField_RarelyChanges.getBuffer(), m_CBField_Light.getBuffer() };
+	_data.m_dc->VSSetConstantBuffers(0, 3, buffers);
+	_data.m_dc->HSSetConstantBuffers(0, 1, &buffers[1]);
+	_data.m_dc->DSSetConstantBuffers(0, 1, &buffers[1]);
+	_data.m_dc->GSSetConstantBuffers(0, 3, buffers);
+	_data.m_dc->PSSetConstantBuffers(2, 1, &buffers[2]);
 
-	//set constant buffers
-	_data.m_dc->HSSetConstantBuffers(0, 1, &m_CB_geometry);
-	_data.m_dc->GSSetConstantBuffers(0, 1, &m_CB_geometry);
-	_data.m_dc->DSSetConstantBuffers(0, 1, &m_CB_geometry);
-	_data.m_dc->VSSetConstantBuffers(0, 1, &m_CB_geometry);
-	_data.m_dc->VSSetConstantBuffers(1, 1, &m_CB_viewproj);
-	_data.m_dc->GSSetConstantBuffers(1, 1, &m_CB_viewproj);
-	_data.m_dc->GSSetConstantBuffers(2, 1, &m_CB_light);
-	_data.m_dc->PSSetConstantBuffers(2, 1, &m_CB_light);
-	_data.m_dc->VSSetConstantBuffers(2, 1, &m_CB_light);
 
 	//sampler
 	_data.m_dc->PSSetSamplers(0, 1, &s_samplerState);
@@ -571,74 +562,51 @@ void Field::updateConstBuffers(const DrawData& _data)
 	Time* t = OCH::ServiceLocator<Time>::get();
 
 	XMFLOAT3 camPos = _data.m_cam->getPos();
+	m_CBField_Light.camera = XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.f);
+	m_CBField_Light.mapUpdate(_data.m_dc, D3D11_MAP_WRITE_DISCARD);
 
+	//@set up these defualts! let them be changed by user!!! Custom update method for updating this!
+	//m_CBField_RarelyChanges;;
 
-	m_CBcpu_geometry.halfGrassWidth = m_halfGrassWidth;
-	m_CBcpu_geometry.time = (float)t->time;
-	m_CBcpu_geometry.farTess = 6.0f;
-	m_CBcpu_geometry.nearTess = 0.4f;
-	m_CBcpu_geometry.minTessDensity = 3.0f;
-	m_CBcpu_geometry.maxTessDensity = 9.0f;
-
-	//view projection buffer
 	XMMATRIX viewproj = XMMatrixTranspose(XMLoadFloat4x4(&_data.m_cam->getViewProj()));
-	XMStoreFloat4x4(&m_CBcpu_viewproj.m_wvp, viewproj);
-	
-	/*light*/
-	m_CBcpu_light.camera = XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.f);
-	//STOREF4(&m_CBcpu_light.light, XMVectorMultiply(_data.m_cam->calcViewDir(), VEC3(-1, -1, -1)));//let the user control the light!@
+	XMStoreFloat4x4(&m_CBField_ChangesPerFrame.m_wvp, viewproj);
+	m_CBField_ChangesPerFrame.time = (float)t->time;
+	m_CBField_ChangesPerFrame.mapUpdate(_data.m_dc, D3D11_MAP_WRITE_DISCARD);
 }
 
 bool Field::loadBuffers(ID3D11Device* _device)
 {
-	//CBUFFER
-	//Geometry buffer
-	HRESULT result;
-	D3D11_BUFFER_DESC bufferdesc;
-	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
-	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferdesc.ByteWidth = sizeof(CBField);
-	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	bufferdesc.CPUAccessFlags = 0;
-	bufferdesc.MiscFlags = 0;
-	bufferdesc.StructureByteStride = 0;
-	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_geometry);
-	if (FAILED(result))
-	{
-		DXTRACE_MSG(L"Couldn't create the geometry const buffer.");
-		return false;
-	}
+	bool result = true;
 
-	//World view proj
-	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
-	bufferdesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferdesc.ByteWidth = sizeof(CBWorldViewProj);
-	bufferdesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	bufferdesc.CPUAccessFlags = 0;
-	bufferdesc.MiscFlags = 0;
-	bufferdesc.StructureByteStride = 0;
-	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_viewproj);
-	if (FAILED(result))
-	{
-		DXTRACE_MSG(L"Error: Couldn't create the world const buffer.");
-		return false;
-	}
+	D3D11_BUFFER_DESC buffDesc;
+	ZeroMemory(&buffDesc, sizeof(buffDesc));
+	buffDesc.Usage			= D3D11_USAGE_DYNAMIC;
+	buffDesc.BindFlags		= D3D11_BIND_CONSTANT_BUFFER;
+	buffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-	//Light
-	ZeroMemory(&bufferdesc, sizeof(bufferdesc));
-	bufferdesc.Usage				= D3D11_USAGE_DEFAULT;
-	bufferdesc.ByteWidth			= sizeof(CBFieldLight);
-	bufferdesc.BindFlags			= D3D11_BIND_CONSTANT_BUFFER;
-	bufferdesc.CPUAccessFlags		= 0;
-	bufferdesc.MiscFlags			= 0;
-	bufferdesc.StructureByteStride	= 0;
-	result = _device->CreateBuffer(&bufferdesc, NULL, &m_CB_light);
-	if (FAILED(result))
-	{
-		DXTRACE_MSG(L"Error: Couldn't create the light const buffer.");
-		return false;
-	}
-	return true;
+	/* No initial data for this cbuffer */
+	result = result && m_CBField_ChangesPerFrame.init(_device, &buffDesc);
+
+	/* Default light settings */
+	m_CBField_Light.light = { 0, 1.f / std::sqrt(2.f), 1.f / std::sqrt(2.f), 0 };
+	m_CBField_Light.ambient = { 100.f / 255.f, 100.f / 255.f, 100 / 255.f, 0.0f };
+	m_CBField_Light.diffuse = { 120.f / 255.f, 120.f / 255.f, 100.f / 255.f, 0.0f };
+	m_CBField_Light.specular = { 20 / 255.f, 20.f / 255.f, 20.f / 255.f, 0.0f };
+	m_CBField_Light.shiny = 8.0f;
+	result = result && m_CBField_Light.init(_device, &buffDesc);
+	
+	/* Default LOD settings */
+	buffDesc.Usage			= D3D11_USAGE_DEFAULT;
+	buffDesc.CPUAccessFlags = 0;
+
+	m_CBField_RarelyChanges.farTess = 6.0f;
+	m_CBField_RarelyChanges.nearTess = 0.4f;
+	m_CBField_RarelyChanges.halfGrassWidth = m_halfGrassWidth;
+	m_CBField_RarelyChanges.minTessDensity = 3.0f;
+	m_CBField_RarelyChanges.maxTessDensity = 9.0f;
+	result = result && m_CBField_RarelyChanges.init(_device, &buffDesc);
+
+	return result;
 }
 
 void Field::addPatch(std::vector<field::Instance>& _field, float* verts, unsigned int _numBlades)

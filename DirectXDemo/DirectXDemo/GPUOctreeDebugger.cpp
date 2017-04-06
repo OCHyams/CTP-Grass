@@ -161,7 +161,7 @@ bool GPUOctreeDebugger::loadShared(ID3D11Device* _device)
 	D3D11_BUFFER_DESC worldDesc;
 	ZeroMemory(&worldDesc, sizeof(worldDesc));
 	worldDesc.Usage = D3D11_USAGE_DEFAULT;
-	worldDesc.ByteWidth = sizeof(CBWorldViewProj);
+	worldDesc.ByteWidth = sizeof(CBField_ChangesPerFrame);
 	worldDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	worldDesc.CPUAccessFlags = 0;
 	worldDesc.MiscFlags = 0;
@@ -232,7 +232,7 @@ void GPUOctreeDebugger::draw(ID3D11DeviceContext* _dc, const DirectX::XMFLOAT4X4
 		{
 			//Draw it
 			using namespace DirectX;
-			CBWorldViewProj cbuff;
+			CBField_ChangesPerFrame cbuff;
 			XMMATRIX wvp = XMMatrixScalingFromVector(LF3(&current.m_AABB.Extents) * 2);
 			wvp = XMMatrixMultiply(wvp, XMMatrixTranslationFromVector(LF3(&current.m_AABB.Center)));
 			wvp = XMMatrixMultiply(wvp, LF44(&_viewproj));

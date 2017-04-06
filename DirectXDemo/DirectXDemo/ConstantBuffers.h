@@ -24,25 +24,26 @@ struct CBGrassGeometry
 };
 
 __declspec(align(16))
-struct CBField
+struct CBField_RarelyChanges
 {
 	float	halfGrassWidth;
-	float	time;
-	float	minTessDensity;
 	float	maxTessDensity;
+	float	minTessDensity;
 	float	nearTess;
 	float	farTess;
 };
+
 __declspec(align(16))
-struct CBWorldViewProj
+struct CBField_ChangesPerFrame
 {
 	DirectX::XMFLOAT4X4 m_wvp;
+	float	time;
 };
 
 __declspec(align(16))
-struct CBFieldLight
+struct CBField_Light
 {
-	DirectX::XMFLOAT4	camera;//@change to float3s
+	DirectX::XMFLOAT4	camera;
 	DirectX::XMFLOAT4	light;
 	DirectX::XMFLOAT4	ambient;
 	DirectX::XMFLOAT4	diffuse; 
