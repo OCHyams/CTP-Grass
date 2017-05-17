@@ -2,17 +2,16 @@
 Author:			Orlando Cazalet-Hyams
 Description :	Constant buffer class, uses decorator pattern
 				so that the memebers can be accessed as TData.
+				To supply inital data, set member values before
+				calling init().
 ----------------------------------------------------------------*/
 
 #pragma once
-#include <d3d11_2.h>
+#include <d3d11.h>
 #include "Shorthand.h"
 
-//Kind of ironically, don't use this if you want your cbuffers to be constant
-//because it stores a cpu-side lump of data which would be unecessary
-
 template <typename TData>
-class CBuffer : public TData
+class CBuffer final : public TData
 {
 public:
 	CBuffer() = default;
@@ -24,7 +23,7 @@ public:
 	bool init( ID3D11Device* _device, const D3D11_BUFFER_DESC* _bufferDesc );
 	void cleanup();
 
-	ID3D11Buffer * getBuffer() { return m_buffer; }
+	ID3D11Buffer* getBuffer() { return m_buffer; }
 private:
 	ID3D11Buffer* m_buffer;
 };

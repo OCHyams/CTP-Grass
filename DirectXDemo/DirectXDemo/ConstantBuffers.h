@@ -4,7 +4,7 @@ Description :	CPU-side constant buffer structs.
 ----------------------------------------------------------------*/
 
 #pragma once
-#include <d3d11_2.h>
+#include <d3d11.h>
 #include "SimpleMath.h"
 
 __declspec(align(16))

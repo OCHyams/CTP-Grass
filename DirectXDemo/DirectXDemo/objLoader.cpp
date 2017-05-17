@@ -9,7 +9,7 @@
 	This file has been modified for the purposes of the prototype.
 */
 
-#include <d3d11_2.h>
+#include <d3d11.h>
 #include <SimpleMath.h>
 #include<fstream>
 #include<vector>

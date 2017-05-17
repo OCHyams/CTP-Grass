@@ -1,5 +1,5 @@
 #pragma once
-#include <d3d11_2.h>
+#include <d3d11.h>
 #include <map>
 #include <vector>
 #include "objLoader.h"

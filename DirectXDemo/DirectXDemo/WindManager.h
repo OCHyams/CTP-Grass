@@ -1,20 +1,33 @@
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	This class manages wind volumes and 
+				updates a grass instance buffer with
+				per-instance wind vectors. An octree
+				is queried such that only visible grass
+				instances are added to the output buffer
+				used for rendering. All grass instances
+				are saved to another buffer so that
+				state-based calculations can be used in the
+				future.
+----------------------------------------------------------------*/
+
 #pragma once
 #include <vector>
-#include <d3d11_2.h>
-
+#include <d3d11.h>
+#include "Buffer.h"
+#include "ConstantBuffer.h"
+#include "ConstantBuffers.h"
 #include "WindCuboid.h"
 #include "WindSphere.h"
 
 class WindManager
 {
 public:
-	const int m_threadsPerGroupX = 256;
+	const int THREADS_PER_GROUP_X = 256;
 
 	/////////////////////////////////////////////////
-	/// Should be called once per frame after all 
-	///	wind zones have been modified. No need to call 
-	///	if all zones are immobile and none are created
-	/// or destroyed.
+	/// Should be called once per frame to update
+	/// GPU resources.
 	/////////////////////////////////////////////////
 	void updateResources(ID3D11DeviceContext*, unsigned int _numInstances, float _time, float _deltaTime);
 
@@ -40,7 +53,7 @@ public:
 	void unload();
 
 	/////////////////////////////////////////////////
-	/// No memory management required. Returns nullptr //@This sort of stuff should get hidden behind some user interface classes
+	/// No memory management required. Returns nullptr
 	/// if there are already too many WindRects.
 	/////////////////////////////////////////////////
 	WindCuboid* createWindCuboid();
@@ -66,25 +79,25 @@ public:
 	/////////////////////////////////////////////////
 	void removeAll();
 
+	/////////////////////////////////////////////////
+	/// Used by Field objects during rendering.
+	/////////////////////////////////////////////////
 	void applyWindForces(	ID3D11UnorderedAccessView* _outGrass, ID3D11UnorderedAccessView* _frustumCulled, ID3D11UnorderedAccessView* _indirectArgs,
 							ID3D11ShaderResourceView* _inGrass, ID3D11ShaderResourceView* _inOctree, 
 							ID3D11DeviceContext* _dc, int _numInstances);
 
-	ID3D11ShaderResourceView* getRectSRV() { return m_cuboidSRV;  }
-	ID3D11ShaderResourceView* getSphereSRV() { return m_sphereSRV; }
-	const std::vector<WindCuboid>& getCuboids() const { return m_cuboids; }
-	const std::vector<WindSphere>& getSpheres() const { return m_spheres; }
-protected:
+	const Buffer* getCuboidBuffer() { return &m_cuboidBuffer; } const
+	const Buffer* getSphereBuffer() { return &m_sphereBuffer; } const
+	const std::vector<WindCuboid>& getCuboids() const { return m_cuboids; } 
+	const std::vector<WindSphere>& getSpheres() const { return m_spheres; } 
+
 private:
 	std::vector<WindCuboid>	m_cuboids;
 	std::vector<WindSphere> m_spheres;
 	int m_maxCuboids;
 	int m_maxSpheres;
-
-	ID3D11Buffer*				m_cuboidBuffer; //@Not sure if i need the buffers?
-	ID3D11Buffer*				m_sphereBuffer;
-	ID3D11ShaderResourceView*	m_cuboidSRV;
-	ID3D11ShaderResourceView*	m_sphereSRV;
-	ID3D11Buffer*				m_CB_changesPerFrame;
+	Buffer m_cuboidBuffer;
+	Buffer m_sphereBuffer;
+	CBuffer<CBWindForceChangesPerFrame> m_CB_changesPerFrame;
 	static ID3D11ComputeShader*	s_cs;
 };

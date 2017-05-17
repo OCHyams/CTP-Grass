@@ -8,7 +8,6 @@ Description :	Base class for all DX11 demos to make it quick
 #pragma once
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#include <d3d11_2.h>
 #include <d3d11.h>
 #include "Time.h"
 class Input;

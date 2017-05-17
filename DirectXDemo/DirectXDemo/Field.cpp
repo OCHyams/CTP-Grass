@@ -249,8 +249,10 @@ void Field::unloadShared()
 }
 
 
-bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize)
+bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize, WindManager* _windManager)
 {
+	m_windManager = _windManager;
+
 	m_pos = _pos;
 
 	using namespace DirectX;

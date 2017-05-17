@@ -8,7 +8,7 @@ Description :	A Field handles generating & rendering grass over
 #pragma once
 #include "DrawData.h"
 #include "VertexData.h"
-#include <d3d11_2.h>
+#include <d3d11.h>
 #include <math.h>
 #include "ConstantBuffers.h"
 #include "FieldRenderData.h"
@@ -35,11 +35,6 @@ public:
 	/// Should stop frustum culling?
 	/////////////////////////////////////////////////
 	bool m_noCulling = false;
-
-	/////////////////////////////////////////////////
-	/// This shouldn't be public *oops*@
-	/////////////////////////////////////////////////
-	WindManager* m_windManager;
 	
 	Field();
 	~Field();
@@ -55,7 +50,7 @@ public:
 	/////////////////////////////////////////////////
 	/// Initialise the field
 	/////////////////////////////////////////////////
-	bool load(ID3D11Device*, ObjModel*, float density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize);
+	bool load(ID3D11Device*, ObjModel*, float density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize, WindManager* _windManager);
 
 	void updateLODAndWidth(CBField_RarelyChanges& _newBuffer);
 	const CBField_RarelyChanges& getCurrentLODAndWidth() const { return m_CBField_RarelyChanges; };
@@ -90,6 +85,7 @@ private:
 	static 
 	ID3D11ShaderResourceView*		s_texture; 
 	static ID3D11SamplerState*		s_samplerState;
+	WindManager*					m_windManager;
 	/////////////////////////////////////////////////
 	/// Constant buffers
 	/////////////////////////////////////////////////

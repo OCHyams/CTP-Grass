@@ -7,7 +7,7 @@ Description :	Class that handles initialising a buffer with
 ----------------------------------------------------------------*/
 
 #pragma once
-#include <d3d11_2.h>
+#include <d3d11.h>
 class Buffer
 {
 public:

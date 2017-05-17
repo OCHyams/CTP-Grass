@@ -11,7 +11,7 @@
 
 #ifndef _OBJ_LOADER_H_
 #define _OBJ_LOADER_H_
-#include <d3d11_2.h>
+#include <d3d11.h>
 #include "SimpleMath.h"
 
 class ObjModel

@@ -82,11 +82,9 @@ bool DX11GrassDemo::load()
 
 	/*Set up demo field*/
 	m_field.m_halfGrassWidth = 0.02f;
-	m_field.m_windManager = &m_windManager;
-
 	MESH meshToUse = MESH::GEN_HILL;
 	ObjModel* meshObj = &hill;/* &plane;*/// m_renderer.getObjModel((int)meshToUse);
-	RETURN_IF_FAILED(m_field.load(m_d3dDevice, meshObj, 125, XMFLOAT3(0, 0, 0), { 6.f, 6.f, 6.f}));
+	RETURN_IF_FAILED(m_field.load(m_d3dDevice, meshObj, 125, XMFLOAT3(0, 0, 0), { 6.f, 6.f, 6.f}, &m_windManager));
 	
 	m_numBlades = m_field.getMaxNumBlades();
 
