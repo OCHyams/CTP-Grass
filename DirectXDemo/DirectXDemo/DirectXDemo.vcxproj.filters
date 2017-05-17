@@ -36,19 +36,10 @@
     <ClCompile Include="BasicDemo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Triangle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SimpleGrass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GameObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DXHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Input.cpp">
@@ -66,12 +57,6 @@
     <ClCompile Include="TokenStream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Octree.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="OctreeDebugger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="WindManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -87,13 +72,7 @@
     <ClCompile Include="FieldUtilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Field_14_03.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Buffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WindManager_14_03.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GPUOctree.cpp">
@@ -113,22 +92,10 @@
     <ClInclude Include="BasicDemo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Triangle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GameObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="basicVertex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SimpleGrass.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DXHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ServiceLocator.h">
@@ -156,12 +123,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Shorthand.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Octree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="OctreeDebugger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Object.h">
@@ -203,9 +164,6 @@
     <ClInclude Include="DoubleBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Field_14_03.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="FieldUtilities.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -215,21 +173,18 @@
     <ClInclude Include="ConstantBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WindManager_14_03.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GPUOctree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GPUOctreeDebugger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Triangle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="SolidGreenColour.fx">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="SimpleGrass.fx">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="BasicShader.fx">
@@ -247,9 +202,6 @@
     <FxCompile Include="DefaultObjectPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="GrassWindFrustumCS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -258,10 +210,5 @@
     <Image Include="..\Resources\GRASS.dds">
       <Filter>Assets</Filter>
     </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="hlsl_rand.txt">
-      <Filter>Shaders</Filter>
-    </Text>
   </ItemGroup>
 </Project>

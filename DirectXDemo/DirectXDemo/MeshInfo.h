@@ -14,6 +14,7 @@ public:
 	DXGI_FORMAT						m_ibFormat = DXGI_FORMAT_R16_UINT;
 	UINT							m_ibOffset = 0;
 	D3D11_PRIMITIVE_TOPOLOGY		m_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
 	void apply(ID3D11DeviceContext* _dc)
 	{
 		/*Input assembly*/

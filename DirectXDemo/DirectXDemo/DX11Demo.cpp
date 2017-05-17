@@ -3,7 +3,7 @@
 #include "ServiceLocator.h" 
 #include "Input.h"
 #include "AntTweakBar.h"
-#include "DXHelper.h"
+#include "Shorthand.h"
 DX11Demo::DX11Demo() :	m_driverType(D3D_DRIVER_TYPE_NULL), 
 						m_featureLevel(D3D_FEATURE_LEVEL_11_1),
 						m_d3dDevice(nullptr), 

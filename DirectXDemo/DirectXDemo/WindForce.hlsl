@@ -7,7 +7,6 @@ struct Instance
 	float padding;
 };
 
-//@For now only deal with AABB wind volumes
 struct WindCuboid
 {
 	float3	pos;
@@ -41,25 +40,30 @@ cbuffer CBChangePerFrame
 	float deltaTime;
 };
 
-
+/* Shader resources */
 ByteAddressBuffer				inGrass		: register(t0);
 StructuredBuffer<WindCuboid>	inCuboids	: register(t1);
 StructuredBuffer<WindSphere>	inSpheres	: register(t2);
 StructuredBuffer<OctreeNode>	inNodes		: register(t3);
 
-RWByteAddressBuffer				outGrass		: register(u0);
-RWByteAddressBuffer				outGrassFrustumCulled : register (u1);
-static uint ARGS_VCOUNT = 0, ARGS_INST_COUNT = 1, ARGS_VERT_START = 2, ARGS_INST_START = 3/*, ARGS_BACK_COUNTER*/;
-RWBuffer<uint>					indirectArgs	: register(u2);
+/* Unordered access resources */
+RWByteAddressBuffer	outGrass		: register(u0);
+RWByteAddressBuffer	outGrassFrustumCulled : register (u1);
+RWBuffer<uint>		indirectArgs	: register(u2);
 
-static uint SIZE_OF_INSTANCE = 48; //44 /*Raw*/ +4 /*Padding*/;
+static uint ARGS_VERT_COUNT = 0, 
+			ARGS_INST_COUNT = 1, 
+			ARGS_VERT_START = 2, 
+			ARGS_INST_START = 3;
+
+static uint SIZE_OF_INSTANCE = 48; /* Raw + Padding = 44 + 4 */
 static uint ROT_OFFSET = 0;
 static uint POS_OFFSET = 16;
 static uint WIND_OFFSET = 28;
 static uint OCT_IDX_OFFSET = 40;
 
-
-
+/* Return wind force at this point
+	from all wind cuboids. */
 float3 windFromCuboids(float3 pos)
 {
 	float3 output = 0;
@@ -80,6 +84,8 @@ float3 windFromCuboids(float3 pos)
 	return output;
 }
 
+/* Return wind force at this point
+	from all wind spheres. */
 float3 windFromSpheres(float3 pos)
 {
 	float3 output = 0;
@@ -103,7 +109,11 @@ float3 windFromSpheres(float3 pos)
 [numthreads(256, 1, 1)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
-	if (DTid.x >= numInstances) return;//This is required because rounding to int means that more - than - necessary number of threads are run! This pushes out the chance for some instances to get put into the append buffer
+	/* This is required because rounding in the num-threads calculation
+		often leads to more-than-necessary threads are run.
+		Without this check, the append buffer counter can be incremented without
+		having added anything! */
+	if (DTid.x >= numInstances) return;
 
 	Instance instance;
 	uint inAddress = DTid.x * SIZE_OF_INSTANCE;
@@ -115,11 +125,17 @@ void main( uint3 DTid : SV_DispatchThreadID )
 	instance.octreeIdx	= asint(inGrass.Load(inAddress + OCT_IDX_OFFSET));
 	instance.padding = 0;
 
-	//emulate append buffer
-	//If visble, add to the pseudo append buffer
+
+	/* If visble... */
 	if (inNodes[instance.octreeIdx].visible > 0)
-	{
+	{	
+		/* ...add instance to the pseudo append buffer 
+			which will be used as-is as the instance buffer
+			in the next grass rendering stage. */
+
+		/* Increment indrect arguments instance count. */
 		InterlockedAdd(indirectArgs[ARGS_INST_COUNT], 1, outAddress);
+		/* Add instance to buffer. */
 		outAddress *= SIZE_OF_INSTANCE;
 		outGrassFrustumCulled.Store4(outAddress + ROT_OFFSET, asuint(instance.rot));
 		outGrassFrustumCulled.Store3(outAddress + POS_OFFSET, asuint(instance.pos));
@@ -127,7 +143,7 @@ void main( uint3 DTid : SV_DispatchThreadID )
 		outGrassFrustumCulled.Store(outAddress + OCT_IDX_OFFSET, asuint(instance.octreeIdx));
 	}
 
-	//add all grass to outbuff
+	/* Add all grass to the output buffer */
 	outGrass.Store4(inAddress + ROT_OFFSET, asuint(instance.rot));
 	outGrass.Store3(inAddress + POS_OFFSET, asuint(instance.pos));
 	outGrass.Store3(inAddress + WIND_OFFSET, asuint(instance.wind));

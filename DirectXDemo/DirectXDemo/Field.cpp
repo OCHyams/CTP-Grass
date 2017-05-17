@@ -2,7 +2,6 @@
 #include <d3dcompiler.h>
 #include "dxerr.h"
 #include <DirectXMath.h>
-#include "DXHelper.h"
 #include "Input.h"
 #include "Time.h"
 #include "ServiceLocator.h"
@@ -17,7 +16,9 @@
 #include "WindManager.h"
 #include "Buffer.h"
 #include "AntTweakBar.h"
+#include "triangle.h"
 #include <chrono>
+
 //statics
 field::Shaders			Field::s_shaders		= field::Shaders();
 ID3D11RasterizerState*	Field::s_rasterizer		= nullptr;
@@ -496,7 +497,7 @@ void Field::updateConstBuffers(const DrawData& _data)
 	}
 
 	XMMATRIX viewproj = XMMatrixTranspose(XMLoadFloat4x4(&_data.m_cam->getViewProj()));
-	XMStoreFloat4x4(&m_CBField_ChangesPerFrame.m_wvp, viewproj);
+	XMStoreFloat4x4(&m_CBField_ChangesPerFrame.wvp, viewproj);
 	m_CBField_ChangesPerFrame.time = (float)t->time;
 	m_CBField_ChangesPerFrame.mapUpdate(_data.m_dc, D3D11_MAP_WRITE_DISCARD);
 }

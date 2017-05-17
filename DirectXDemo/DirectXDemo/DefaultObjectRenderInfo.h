@@ -1,3 +1,7 @@
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	Render info for default objects.
+----------------------------------------------------------------*/
 #pragma once
 #include "RenderInfo.h"
 class MeshObject;

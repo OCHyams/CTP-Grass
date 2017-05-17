@@ -1,7 +1,5 @@
 #include "BasicDemo.h"
-#include "SimpleGrass.h"
 #include "Camera.h"
-#include "Triangle.h"
 #include "DrawData.h"
 #include "Field.h"
 #include "AntTweakBar.h"
@@ -11,16 +9,16 @@
 #include "Input.h"
 #include "GPUOctreeDebugger.h"
 
-BasicDemo::BasicDemo()
+DX11GrassDemo::DX11GrassDemo()
 {}
 
-BasicDemo::~BasicDemo()
+DX11GrassDemo::~DX11GrassDemo()
 {}
 
 static const float GEN_HILL_HEIGHT = 20.f;
-bool BasicDemo::load()
+bool DX11GrassDemo::load()
 {	
-	CHECK_FAIL(m_renderer.load(m_d3dDevice));
+	RETURN_IF_FAILED(m_renderer.load(m_d3dDevice));
 	/*Models!*/
 	using namespace DirectX;
 	/*XMMATRIX v44_transform = XMMatrixScalingFromVector(VEC3(0.2, 0.2, 0.2));
@@ -39,17 +37,17 @@ bool BasicDemo::load()
 
 	ObjModel plane;
 	plane.loadPlane(125,125,20,20);
-	CHECK_FAIL(m_renderer.registerMesh((int)MESH::PLANE, plane, m_d3dDevice));
+	RETURN_IF_FAILED(m_renderer.registerMesh((int)MESH::PLANE, plane, m_d3dDevice));
 	
 	ObjModel hill;
 	hill.loadHill(150, 150, 10, 10, GEN_HILL_HEIGHT);
-	CHECK_FAIL(m_renderer.registerMesh((int)MESH::GEN_HILL, hill, m_d3dDevice));
+	RETURN_IF_FAILED(m_renderer.registerMesh((int)MESH::GEN_HILL, hill, m_d3dDevice));
 
-	CHECK_FAIL(GPUOctreeDebugger::loadShared(m_d3dDevice));
+	RETURN_IF_FAILED(GPUOctreeDebugger::loadShared(m_d3dDevice));
 
 	/*Load data shared by all wind managers (though there should only be one anyway)*/
 	WindManager::loadShared(m_d3dDevice);
-	CHECK_FAIL(m_windManager.load(m_d3dDevice, 1, 1));
+	RETURN_IF_FAILED(m_windManager.load(m_d3dDevice, 1, 1));
 	/*Create a static wind volume, no need to keep track of mem, system does that*/
 	WindCuboid* windCuboid = m_windManager.createWindCuboid();
 	windCuboid->m_extents = { 1000.0f, 1000.0f, 1000.0f };
@@ -80,7 +78,7 @@ bool BasicDemo::load()
 	m_fps = 0;
 
 	/*Load data shared by all fields*/
-	CHECK_FAIL(Field::loadShared(m_d3dDevice));
+	RETURN_IF_FAILED(Field::loadShared(m_d3dDevice));
 
 	/*Set up demo field*/
 	m_field.m_halfGrassWidth = 0.02f;
@@ -88,7 +86,7 @@ bool BasicDemo::load()
 
 	MESH meshToUse = MESH::GEN_HILL;
 	ObjModel* meshObj = &hill;/* &plane;*/// m_renderer.getObjModel((int)meshToUse);
-	CHECK_FAIL(m_field.load(m_d3dDevice, meshObj, 125, XMFLOAT3(0, 0, 0), { 6.f, 6.f, 6.f}));
+	RETURN_IF_FAILED(m_field.load(m_d3dDevice, meshObj, 125, XMFLOAT3(0, 0, 0), { 6.f, 6.f, 6.f}));
 	
 	m_numBlades = m_field.getMaxNumBlades();
 
@@ -105,13 +103,13 @@ bool BasicDemo::load()
 	m_cam = new ArcCamera({ 0.f, GEN_HILL_HEIGHT + 0.2f, -3.f });
 	m_cam->m_arcSpeed = 1;
 	m_objects.push_back(m_cam);
-	CHECK_FAIL(m_cam->load(m_d3dDevice));
+	RETURN_IF_FAILED(m_cam->load(m_d3dDevice));
 
 	return true;
 }
 #undef CHECK_FAIL
 
-void BasicDemo::unload()
+void DX11GrassDemo::unload()
 {
 	WindManager::unloadShared();
 	m_windManager.unload();
@@ -130,7 +128,7 @@ void BasicDemo::unload()
 	m_renderer.cleanup();
 }
 
-void BasicDemo::update()
+void DX11GrassDemo::update()
 {
 	DX11Demo::update();
 
@@ -155,7 +153,7 @@ void BasicDemo::update()
 	}
 }
 
-void BasicDemo::render()
+void DX11GrassDemo::render()
 {
 	if (m_d3dContext == 0) return;
 

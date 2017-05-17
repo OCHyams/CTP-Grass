@@ -1,6 +1,13 @@
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	A Field handles generating & rendering grass over	
+				a single mesh, octree is local, wind-manager is
+				set up to be shared (but doesn't have to be).
+----------------------------------------------------------------*/
+
 #pragma once
 #include "DrawData.h"
-#include "basicVertex.h"
+#include "VertexData.h"
 #include <d3d11_2.h>
 #include <math.h>
 #include "ConstantBuffers.h"
@@ -108,43 +115,6 @@ private:
 	void updateConstBuffers(const DrawData&);
 
 	bool loadBuffers(ID3D11Device*);
-
-	/*Stuff for proc gen grass*/
-	struct Triangle
-	{
-		//Calculate surface area from 3 * float3 positions
-		static float surfaceArea(float* verts)
-		{
-			using namespace DirectX;
-			/*Calc surface area*/
-			XMVECTOR a = VEC3(*(verts), *(verts + 1), *(verts + 2));
-			XMVECTOR b = VEC3(*(verts + 3), *(verts + 4), *(verts + 5));
-			XMVECTOR c = VEC3(*(verts + 6), *(verts + 7), *(verts + 8));
-			XMVECTOR sa = 0.5 * XMVector3Length(XMVector3Cross((a - c), (b - c)));
-			return sa.m128_f32[0];
-		}
-
-		DirectX::XMFLOAT3	m_verts[3];
-		DirectX::XMFLOAT3	m_norms[3];
-		float				m_surfaceArea;
-
-		Triangle(const DirectX::XMFLOAT3* _verts, const DirectX::XMFLOAT3* _norms)
-		{
-			using namespace DirectX;
-			/*Get verts & norms*/
-			memcpy(m_verts, _verts, sizeof(DirectX::XMFLOAT3) * 3);
-			if (_norms) memcpy(m_norms, _norms, sizeof(DirectX::XMFLOAT3) * 3);
-			else m_norms[0] = m_norms[1] = m_norms[2] = { 0,1,0 };
-
-			/*Calc surface area*/
-			XMVECTOR a = XMLoadFloat3(&m_verts[0]);
-			XMVECTOR b = XMLoadFloat3(&m_verts[1]);
-			XMVECTOR c = XMLoadFloat3(&m_verts[2]);
-			XMVECTOR sa = 0.5 * XMVector3Length(XMVector3Cross((a - c), (b - c)));
-			m_surfaceArea = sa.m128_f32[0];
-		}
-
-	};
 
 	void addPatch(std::vector<field::Instance>& _field, float* verts, unsigned int _numBlade);
 };

@@ -1,24 +1,19 @@
 #pragma once
-#include "GameObject.h"
-#include "basicVertex.h"
-#include <d3d11_2.h>
-class ShaderDemoObject : public GameObject
+#include <d3d11.h>
+#include <SimpleMath.h>
+#include "Shorthand.h"
+
+struct Triangle
 {
-public:
-	ShaderDemoObject();
-	virtual ~ShaderDemoObject();
-
-	virtual bool load(ID3D11Device* _device) override;
-	virtual void unload() override;
-
-	virtual void update() override;
-	virtual void draw(const DrawData&) override;
-
-protected:
-	ID3D11VertexShader* m_vs;
-	ID3D11PixelShader* m_ps;
-	ID3D11GeometryShader* m_gs;
-
-	ID3D11InputLayout* m_inputLayout;
-	ID3D11Buffer* m_vertexBuffer;
+	/* Calculate surface area from 3 * float3 positions */
+	static float surfaceArea(float* verts)
+	{
+		using namespace DirectX;
+		/*Calc surface area*/
+		XMVECTOR a = VEC3(*(verts), *(verts + 1), *(verts + 2));
+		XMVECTOR b = VEC3(*(verts + 3), *(verts + 4), *(verts + 5));
+		XMVECTOR c = VEC3(*(verts + 6), *(verts + 7), *(verts + 8));
+		XMVECTOR sa = 0.5 * XMVector3Length(XMVector3Cross((a - c), (b - c)));
+		return XMVectorGetX(sa);
+	}
 };

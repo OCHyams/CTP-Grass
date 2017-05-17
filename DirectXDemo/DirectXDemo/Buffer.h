@@ -1,14 +1,20 @@
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	Class that handles initialising a buffer with
+				the option to also initialise an unordered-access 
+				-view, or shader-resource-view, or both, with
+				or without initial data.
+----------------------------------------------------------------*/
+
 #pragma once
 #include <d3d11_2.h>
-
-
 class Buffer
 {
 public:
 	Buffer() = default;
 	~Buffer() { cleanup(); }
 
-	//Pass NULL to subresource, uav or srv if you don't need them
+	/* Pass NULL to subresource, uav or srv if you don't need them. */
 	bool init(	ID3D11Device* _device, 
 				const D3D11_BUFFER_DESC*, 
 				const D3D11_SUBRESOURCE_DATA*, 

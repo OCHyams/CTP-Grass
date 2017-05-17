@@ -1,20 +1,24 @@
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	Grass demo class, kind of like a 'scene'.
+				It owns the camera and the grass etc... 
+----------------------------------------------------------------*/
 #pragma once
 #include "DX11Demo.h"
 #include <vector>
 #include <DirectXMath.h>
 #include "Field.h"
 #include "WindManager.h"
-#include "Field_14_03.h"
-#include "WindManager_14_03.h"
 #include "Renderer.h"
+
 class GameObject;
 class ArcCamera;
 class SimpleGrass;
-class BasicDemo : public DX11Demo
+class DX11GrassDemo : public DX11Demo
 {
 public:
-	BasicDemo();
-	virtual ~BasicDemo();
+	DX11GrassDemo();
+	virtual ~DX11GrassDemo();
 
 	bool load() override;
 	void unload() override;

@@ -1,5 +1,10 @@
-#pragma once
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	Constant buffer class, uses decorator pattern
+				so that the memebers can be accessed as TData.
+----------------------------------------------------------------*/
 
+#pragma once
 #include <d3d11_2.h>
 #include "Shorthand.h"
 

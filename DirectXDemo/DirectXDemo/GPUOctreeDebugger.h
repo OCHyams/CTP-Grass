@@ -1,9 +1,13 @@
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	Helper class that draws an octree for debugging.
+----------------------------------------------------------------*/
+
 #pragma once
 #include "GPUOctree.h"
 #include <d3dcompiler.h>
 #include "dxerr.h"
 #include <DirectXMath.h>
-#include "DXHelper.h"
 #include "FieldRenderData.h"
 /////////////////////////////////////////////////
 ///	Class to help debugg an octree.

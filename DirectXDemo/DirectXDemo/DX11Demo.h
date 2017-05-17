@@ -1,3 +1,10 @@
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	Base class for all DX11 demos to make it quick
+				and easy to set up.
+				(from Beginning DirectX 11 Game Programming)
+----------------------------------------------------------------*/
+
 #pragma once
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>

@@ -1,6 +1,10 @@
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	Input class for DX11.
+----------------------------------------------------------------*/
+
 #pragma once
 #include <dinput.h>
-
 
 class Input
 {

@@ -1,3 +1,8 @@
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	A bunch of short-hand macros for a range of tasks.
+				Not best practice, I don't encourage use of this ^_^
+----------------------------------------------------------------*/
 #pragma once
 
 //DirectX Shorthand
@@ -21,7 +26,7 @@
 #define ERASE_REMOVE(_container, _element) _container.erase(std::remove(_container.begin(), _container.end(), _element))
 #define ERASE_REMOVE_IF(_container, _pred) _container.erase(std::remove_if(_container.begin(), _container.end(), _pred))
 //Early out
-#define CHECK_FAIL(x) if (!x) return false
+#define RETURN_IF_FAILED(x) if (!x) return false
 //sizeof() for buffers
 #define SIZEOF_ROUND_TO_BOUNDARY(type, boundary) (sizeof(type) % boundary == 0? sizeof(type) : (std::ceil((double)sizeof(type) / (double)boundary) * boundary))
 //nullify an array of points

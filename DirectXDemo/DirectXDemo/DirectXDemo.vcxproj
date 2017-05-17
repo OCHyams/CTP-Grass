@@ -127,29 +127,21 @@
     <ClCompile Include="DoubleBuffer.cpp" />
     <ClCompile Include="DX11Demo.cpp" />
     <ClCompile Include="dxerr.cpp" />
-    <ClCompile Include="DXHelper.cpp" />
     <ClCompile Include="Field.cpp" />
     <ClCompile Include="FieldUtilities.cpp" />
-    <ClCompile Include="Field_14_03.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GPUOctree.cpp" />
     <ClCompile Include="GPUOctreeDebugger.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="objLoader.cpp" />
-    <ClCompile Include="Octree.cpp" />
-    <ClCompile Include="OctreeDebugger.cpp" />
     <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="SimpleGrass.cpp" />
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="TokenStream.cpp" />
-    <ClCompile Include="Triangle.cpp" />
     <ClCompile Include="WindManager.cpp" />
-    <ClCompile Include="WindManager_14_03.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasicDemo.h" />
-    <ClInclude Include="basicVertex.h" />
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ConstantBuffer.h" />
@@ -159,11 +151,9 @@
     <ClInclude Include="DrawData.h" />
     <ClInclude Include="DX11Demo.h" />
     <ClInclude Include="dxerr.h" />
-    <ClInclude Include="DXHelper.h" />
     <ClInclude Include="Field.h" />
     <ClInclude Include="FieldRenderData.h" />
     <ClInclude Include="FieldUtilities.h" />
-    <ClInclude Include="Field_14_03.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GPUOctree.h" />
     <ClInclude Include="GPUOctreeDebugger.h" />
@@ -171,22 +161,18 @@
     <ClInclude Include="MeshInfo.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="objLoader.h" />
-    <ClInclude Include="Octree.h" />
-    <ClInclude Include="OctreeDebugger.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RendererData.h" />
     <ClInclude Include="RenderInfo.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="ServiceLocator.h" />
     <ClInclude Include="Shorthand.h" />
-    <ClInclude Include="SimpleGrass.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="TokenStream.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="VertexData.h" />
     <ClInclude Include="WindManager.h" />
     <ClInclude Include="WindCuboid.h" />
-    <ClInclude Include="WindManager_14_03.h" />
     <ClInclude Include="WindSphere.h" />
   </ItemGroup>
   <ItemGroup>
@@ -226,30 +212,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
     </FxCompile>
-    <FxCompile Include="GrassWindFrustumCS.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
-    </FxCompile>
-    <FxCompile Include="SimpleGrass.fx">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Effect</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Effect</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <DeploymentContent>false</DeploymentContent>
-    </FxCompile>
     <FxCompile Include="SolidGreenColour.fx">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Effect</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
@@ -282,9 +244,6 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Resources\GRASS.dds" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="hlsl_rand.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

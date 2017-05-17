@@ -1,5 +1,9 @@
-#pragma once
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	Double buffer. See Buffer.h.
+----------------------------------------------------------------*/
 
+#pragma once
 #include <d3d11_2.h>
 #include "Buffer.h"
 

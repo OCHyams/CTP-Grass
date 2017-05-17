@@ -1,6 +1,11 @@
 #include "Buffer.h"
 #include "Shorthand.h"
-bool Buffer::init(ID3D11Device* _device, const D3D11_BUFFER_DESC* _bufferDesc, const D3D11_SUBRESOURCE_DATA* _initialData, const D3D11_UNORDERED_ACCESS_VIEW_DESC* _uavDesc, const D3D11_SHADER_RESOURCE_VIEW_DESC* _srvDesc)
+
+bool Buffer::init(ID3D11Device* _device, 
+					const D3D11_BUFFER_DESC* _bufferDesc, 
+					const D3D11_SUBRESOURCE_DATA* _initialData, 
+					const D3D11_UNORDERED_ACCESS_VIEW_DESC* _uavDesc, 
+					const D3D11_SHADER_RESOURCE_VIEW_DESC* _srvDesc)
 {
 	HRESULT result;
 	result = _device->CreateBuffer(_bufferDesc, _initialData, &m_buffer);

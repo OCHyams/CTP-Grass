@@ -18,7 +18,6 @@ cbuffer CBWorldViewProj : register (b0)
 PS_INPUT VS_Main(VS_INPUT vert)
 {
 	PS_INPUT output ;
-	output.pos = 0;
 	output.pos = mul(vert.pos, world_view_proj);
 	return output;
 }

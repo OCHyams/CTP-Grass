@@ -1,3 +1,14 @@
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	An octree for a Field. Generated over a mesh,
+				cpu-nodes can be frustum culled to update
+				gpu-nodes visibility status. Implemented as 
+				tree, but nodes are packed into an array
+				and use array index instead of address for child
+				and parent reference so that a GPU buffer can be
+				generated and easily queried.
+----------------------------------------------------------------*/
+
 #pragma once
 #include <DirectXMath.h>
 #include <DirectXCollision.h>
@@ -18,11 +29,11 @@ public:
 		int m_parentIdx = -1;
 
 		Node() = delete;
-		Node(DirectX::XMVECTOR _point0,
-			DirectX::XMVECTOR _point1,
-			int _parentIdx,
-			int _idx)
-			: m_parentIdx(_parentIdx), m_idx(_idx)
+		Node(	DirectX::XMVECTOR _point0,
+				DirectX::XMVECTOR _point1,
+				int _parentIdx,
+				int _idx)
+				: m_parentIdx(_parentIdx), m_idx(_idx)
 		{
 			DirectX::BoundingBox::CreateFromPoints(m_AABB, _point0, _point1);
 			memset(m_childIdx, -1, 8 * sizeof(int));
@@ -57,8 +68,7 @@ public:
 		int m_childIdx[8];
 		int m_idx		=-1;
 		int m_parentIdx =-1;
-		int m_visible	= 0; //gpu doesn't like bools
-
+		int m_visible	= 0; 
 	};
 
 	/////////////////////////////////////////////////
@@ -106,7 +116,6 @@ private:
 	/////////////////////////////////////////////////
 	void addGrass(std::vector<field::Instance>& _field, std::vector<int>& _containsGrass);
 
-	
 	std::vector<Node>		m_nodes;
 	std::vector<GPUNode>	m_gpuNodes;
 	Buffer					m_gpuBuffer;

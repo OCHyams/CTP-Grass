@@ -1,3 +1,9 @@
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	A simple camera that orbits around a point
+				with some hard-coded user inputs.
+----------------------------------------------------------------*/
+
 #pragma once
 #include "GameObject.h"
 #include <DirectXMath.h>

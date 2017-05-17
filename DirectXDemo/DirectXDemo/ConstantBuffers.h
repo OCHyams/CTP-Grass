@@ -1,27 +1,11 @@
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	CPU-side constant buffer structs.
+----------------------------------------------------------------*/
+
 #pragma once
 #include <d3d11_2.h>
 #include "SimpleMath.h"
-
-__declspec(align(16))
-struct CBGrassGeometry
-{
-	float tessDensity;
-	float halfGrassWidth;
-	float time;
-	//wind
-	float wind_x;
-	float wind_y;
-	float wind_z;
-	//base position
-	float pos_x;
-	float pos_y;
-	float pos_z;
-	//bitangent
-	float tan_x;
-	float tan_y;
-	float tan_z;
-	float tan_w;
-};
 
 __declspec(align(16))
 struct CBField_RarelyChanges
@@ -36,7 +20,7 @@ struct CBField_RarelyChanges
 __declspec(align(16))
 struct CBField_ChangesPerFrame
 {
-	DirectX::XMFLOAT4X4 m_wvp;
+	DirectX::XMFLOAT4X4 wvp;
 	float	time;
 };
 
@@ -51,17 +35,6 @@ struct CBField_Light
 	float				shiny;
 };
 
-__declspec(align(16))
-struct CBLight
-{
-	float pos_x;
-	float pos_y;
-	float pos_z;
-	float intensity;
-	float cam_x;
-	float cam_y;
-	float cam_z;
-};
 
 __declspec(align(16))
 struct CBWindForceChangesPerFrame
@@ -88,25 +61,4 @@ struct CBDefaultObject_ChangesPerFrame
 	float				pad0;
 	DirectX::XMFLOAT3	m_lightPos;
 	float				m_intensity;
-};
-
-
-__declspec(align(16))
-struct CBGrassWindFrustum_ChangesPerFrameRO
-{
-	unsigned int numCuboids;
-	unsigned int numSpheres;
-	float time;
-	float deltaTime;
-}; 
-
-struct CBGrassWindFrustum_NeverChanges
-{
-	unsigned int maxInstances;
-};
-
-__declspec(align(16))
-struct CBGrassWindFrustum_ChangesPerFrameRW
-{
-	unsigned int numInstances;
 };

@@ -35,7 +35,7 @@ int WINAPI wWinMain(HINSTANCE _hInstance, HINSTANCE _prevInstance, LPWSTR _cmdLi
 	ShowWindow(hwnd, _cmdShow);
 
 	//init demo
-	std::unique_ptr<DX11Demo> demo(new BasicDemo());
+	std::unique_ptr<DX11Demo> demo(new DX11GrassDemo());
 	bool result = demo->init(_hInstance, hwnd);
 	if (result == false) return -1;
 

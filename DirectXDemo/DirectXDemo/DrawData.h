@@ -1,3 +1,8 @@
+/*----------------------------------------------------------------
+Author:			Orlando Cazalet-Hyams
+Description :	Some data that's used when rendering.
+----------------------------------------------------------------*/
+
 #pragma once
 class ArcCamera; 
 struct ID3D11DeviceContext;
