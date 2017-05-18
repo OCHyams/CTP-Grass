@@ -364,11 +364,11 @@ void Field::draw(const DrawData& _data)
 	XMMATRIX		transform = XMMatrixMultiply(XMMatrixRotationRollPitchYawFromVector(LF3(&_data.m_cam->getRot())), XMMatrixTranslationFromVector(LF3(&_data.m_cam->getPos())));
 	BoundingFrustum frustum(_data.m_cam->calcLargeProjMatrix());
 	frustum.Transform(frustum, transform);
-	m_gpuOctree.frustumCull(frustum, m_noCulling);
+	m_gpuOctree.frustumCull(frustum, m_transformationMatrix, m_noCulling);
 	m_gpuOctree.updateResources(_data);
 	
 	/*Draw Octree*/
-	if (m_drawGPUOctree) m_gpuOctreeDebugger.draw(_data.m_dc, _data.m_cam->getViewProj(), m_gpuOctree);
+	if (m_drawGPUOctree) m_gpuOctreeDebugger.draw(_data.m_dc, m_transformationMatrix, _data.m_cam->getViewProj() ,m_gpuOctree);
 
 	//refresh indirect args buffer
 	unsigned int indirectArgsReset[] = { 4, 0, 0, 0 };

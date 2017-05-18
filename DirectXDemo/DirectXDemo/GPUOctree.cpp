@@ -10,12 +10,9 @@ void GPUOctree::build(const ObjModel & _model, DirectX::XMVECTOR _position, cons
 
 	/*Calculate the size of the bounding box of the model*/
 	float* vtxElePtr = _model.getVertices();
-	//Set the first vertex as the largest and smallest to begin with
 	XMFLOAT3 current = { *vtxElePtr, *(vtxElePtr + 1), *(vtxElePtr + 2) };
 	XMVECTOR smallest = LF3(&current);
 	XMVECTOR largest = LF3(&current);
-
-
 	for (int i = 0; i < _model.getTotalVerts(); ++i)
 	{
 		//Get next three floats, store in XMFLOAT3 current
@@ -26,7 +23,7 @@ void GPUOctree::build(const ObjModel & _model, DirectX::XMVECTOR _position, cons
 		smallest = XMVectorMin(LF3(&current), smallest);
 	}
 
-	//Increase height of bounding box to encompass all the grass
+	/* Increase height of bounding box to encompass all the grass */
 	largest += VEC3(0.1f, _minGrassLength, 0.1f);
 	smallest -= VEC3(0.1f, 0.1f, 0.1f);
 
@@ -143,7 +140,7 @@ void GPUOctree::cleanup()
 	m_gpuBuffer.cleanup();
 }
 
-void GPUOctree::frustumCull(const DirectX::BoundingFrustum& _frustum, bool _noCull)
+void GPUOctree::frustumCull(const DirectX::BoundingFrustum& _frustum, const DirectX::XMFLOAT4X4& _transform, bool _noCull)
 {
 	/*Early out if _root ptr is null*/
 	if (m_nodes.empty()) return;
@@ -151,6 +148,7 @@ void GPUOctree::frustumCull(const DirectX::BoundingFrustum& _frustum, bool _noCu
 	std::stack<int> tree;
 	tree.push(0);
 
+	DirectX::XMMATRIX v44_transform = DirectX::XMLoadFloat4x4(&_transform);
 
 	for (auto& node : m_gpuNodes) node.m_visible = 0;
 
@@ -161,9 +159,14 @@ void GPUOctree::frustumCull(const DirectX::BoundingFrustum& _frustum, bool _noCu
 		const int currentIdx = tree.top();
 		tree.pop();
 
+		//Transform the bounding box
+		DirectX::BoundingBox boundingBox;
+		m_nodes[currentIdx].m_AABB.Transform(boundingBox, v44_transform);
+
 		//If this node is within the frustum 
-		if (_noCull || _frustum.Intersects(m_nodes[currentIdx].m_AABB))
+		if (_noCull || _frustum.Intersects(boundingBox))
 		{
+			//node is visible
 			m_gpuNodes[currentIdx].m_visible = 1;
 			//If not leaf node
 			//Push child nodes

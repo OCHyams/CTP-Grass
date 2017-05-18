@@ -51,7 +51,6 @@ struct HS_DS_INPUT
 	float4	bitangent		: BITANGENT;			/* World-space bitangent */
 	float4	quadVert0		: QUAD_VERTEX0;			/* Screen-space quad vertex position */
 	float4	quadVert1		: QUAD_VERTEX1;			/* Screen-space quad vertex position */
-	float3	normal			: NORMAL;				/* Normalised normal */
 	float3	basePos			: INSTANCE_POSITION;	/* World-space instance position */
 	float	tessDensity		: TESS_DENSITY;			/* Tesselation density */
 };
@@ -66,7 +65,6 @@ struct GS_INPUT
 	float4	bitangent		: BITANGENT;			/* World-space bitangent */
 	float4	quadVert0		: QUAD_VERTEX0;			/* Screen-space quad vertex */
 	float4	quadVert1		: QUAD_VERTEX1;			/* Screen-space quad vertex */
-	float3	normal			: NORMAL;				/* Normalised normal */
 	float3	basePos			: INSTANCE_POSITION;	/* World-space instance position */
 	float	tVal			: T_VAL;				/* Bezier curve time step */
 };

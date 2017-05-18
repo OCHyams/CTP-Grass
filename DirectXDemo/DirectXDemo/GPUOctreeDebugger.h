@@ -19,7 +19,7 @@ public:
 	static bool loadShared(ID3D11Device* _device);
 	static void unloadShared();
 
-	void draw(ID3D11DeviceContext* _dc, const DirectX::XMFLOAT4X4& viewproj, const GPUOctree& _tree);
+	void draw(ID3D11DeviceContext* _dc, const DirectX::XMFLOAT4X4& _transform, const DirectX::XMFLOAT4X4& _viewProj, const GPUOctree& _tree);
 private:
 	static DXHelper::Shaders		s_shaders;
 	static ID3D11RasterizerState*	s_rasterizer;

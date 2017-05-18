@@ -186,7 +186,7 @@ void GPUOctreeDebugger::unloadShared()
 	RELEASE(s_m_CB_wvp);
 }
 
-void GPUOctreeDebugger::draw(ID3D11DeviceContext* _dc, const DirectX::XMFLOAT4X4& _viewproj, const GPUOctree& _tree)
+void GPUOctreeDebugger::draw(ID3D11DeviceContext* _dc, const DirectX::XMFLOAT4X4& _transform, const DirectX::XMFLOAT4X4& _viewProj, const GPUOctree& _tree)
 {
 	unsigned int stride = sizeof(BasicVertex);
 	unsigned int offset = 0;
@@ -206,8 +206,7 @@ void GPUOctreeDebugger::draw(ID3D11DeviceContext* _dc, const DirectX::XMFLOAT4X4
 	/*Buffers*/
 	_dc->VSSetConstantBuffers(0, 1, &s_m_CB_wvp);
 	_dc->PSSetConstantBuffers(0, 1, &s_m_CB_wvp);
-
-
+	
 	std::stack<int> tree;
 	tree.push(0);
 
@@ -218,8 +217,8 @@ void GPUOctreeDebugger::draw(ID3D11DeviceContext* _dc, const DirectX::XMFLOAT4X4
 		const int currentIdx = tree.top();
 		tree.pop();
 
-		const GPUOctree::Node current = _tree.getNode(currentIdx);
-
+		GPUOctree::Node current = _tree.getNode(currentIdx);
+	
 		//If not leaf node
 		if (current.hasChildren())
 		{		//Push child nodes
@@ -232,13 +231,14 @@ void GPUOctreeDebugger::draw(ID3D11DeviceContext* _dc, const DirectX::XMFLOAT4X4
 		{
 			//Draw it
 			using namespace DirectX;
-			CBField_ChangesPerFrame cbuff;
+			CBBasicShader_ChangesPerFrame cbuff;
 			XMMATRIX wvp = XMMatrixScalingFromVector(LF3(&current.m_AABB.Extents) * 2);
 			wvp = XMMatrixMultiply(wvp, XMMatrixTranslationFromVector(LF3(&current.m_AABB.Center)));
-			wvp = XMMatrixMultiply(wvp, LF44(&_viewproj));
-			XMStoreFloat4x4(&cbuff.viewProj, TRANSPOSE(wvp));
-
+			wvp = XMMatrixMultiply(wvp, LF44(&_transform));
+			wvp = XMMatrixMultiply(wvp, LF44(&_viewProj));
+			XMStoreFloat4x4(&cbuff.worldViewProj, TRANSPOSE(wvp));
 			_dc->UpdateSubresource(s_m_CB_wvp, 0, 0, &cbuff, 0, 0);
+
 			_dc->DrawIndexed(36, 0, 0);
 		}
 	}

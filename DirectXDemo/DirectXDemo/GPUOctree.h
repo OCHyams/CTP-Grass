@@ -89,7 +89,7 @@ public:
 	/////////////////////////////////////////////////
 	///	Marks GPUNodes as visible if in frusutm.
 	/////////////////////////////////////////////////
-	void frustumCull(const DirectX::BoundingFrustum& _frustum, bool _noCull = false);
+	void frustumCull(const DirectX::BoundingFrustum& _frustum, const DirectX::XMFLOAT4X4& _transform, bool _noCull = false);
 
 	/////////////////////////////////////////////////
 	///	Update GPU resources after a frustum cull.

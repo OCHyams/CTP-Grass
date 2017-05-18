@@ -17,6 +17,13 @@ struct CBField_RarelyChanges
 	float	farTess;
 };
 
+
+__declspec(align(16))
+struct CBBasicShader_ChangesPerFrame
+{
+	DirectX::XMFLOAT4X4 worldViewProj;
+};
+
 __declspec(align(16))
 struct CBField_ChangesPerFrame
 {

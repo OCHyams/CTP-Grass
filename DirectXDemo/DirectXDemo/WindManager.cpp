@@ -88,6 +88,7 @@ bool WindManager::load(ID3D11Device* _device, int _maxCuboids, int _maxSpheres)
 	bufferDesc.Usage				= D3D11_USAGE_DEFAULT;
 	bufferDesc.CPUAccessFlags		= 0;
 	bufferDesc.MiscFlags			= 0;
+	bufferDesc.BindFlags			= D3D11_BIND_CONSTANT_BUFFER;
 	bufferDesc.StructureByteStride	= 0;
 	RETURN_IF_FAILED(m_CB_changesPerFrame.init(_device, &bufferDesc));
 
