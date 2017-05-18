@@ -34,11 +34,11 @@ void WindManager::updateResources(ID3D11DeviceContext* _dc, unsigned int _numIns
 	
 	//CBuffer
 	//CBWindForceChangesPerFrame cb = { m_cuboids.size(), m_spheres.size(), _numInstances, _time, _deltaTime };//Should be in it's own buffer for sure
-	m_CB_changesPerFrame.numCuboids = m_cuboids.size();
-	m_CB_changesPerFrame.numSpheres = m_spheres.size();
-	m_CB_changesPerFrame.numInstances = _numInstances;
-	m_CB_changesPerFrame.time = _time;
-	m_CB_changesPerFrame.deltaTime = _deltaTime;
+	m_CB_changesPerFrame.m_numCuboids = m_cuboids.size();
+	m_CB_changesPerFrame.m_numSpheres = m_spheres.size();
+	m_CB_changesPerFrame.m_numInstances = _numInstances;
+	m_CB_changesPerFrame.m_time = _time;
+	m_CB_changesPerFrame.m_deltaTime = _deltaTime;
 	m_CB_changesPerFrame.subresourceUpdate(_dc);
 }
 

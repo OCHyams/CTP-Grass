@@ -19,25 +19,7 @@ static const float GEN_HILL_HEIGHT = 20.f;
 bool DX11GrassDemo::load()
 {	
 	RETURN_IF_FAILED(m_renderer.load(m_d3dDevice));
-	/*Models!*/
 	using namespace DirectX;
-	/*XMMATRIX v44_transform = XMMatrixScalingFromVector(VEC3(0.2, 0.2, 0.2));
-	XMMATRIX v44_translation = XMMatrixTranslation(0.0f, -3.0f, 0.0f);
-	v44_transform = XMMatrixMultiply(v44_transform, v44_translation);
-	XMFLOAT4X4 f44_transform;
-	XMStoreFloat4x4(&f44_transform, v44_transform);*/
-	//CHECK_FAIL(m_renderer.registerMesh((int)MESH::HILL, "../Resources/hill_tris.txt", ObjModel::QUAD_STRIP, f44_transform, m_d3dDevice));
-
-	
-	/*v44_transform = XMMatrixScalingFromVector(VEC3(4, 2, 4));
-	v44_translation = XMMatrixTranslation(0.0f, -2, 4);
-	v44_transform = XMMatrixMultiply(v44_transform, v44_translation);
-	XMStoreFloat4x4(&f44_transform, v44_transform);*/
-	//CHECK_FAIL(m_renderer.registerMesh((int)MESH::SMALL_HILLS, "../Resources/SmallHills.obj", ObjModel::TRIANGLE_STRIP, f44_transform, m_d3dDevice));
-
-	ObjModel plane;
-	plane.loadPlane(125,125,20,20);
-	RETURN_IF_FAILED(m_renderer.registerMeshFromObjModel((int)MESH::PLANE, plane, m_d3dDevice));
 	
 	ObjModel hill;
 	hill.loadHill(150, 150, 10, 10, GEN_HILL_HEIGHT);
@@ -87,13 +69,12 @@ bool DX11GrassDemo::load()
 	RETURN_IF_FAILED(m_field.load(m_d3dDevice, meshObj, 125, XMFLOAT3(0, 0, 0), { 6.f, 6.f, 6.f}, &m_windManager));
 	//Update LOD and width settings like this...
 	CBField_RarelyChanges fieldData = *m_field.getCurrentLODAndWidth();
-	fieldData.halfGrassWidth = 0.02f;
+	fieldData.m_halfGrassWidth = 0.02f;
 	m_field.updateLODAndWidth(fieldData);
 
 	m_numBlades = m_field.getMaxNumBlades();
 
 	/* Free mem of intermidiate representation */
-	plane.release();
 	hill.release();
 
 	MeshObject* mesh = new MeshObject();

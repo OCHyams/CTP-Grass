@@ -10,49 +10,49 @@ Description :	CPU-side constant buffer structs.
 __declspec(align(16))
 struct CBField_RarelyChanges
 {
-	float	halfGrassWidth;
-	float	maxTessDensity;
-	float	minTessDensity;
-	float	nearTess;
-	float	farTess;
+	float	m_halfGrassWidth;
+	float	m_maxTessDensity;
+	float	m_minTessDensity;
+	float	m_nearTess;
+	float	m_farTess;
 };
 
 
 __declspec(align(16))
 struct CBBasicShader_ChangesPerFrame
 {
-	DirectX::XMFLOAT4X4 worldViewProj;
+	DirectX::XMFLOAT4X4 m_worldViewProj;
 };
 
 __declspec(align(16))
 struct CBField_ChangesPerFrame
 {
-	DirectX::XMFLOAT4X4 world;
-	DirectX::XMFLOAT4X4 viewProj;
-	DirectX::XMFLOAT4X4 worldViewProj;
-	float				time;
+	DirectX::XMFLOAT4X4 m_world;
+	DirectX::XMFLOAT4X4 m_viewProj;
+	DirectX::XMFLOAT4X4 m_worldViewProj;
+	float				m_time;
 };
 
 __declspec(align(16))
 struct CBField_Light
 {
-	DirectX::XMFLOAT4	camera;
-	DirectX::XMFLOAT4	light;
-	DirectX::XMFLOAT4	ambient;
-	DirectX::XMFLOAT4	diffuse; 
-	DirectX::XMFLOAT4	specular;
-	float				shiny;
+	DirectX::XMFLOAT4	m_camera;
+	DirectX::XMFLOAT4	m_light;
+	DirectX::XMFLOAT4	m_ambient;
+	DirectX::XMFLOAT4	m_diffuse; 
+	DirectX::XMFLOAT4	m_specular;
+	float				m_shiny;
 };
 
 
 __declspec(align(16))
 struct CBWindForceChangesPerFrame
 {
-	unsigned int numCuboids;
-	unsigned int numSpheres;
-	unsigned int numInstances;
-	float time;
-	float deltaTime;
+	unsigned int m_numCuboids;
+	unsigned int m_numSpheres;
+	unsigned int m_numInstances;
+	float m_time;
+	float m_deltaTime;
 };
 
 __declspec(align(16))

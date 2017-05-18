@@ -441,7 +441,7 @@ void Field::updateConstBuffers(const DrawData& _data)
 	Time* t = OCH::ServiceLocator<Time>::get();
 
 	XMFLOAT3 camPos = _data.m_cam->getPos();
-	m_CBField_Light.camera = XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.f);
+	m_CBField_Light.m_camera = XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.f);
 	m_CBField_Light.mapUpdate(_data.m_dc, D3D11_MAP_WRITE_DISCARD);
 
 	if (m_CBField_RarelyChanges_dirty)
@@ -456,10 +456,10 @@ void Field::updateConstBuffers(const DrawData& _data)
 	world = XMMatrixTranspose(world);
 	viewproj = XMMatrixTranspose(viewproj);
 	worldViewProj = XMMatrixTranspose(worldViewProj);
-	XMStoreFloat4x4(&m_CBField_ChangesPerFrame.world, world);
-	XMStoreFloat4x4(&m_CBField_ChangesPerFrame.viewProj, viewproj);
-	XMStoreFloat4x4(&m_CBField_ChangesPerFrame.worldViewProj, worldViewProj);
-	m_CBField_ChangesPerFrame.time = (float)t->time;
+	XMStoreFloat4x4(&m_CBField_ChangesPerFrame.m_world, world);
+	XMStoreFloat4x4(&m_CBField_ChangesPerFrame.m_viewProj, viewproj);
+	XMStoreFloat4x4(&m_CBField_ChangesPerFrame.m_worldViewProj, worldViewProj);
+	m_CBField_ChangesPerFrame.m_time = (float)t->time;
 	m_CBField_ChangesPerFrame.mapUpdate(_data.m_dc, D3D11_MAP_WRITE_DISCARD);
 }
 
@@ -477,22 +477,22 @@ bool Field::loadBuffers(ID3D11Device* _device)
 	result = result && m_CBField_ChangesPerFrame.init(_device, &buffDesc);
 
 	/* Default light settings */
-	m_CBField_Light.light = { 0, 0.1f / std::sqrt(2.f), 1.f / std::sqrt(2.f), 0 };
-	m_CBField_Light.ambient = { 100.f / 255.f, 100.f / 255.f, 100 / 255.f, 0.0f };
-	m_CBField_Light.diffuse = { 120.f / 255.f, 120.f / 255.f, 100.f / 255.f, 0.0f };
-	m_CBField_Light.specular = { 20 / 255.f, 20.f / 255.f, 20.f / 255.f, 0.0f };
-	m_CBField_Light.shiny = 8.0f;
+	m_CBField_Light.m_light = { 0, 0.1f / std::sqrt(2.f), 1.f / std::sqrt(2.f), 0 };
+	m_CBField_Light.m_ambient = { 100.f / 255.f, 100.f / 255.f, 100 / 255.f, 0.0f };
+	m_CBField_Light.m_diffuse = { 120.f / 255.f, 120.f / 255.f, 100.f / 255.f, 0.0f };
+	m_CBField_Light.m_specular = { 20 / 255.f, 20.f / 255.f, 20.f / 255.f, 0.0f };
+	m_CBField_Light.m_shiny = 8.0f;
 	result = result && m_CBField_Light.init(_device, &buffDesc);
 	
 	/* Default LOD settings */
 	buffDesc.Usage			= D3D11_USAGE_DEFAULT;
 	buffDesc.CPUAccessFlags = 0;
 
-	m_CBField_RarelyChanges.farTess = 6.0f;
-	m_CBField_RarelyChanges.nearTess = 0.4f;
-	m_CBField_RarelyChanges.halfGrassWidth = 0.02f;
-	m_CBField_RarelyChanges.minTessDensity = 3.0f;
-	m_CBField_RarelyChanges.maxTessDensity = 9.0f;
+	m_CBField_RarelyChanges.m_farTess = 6.0f;
+	m_CBField_RarelyChanges.m_nearTess = 0.4f;
+	m_CBField_RarelyChanges.m_halfGrassWidth = 0.02f;
+	m_CBField_RarelyChanges.m_minTessDensity = 3.0f;
+	m_CBField_RarelyChanges.m_maxTessDensity = 9.0f;
 	result = result && m_CBField_RarelyChanges.init(_device, &buffDesc);
 
 	return result;
