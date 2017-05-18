@@ -9,6 +9,7 @@ void DefaultObjcetRenderInfo::updatePerObjectBuffers(const DrawData& _drawData, 
 	cbuffer.m_worldPos = _object.getPos();
 	cbuffer.m_specularPow = m_specularPower;
 	cbuffer.m_worldViewProj = XMLoadFloat4x4(&_object.getWVPTranspose());
+	cbuffer.m_lit = m_lit;
 	_drawData.m_dc->UpdateSubresource(m_vsBuffers.at(0), 0, 0, &cbuffer, 0 , 0);
 }
 

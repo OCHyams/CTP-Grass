@@ -195,7 +195,10 @@ void WindManager::applyWindForces(ID3D11UnorderedAccessView* _outGrass, ID3D11Un
 	_dc->CSSetShaderResources(0, ARRAYSIZE(views), views);
 	_dc->CSSetUnorderedAccessViews(0, ARRAYSIZE(uav), uav, nullptr);
 	_dc->CSSetConstantBuffers(0, ARRAYSIZE(cbuffers), cbuffers);
-	_dc->Dispatch((unsigned int)ceil((float)_numInstances/ (float)THREADS_PER_GROUP_X), 1, 1);
+	const unsigned int threadGroupCountX = (unsigned int)ceil((float)_numInstances / (float)THREADS_PER_GROUP_X);
+	const unsigned int threadGroupCountY = 1;
+	const unsigned int threadGroupCountZ = 1;
+	_dc->Dispatch(threadGroupCountX, threadGroupCountY, threadGroupCountZ);
 
 	/*Cleanup*/
 	NULLIFY_STATIC_ARRAY_OF_PTR(views);

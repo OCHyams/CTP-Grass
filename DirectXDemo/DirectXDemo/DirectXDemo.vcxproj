@@ -136,6 +136,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="objLoader.cpp" />
     <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Shaders.cpp" />
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="TokenStream.cpp" />
     <ClCompile Include="WindManager.cpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="RenderInfo.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="ServiceLocator.h" />
+    <ClInclude Include="Shaders.h" />
     <ClInclude Include="Shorthand.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="TokenStream.h" />
@@ -211,17 +213,6 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
-    </FxCompile>
-    <FxCompile Include="SolidGreenColour.fx">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Effect</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Effect</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-      <DeploymentContent>false</DeploymentContent>
     </FxCompile>
     <FxCompile Include="WindForce.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>

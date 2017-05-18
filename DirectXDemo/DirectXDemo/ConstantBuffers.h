@@ -52,6 +52,7 @@ struct CBDefaultObject_ChangesPerObject
 	DirectX::XMMATRIX	m_worldViewProj;
 	DirectX::XMFLOAT3	m_worldPos;
 	float				m_specularPow;
+	int					m_lit;
 };
 
 __declspec(align(16))

@@ -9,6 +9,7 @@ Description :	Helper class that draws an octree for debugging.
 #include "dxerr.h"
 #include <DirectXMath.h>
 #include "FieldRenderData.h"
+#include "Shaders.h"
 /////////////////////////////////////////////////
 ///	Class to help debugg an octree.
 /////////////////////////////////////////////////
@@ -20,7 +21,7 @@ public:
 
 	void draw(ID3D11DeviceContext* _dc, const DirectX::XMFLOAT4X4& viewproj, const GPUOctree& _tree);
 private:
-	static field::Shaders			s_shaders;
+	static DXHelper::Shaders		s_shaders;
 	static ID3D11RasterizerState*	s_rasterizer;
 	static ID3D11InputLayout*		s_inputLayout;
 	static ID3D11Buffer*			s_indexBuffer;

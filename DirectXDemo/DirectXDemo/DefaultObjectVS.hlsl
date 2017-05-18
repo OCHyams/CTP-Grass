@@ -4,6 +4,7 @@ cbuffer CBDefaultObject_ChangesPerObject : register(b0)
 	matrix	wvp;
 	float3	worldPos;
 	float	specularPow;
+	int		lit;
 }
 
 cbuffer CBDefaultObject_ChangesPerFrame : register (b1)
@@ -36,7 +37,7 @@ PS_INPUT main(VS_INPUT vert)
 	PS_INPUT output;
 
 	output.pos = mul(float4(vert.pos, 1.0f), wvp);
-	output.normal = vert.normal;//uhm...needs to get rotated...!
+	output.normal = mul(vert.normal, (float3x3)wvp);
 	output.viewVec = normalize(cameraPos - vert.pos);
 	output.lightVec = normalize(lightPos - vert.pos);
 	output.texCoord = vert.texCoord;

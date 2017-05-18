@@ -81,6 +81,9 @@
     <ClCompile Include="GPUOctreeDebugger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Shaders.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DX11Demo.h">
@@ -182,11 +185,11 @@
     <ClInclude Include="Triangle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Shaders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="SolidGreenColour.fx">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="BasicShader.fx">
       <Filter>Shaders</Filter>
     </FxCompile>

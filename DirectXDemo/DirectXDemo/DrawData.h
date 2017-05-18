@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------
 Author:			Orlando Cazalet-Hyams
-Description :	Some data that's used when rendering.
+Description :	Some data that's used for rendering.
 ----------------------------------------------------------------*/
 
 #pragma once

@@ -131,7 +131,9 @@ void main( uint3 DTid : SV_DispatchThreadID )
 	{	
 		/* ...add instance to the pseudo append buffer 
 			which will be used as-is as the instance buffer
-			in the next grass rendering stage. */
+			in the next grass rendering stage. Normal
+			append buffers are structured & cannot
+			be used as an instance buffer.*/
 
 		/* Increment indrect arguments instance count. */
 		InterlockedAdd(indirectArgs[ARGS_INST_COUNT], 1, outAddress);

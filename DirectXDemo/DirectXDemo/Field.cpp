@@ -18,9 +18,9 @@
 #include "AntTweakBar.h"
 #include "triangle.h"
 #include <chrono>
-
+#include "Shaders.h"
 //statics
-field::Shaders			Field::s_shaders		= field::Shaders();
+DXHelper::Shaders		Field::s_shaders	= DXHelper::Shaders();
 ID3D11RasterizerState*	Field::s_rasterizer		= nullptr;
 ID3D11InputLayout*		Field::s_inputLayout	= nullptr;
 ID3D11Buffer*			Field::s_vertexBuffer	= nullptr;
@@ -67,11 +67,10 @@ bool Field::loadShared(ID3D11Device* _device)
 		//PER_VERTEX
 		{ "SV_POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "FLEX", 0, DXGI_FORMAT_R32_FLOAT ,0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "FLEX", 0, DXGI_FORMAT_R32_FLOAT ,0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		//PER_INSTANCE
 		{ "INSTANCE_ROTATION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_LOCATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "INSTANCE_POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "INSTANCE_WIND", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 28, D3D11_INPUT_PER_INSTANCE_DATA, 1}
 	};
 	unsigned unsigned int totalLayoutElements = ARRAYSIZE(vsLayout);
@@ -84,82 +83,39 @@ bool Field::loadShared(ID3D11Device* _device)
 		return false;
 	}
 
-	//PS SHADER
-	result = D3DCompileFromFile(L"Field.fx", NULL, NULL, "PS_Main", "ps_5_0", shaderFlags, 0, &buffer, NULL);
-	if (FAILED(result))
-	{
-		RELEASE(buffer);
-		MessageBox(0, "Error loading pixel shader.", "Shader compilation", MB_OK);
-		return false;
-	}
+	using namespace DXHelper;
+	CompileFromFileArgs args;
+	args.fileName = L"Field.fx";
+	args.entryPoint = "PS_Main";
+	args.target = "ps_5_0";
+	s_shaders.m_ps = compileShaderFromFile<ID3D11PixelShader>(_device, args);
+	RETURN_IF_FAILED(s_shaders.m_ps);
 
-	result = _device->CreatePixelShader(buffer->GetBufferPointer(), buffer->GetBufferSize(), 0, &s_shaders.m_ps);
-	RELEASE(buffer);
-	if (FAILED(result))
-	{
-		DXTRACE_MSG(L"Couldn't create the pixel shader.");
-		return false;
-	}
+	args.entryPoint = "GS_Main";
+	args.target = "gs_5_0";
+	s_shaders.m_gs = compileShaderFromFile<ID3D11GeometryShader>(_device, args);
+	RETURN_IF_FAILED(s_shaders.m_gs);
 
-	//GS SHADER
-	result = D3DCompileFromFile(L"Field.fx", NULL, NULL, "GS_Main", "gs_5_0", shaderFlags, 0, &buffer, NULL);
-	if (FAILED(result))
-	{
-		RELEASE(buffer);
-		MessageBox(0, "Error loading geometry shader.", "Shader compilation", MB_OK);
-		return false;
-	}
+	args.entryPoint = "HS_Main";
+	args.target = "hs_5_0";
+	s_shaders.m_hs = compileShaderFromFile<ID3D11HullShader>(_device, args);
+	RETURN_IF_FAILED(s_shaders.m_hs);
 
-	result = _device->CreateGeometryShader(buffer->GetBufferPointer(), buffer->GetBufferSize(), 0, &s_shaders.m_gs);
-	RELEASE(buffer);
-	if (FAILED(result))
-	{
-		DXTRACE_MSG(L"Couldn't create the geometry shader.");
-		return false;
-	}
+	args.entryPoint = "DS_Main";
+	args.target = "ds_5_0";
+	s_shaders.m_ds = compileShaderFromFile<ID3D11DomainShader>(_device, args);
+	RETURN_IF_FAILED(s_shaders.m_ds);
 
-	//HS SHADER
-	result = D3DCompileFromFile(L"Field.fx", NULL, NULL, "HS_Main", "hs_5_0", shaderFlags, 0, &buffer, NULL);
-	if (FAILED(result))
-	{
-		RELEASE(buffer);
-		MessageBox(0, "Error loading hull shader.", "Shader compilation", MB_OK);
-		return false;
-	}
 
-	result = _device->CreateHullShader(buffer->GetBufferPointer(), buffer->GetBufferSize(), 0, &s_shaders.m_hs);
-	RELEASE(buffer);
-	if (FAILED(result))
-	{
-		DXTRACE_MSG(L"Couldn't create the hull shader.");
-		return false;
-	}
-
-	//DS SHADER
-	result = D3DCompileFromFile(L"Field.fx", NULL, NULL, "DS_Main", "ds_5_0", shaderFlags, 0, &buffer, NULL);
-	if (FAILED(result))
-	{
-		RELEASE(buffer);
-		MessageBox(0, "Error loading domain shader.", "Shader compilation", MB_OK);
-		return false;
-	}
-
-	result = _device->CreateDomainShader(buffer->GetBufferPointer(), buffer->GetBufferSize(), 0, &s_shaders.m_ds);
-	RELEASE(buffer);
-	if (FAILED(result))
-	{
-		DXTRACE_MSG(L"Couldn't create the domain shader.");
-		return false;
-	}
 	
 	//VERTEX DATA
 	field::Vertex verts[] =
 	{
 		//pos, binormal, normal, flex																							//flex
-		{ DirectX::XMFLOAT3(0.f, 0.f, 0.f),   DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.f },		//0
-		{ DirectX::XMFLOAT3(0.f, 0.2f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.1f },	//0.111
-		{ DirectX::XMFLOAT3(0.f, 0.4f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 0.3f },	//0.445
-		{ DirectX::XMFLOAT3(0.0f, 0.6f, 0.08f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), DirectX::XMFLOAT3(0.f, 0.f, -1.f), 1.f }		//1
+		{ DirectX::XMFLOAT3(0.f, 0.f, 0.f),   DirectX::XMFLOAT3(1.f, 0.f, 0.f), /*DirectX::XMFLOAT3(0.f, 0.f, -1.f),*/ 0.f },		//0
+		{ DirectX::XMFLOAT3(0.f, 0.2f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), /*DirectX::XMFLOAT3(0.f, 0.f, -1.f),*/ 0.1f },	//0.111
+		{ DirectX::XMFLOAT3(0.f, 0.4f, 0.f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), /*DirectX::XMFLOAT3(0.f, 0.f, -1.f),*/ 0.3f },	//0.445
+		{ DirectX::XMFLOAT3(0.0f, 0.6f, 0.08f),  DirectX::XMFLOAT3(1.f, 0.f, 0.f), /*DirectX::XMFLOAT3(0.f, 0.f, -1.f),*/ 1.f }		//1
 	};
 
 	D3D11_BUFFER_DESC vDesc;
@@ -187,7 +143,7 @@ bool Field::loadShared(ID3D11Device* _device)
 	rasterDesc.DepthBias = 0;
 	rasterDesc.DepthBiasClamp = 0.0f;
 	rasterDesc.DepthClipEnable = true;
-	rasterDesc.FillMode = D3D11_FILL_SOLID;//D3D11_FILL_WIREFRAME  D3D11_FILL_SOLID
+	rasterDesc.FillMode = D3D11_FILL_SOLID;
 	rasterDesc.FrontCounterClockwise = false;
 	rasterDesc.MultisampleEnable = false;
 	rasterDesc.ScissorEnable = false;
@@ -424,7 +380,7 @@ void Field::draw(const DrawData& _data)
 
 	/*Update wind resources*/
 	m_windManager->updateResources(_data.m_dc, m_maxInstanceCount, _data.m_time, _data.m_deltaTime );
-	//Dispatch the wind update //@with new octree
+	//Dispatch the wind update
 	m_windManager->applyWindForces(m_instanceDoubleBuffer.back()->getUAV() , m_pseudoAppend.getUAV(), m_indirectArgs.getUAV(), m_instanceDoubleBuffer.front()->getSRV(), m_gpuOctree.getTreeBuffer().getSRV(),_data.m_dc, m_maxInstanceCount);
 	//The resource is now already on the GPU
 	m_instanceDoubleBuffer.swap();

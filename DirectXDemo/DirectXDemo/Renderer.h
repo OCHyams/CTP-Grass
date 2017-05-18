@@ -7,6 +7,7 @@
 #include "DrawData.h"
 #include "GameObject.h"
 #include <SimpleMath.h>
+#include "Shorthand.h"
 class ArcCamera;
 class MeshInfo;
 class RenderInfo;
@@ -31,11 +32,13 @@ public:
 	void cleanup();
 
 	void render(const DrawData& data);
-	void addObj(MeshObject* _obj) { m_meshObjects.push_back(_obj); }
+	void addToRenderList(MeshObject* _obj);
+	void removeFromRenderList(MeshObject* _obj);
+	void renderNow(const DrawData& data, MeshObject* _obj);
 
 	bool registerMesh(int _id, const std::string& _fpath, ObjModel::MESH_TOPOLOGY _inputTopology, DirectX::XMFLOAT4X4 _transform, ID3D11Device* _device);
-	//Creates vertex buffer etc for given obj model but does not store a reference to the objmodel as the other registerMesh() overload does.
-	bool registerMesh(int _id, const ObjModel& model, ID3D11Device* _device);
+	//Creates vertex buffer etc for given obj model but does not store a reference to the objmodel (registerMesh()  does).
+	bool registerMeshFromObjModel(int _id, const ObjModel& model, ID3D11Device* _device);
 
 	ObjModel* getObjModel(int meshIdx);
 protected:
@@ -45,8 +48,8 @@ protected:
 	std::map<FX, RenderInfo*>	m_fx;
 	std::vector<MeshObject*>	m_meshObjects;
 
-	MeshInfo* Renderer::loadMesh(const std::string& _fpath, ObjModel::MESH_TOPOLOGY inputTopology, int idx, ID3D11Device* _device, const DirectX::XMFLOAT4X4& _transform);
+	MeshInfo* loadMesh(const std::string& _fpath, ObjModel::MESH_TOPOLOGY inputTopology, int idx, ID3D11Device* _device, const DirectX::XMFLOAT4X4& _transform);
 	
 private:
-	MeshInfo* Renderer::loadMeshHelper(const ObjModel& model, ID3D11Device* _device);
+	MeshInfo* loadMeshHelper(const ObjModel& model, ID3D11Device* _device);
 };

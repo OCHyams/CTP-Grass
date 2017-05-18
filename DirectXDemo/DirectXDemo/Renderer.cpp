@@ -7,6 +7,8 @@
 #include "DefaultObjectRenderInfo.h"
 #include <d3dcompiler.h>
 #include "ConstantBuffers.h"
+#include "Shaders.h"
+#include <algorithm>
 bool Renderer::load(ID3D11Device* _device)
 {
 	using namespace DirectX;
@@ -33,7 +35,6 @@ bool Renderer::load(ID3D11Device* _device)
 		MessageBox(0, "Couldn't create the vertex shader.", "Default Object Shader", MB_OK);
 		return false;
 	}
-
 	//INPUT LAYOUT
 	D3D11_INPUT_ELEMENT_DESC vsLayout[] =
 	{
@@ -51,21 +52,13 @@ bool Renderer::load(ID3D11Device* _device)
 		return false;
 	}
 
-	//PS SHADER
-	ID3DBlob* psBuffer = nullptr;
-	result = D3DCompileFromFile(L"DefaultObjectPS.hlsl", NULL, NULL, "main", "ps_5_0", shaderFlags, 0, &psBuffer, NULL);
-	if (FAILED(result))
-	{
-		MessageBox(0, "Error loading pixel shader.", "Default Object Shader", MB_OK);
-		return false;
-	}
-	result = _device->CreatePixelShader(psBuffer->GetBufferPointer(), psBuffer->GetBufferSize(), 0, &defaultData->m_ps);
-	psBuffer->Release();
-	if (FAILED(result))
-	{
-		MessageBox(0, "Couldn't create the vertex shader.", "Default Object Shader", MB_OK);
-		return false;
-	}
+	using namespace DXHelper;
+	CompileFromFileArgs args;
+	args.fileName = L"DefaultObjectPS.hlsl";
+	args.entryPoint = "main";
+	args.target = "ps_5_0";
+	defaultData->m_ps = compileShaderFromFile<ID3D11PixelShader>(_device, args);
+	RETURN_IF_FAILED(defaultData->m_ps);
 
 	//RASTERIZER STATE
 	D3D11_RASTERIZER_DESC rasterDesc;
@@ -199,6 +192,38 @@ void Renderer::render(const DrawData& data)
 	RenderInfo::remove(data.m_dc);
 }
 
+void Renderer::addToRenderList(MeshObject* _obj)
+{ 
+	m_meshObjects.push_back(_obj); 
+}
+
+void Renderer::removeFromRenderList(MeshObject* _obj)
+{ 
+	ERASE_REMOVE(m_meshObjects, _obj);
+}
+
+void Renderer::renderNow(const DrawData& data, MeshObject* _obj)
+{
+	MeshInfo* mesh = m_meshes[(int)_obj->m_meshID];
+	if (!mesh) return;
+
+	/*Iterate over "effects"*/
+	for (auto pass : m_fx)
+	{
+		/*If the object has a render flag matching that for this pass...*/
+		if (_obj->m_renderFlags & (unsigned int)pass.first)
+		{
+			/*Apply context settings that are required for this pass*/
+			pass.second->apply(data.m_dc);
+			pass.second->updatePerFrameBuffers(data);
+			pass.second->updatePerObjectBuffers(data, *_obj);
+			data.m_dc->DrawIndexed(mesh->m_vCount, 0, 0);
+			_obj->draw(data);
+		}
+	}
+	RenderInfo::remove(data.m_dc);
+}
+
 bool Renderer::registerMesh(int _id, const std::string& _fpath, ObjModel::MESH_TOPOLOGY _inputTopology, DirectX::XMFLOAT4X4 _transform, ID3D11Device* _device)
 {
 	if (getObjModel(_id))
@@ -217,7 +242,7 @@ bool Renderer::registerMesh(int _id, const std::string& _fpath, ObjModel::MESH_T
 	return true;
 }
 
-bool Renderer::registerMesh(int _id, const ObjModel& model, ID3D11Device * _device)
+bool Renderer::registerMeshFromObjModel(int _id, const ObjModel& model, ID3D11Device * _device)
 {
 	if (getObjModel(_id))
 	{

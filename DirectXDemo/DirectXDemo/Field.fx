@@ -37,11 +37,10 @@ struct VS_INPUT
 	/* PER_VERTEX */
 	float3	position		: SV_POSITION;			/* Local-space position */
 	float3	bitangent		: TANGENT;				/* Local-space tangent */
-	float3	normal			: NORMAL;				/* REMOVE THIS@@ */
-	float	flexibility		: FLEX;					/* Could remove this?*/
+	float	flexibility		: FLEX;					/* 0-1 flexibility coefficent */
 	/* PER-INSTANCE */
 	float4	rotation		: INSTANCE_ROTATION;	/* Quaternion rotation */
-	float3	worldPosition	: INSTANCE_LOCATION;	/* World-space base position */ //@Rename semantic!
+	float3	worldPosition	: INSTANCE_POSITION;	/* World-space base position */ 
 	float3	wind			: INSTANCE_WIND;		/* Wind vector */
 };
 
@@ -52,7 +51,7 @@ struct HS_DS_INPUT
 	float4	quadVert0		: QUAD_VERTEX0;			/* Screen-space quad vertex position */
 	float4	quadVert1		: QUAD_VERTEX1;			/* Screen-space quad vertex position */
 	float3	normal			: NORMAL;				/* Normalised normal */
-	float3	basePos			: INSTANCE_LOCATION;	/* World-space instance position */
+	float3	basePos			: INSTANCE_POSITION;	/* World-space instance position */
 	float	tessDensity		: TESS_DENSITY;			/* Tesselation density */
 };
 
@@ -67,7 +66,7 @@ struct GS_INPUT
 	float4	quadVert0		: QUAD_VERTEX0;			/* Screen-space quad vertex */
 	float4	quadVert1		: QUAD_VERTEX1;			/* Screen-space quad vertex */
 	float3	normal			: NORMAL;				/* Normalised normal */
-	float3	basePos			: INSTANCE_LOCATION;	/* World-space instance position */
+	float3	basePos			: INSTANCE_POSITION;	/* World-space instance position */
 	float	tVal			: T_VAL;				/* Bezier curve time step */
 };
 
@@ -76,9 +75,8 @@ struct PS_INPUT
 	float4	position		: SV_POSITION;			/* Frag position */
 	float2	texcoord		: TEXCOORD0;			/* Texture coordinate */
 	float3	normal			: NORMAL;				/* Normalized normal */
-	float3  lightVec		: TEXCOORD1;			/* @@ Need this? */ 
-	float3	viewVec			: TEXCOORD2;			/* @*/
-	float3	basePos			: TEXCOORD3;			/*@ */
+	float3	viewVec			: TEXCOORD1;			/* View vector for lighting */
+	float3	basePos			: TEXCOORD2;			/* World-space instance position */
 };
 
 
@@ -131,8 +129,6 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	/* Wind displacement */ 
 	float4 windDisplacement = (windForce(vertex.worldPosition, vertex.wind) * vertex.flexibility);
 	output.cpoint += windDisplacement;
-
-	output.normal = float3(0, 0, 0);//@REMOVE
 
 	/* Bitangents */
 	float3 bitangent = normalize(quatRotateVector(vertex.rotation, vertex.bitangent));
@@ -234,9 +230,8 @@ void GS_Main(line GS_INPUT input[2], inout TriangleStream<PS_INPUT> output)
 		/* Element position */
 		element.position = input[i].quadVert0;
 
-		/* Lighting stuff - @NOT REQUIRED? */
+		/* Lighting stuff */
 		element.viewVec = normalize(camera.xyz - element.position.xyz);
-		element.lightVec = normalize(lightDir.xyz - element.position.xyz);
 		
 		element.normal = normal;
 
@@ -249,9 +244,8 @@ void GS_Main(line GS_INPUT input[2], inout TriangleStream<PS_INPUT> output)
 		/* Element position */
 		element.position = input[i].quadVert1;
 
-		/* Lighting - @ AGAIN?*/
+		/* Lighting stuff */
 		element.viewVec = normalize(camera.xyz - element.position.xyz);
-		element.lightVec = normalize(-lightDir.xyz - element.position.xyz);
 
 		/* Output the vertex */
 		output.Append(element);

@@ -4,7 +4,7 @@
 #include "ConstantBuffers.h"
 #include "Shorthand.h"
 
-field::Shaders			GPUOctreeDebugger::s_shaders = field::Shaders();
+DXHelper::Shaders		GPUOctreeDebugger::s_shaders = DXHelper::Shaders();
 ID3D11RasterizerState*	GPUOctreeDebugger::s_rasterizer = nullptr;
 ID3D11InputLayout*		GPUOctreeDebugger::s_inputLayout = nullptr;
 ID3D11Buffer*			GPUOctreeDebugger::s_vertexBuffer = nullptr;

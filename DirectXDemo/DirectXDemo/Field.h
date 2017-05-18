@@ -17,6 +17,7 @@ Description :	A Field handles generating & rendering grass over
 #include "DoubleBuffer.h"
 #include "GPUOctreeDebugger.h"
 #include "ConstantBuffer.h"
+#include "Shaders.h"
 class ObjModel;
 class WindManager;
 
@@ -40,7 +41,7 @@ public:
 	~Field();
 
 	/////////////////////////////////////////////////
-	/// Compile and load the grass shaders @Should not compile in build version
+	/// Compile and load the grass shaders 
 	/////////////////////////////////////////////////
 	static bool loadShared(ID3D11Device*);
 	/////////////////////////////////////////////////
@@ -78,10 +79,10 @@ private:
 	/////////////////////////////////////////////////
 	/// Shared data
 	/////////////////////////////////////////////////
-	static field::Shaders			s_shaders;
+	static DXHelper::Shaders		s_shaders;
 	static ID3D11RasterizerState*	s_rasterizer;
 	static ID3D11InputLayout*		s_inputLayout;
-	static ID3D11Buffer*			s_vertexBuffer;	//this can be static for now but there should probably be a range of these for different grass positions..?
+	static ID3D11Buffer*			s_vertexBuffer;
 	static 
 	ID3D11ShaderResourceView*		s_texture; 
 	static ID3D11SamplerState*		s_samplerState;

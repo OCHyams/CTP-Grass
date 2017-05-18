@@ -37,36 +37,37 @@ bool DX11GrassDemo::load()
 
 	ObjModel plane;
 	plane.loadPlane(125,125,20,20);
-	RETURN_IF_FAILED(m_renderer.registerMesh((int)MESH::PLANE, plane, m_d3dDevice));
+	RETURN_IF_FAILED(m_renderer.registerMeshFromObjModel((int)MESH::PLANE, plane, m_d3dDevice));
 	
 	ObjModel hill;
 	hill.loadHill(150, 150, 10, 10, GEN_HILL_HEIGHT);
-	RETURN_IF_FAILED(m_renderer.registerMesh((int)MESH::GEN_HILL, hill, m_d3dDevice));
+	RETURN_IF_FAILED(m_renderer.registerMeshFromObjModel((int)MESH::GEN_HILL, hill, m_d3dDevice));
 
 	RETURN_IF_FAILED(GPUOctreeDebugger::loadShared(m_d3dDevice));
 
 	/*Load data shared by all wind managers (though there should only be one anyway)*/
 	WindManager::loadShared(m_d3dDevice);
 	RETURN_IF_FAILED(m_windManager.load(m_d3dDevice, 1, 1));
-	/*Create a static wind volume, no need to keep track of mem, system does that*/
+	/* Create a static wind volume, fire and forget on the cuboid, don't care about it anymore,
+		createWindCuboid() added it to an internal container. */
 	WindCuboid* windCuboid = m_windManager.createWindCuboid();
 	windCuboid->m_extents = { 1000.0f, 1000.0f, 1000.0f };
 	windCuboid->m_initalVelocity = { 0.3f, 0.f, 0.f };
 	windCuboid->m_position = { 0.f, 0.f, 0.f };
-	/*Create a static wind volume, no need to keep track of mem, system does that*/
+	/* Create a static wind volume */
 	m_demoSphere = m_windManager.createWindSphere();
 	m_demoSphere->m_fallOffPow = 5;
 	m_demoSphere->m_initalStrength = 0.f;;
 	m_demoSphere->m_position = { 0,0,0 };
 	m_demoSphere->m_radius = 2.0f;
 
-	//Tweak bar
+	//AntTweakBar
 	TwBar* GUI = TwNewBar("Settings");
 	TwDefine(" Settings position='10 10' ");
 	TwDefine(" Settings size='300 200' ");
 	TwDefine(" Settings movable= false ");
 	TwDefine(" Settings resizable= true ");
-	TwAddVarRW(GUI, "draw gpu  octree", TwType::TW_TYPE_BOOLCPP, &m_field.m_drawGPUOctree, "");//@new octree
+	TwAddVarRW(GUI, "draw gpu  octree", TwType::TW_TYPE_BOOLCPP, &m_field.m_drawGPUOctree, "");
 	TwAddVarRW(GUI, "no frustum culling", TwType::TW_TYPE_BOOLCPP, &m_field.m_noCulling, "");
 	TwAddVarRW(GUI, "str", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_initalStrength, "step = 0.05");
 	TwAddVarRW(GUI, "rad", TwType::TW_TYPE_FLOAT, &m_demoSphere->m_radius, "step = 0.05");
@@ -83,9 +84,8 @@ bool DX11GrassDemo::load()
 	/*Set up demo field*/
 	m_field.m_halfGrassWidth = 0.02f;
 	MESH meshToUse = MESH::GEN_HILL;
-	ObjModel* meshObj = &hill;/* &plane;*/// m_renderer.getObjModel((int)meshToUse);
+	ObjModel* meshObj = &hill;
 	RETURN_IF_FAILED(m_field.load(m_d3dDevice, meshObj, 125, XMFLOAT3(0, 0, 0), { 6.f, 6.f, 6.f}, &m_windManager));
-	
 	m_numBlades = m_field.getMaxNumBlades();
 
 	/* Free mem of intermidiate representation */
@@ -95,7 +95,7 @@ bool DX11GrassDemo::load()
 	MeshObject* mesh = new MeshObject();
 	mesh->m_meshID = meshToUse;
 	mesh->m_renderFlags = (int)FX::DEFAULT;
-	m_renderer.addObj(mesh);
+	m_renderer.addToRenderList(mesh);
 	m_objects.push_back(mesh);
 
 	m_cam = new ArcCamera({ 0.f, GEN_HILL_HEIGHT + 0.2f, -3.f });
@@ -140,6 +140,7 @@ void DX11GrassDemo::update()
 	XMVECTOR windSphereNewPos = VEC3(	(int)m_input->getKey(DIK_LEFT) * -1 + (int)m_input->getKey(DIK_RIGHT),
 										0,
 										(int)m_input->getKey(DIK_DOWN) * -1 + (int)m_input->getKey(DIK_UP));
+
 	windSphereNewPos *= m_time.deltaTime * 0.5f;
 	windSphereNewPos += LF3(&m_demoSphere->m_position);
 	STOREF3(&m_demoSphere->m_position, windSphereNewPos);
@@ -161,10 +162,8 @@ void DX11GrassDemo::render()
 
 	DrawData data = { m_cam, m_d3dContext, m_time.time, m_time.deltaTime };
 
-
-	m_renderer.render(data);
 	m_field.draw(data);
-	
+	m_renderer.render(data);
 
 	TwDraw();
 	m_swapChain->Present(0, 0);

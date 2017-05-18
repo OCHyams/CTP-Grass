@@ -26,7 +26,7 @@ void GPUOctree::build(const ObjModel & _model, DirectX::XMVECTOR _position, cons
 		smallest = XMVectorMin(LF3(&current), smallest);
 	}
 
-	//Increase height of bounding box to encompass all the grass @Possibly just adjust the extents so the AABB is a little larger than the model all round? Seems ok for now :)
+	//Increase height of bounding box to encompass all the grass
 	largest += VEC3(0.1f, _minGrassLength, 0.1f);
 	smallest -= VEC3(0.1f, 0.1f, 0.1f);
 
@@ -41,7 +41,6 @@ void GPUOctree::build(const ObjModel & _model, DirectX::XMVECTOR _position, cons
 	stack.push(root);
 
 	XMVECTOR minSize = LF3(&_minSize);
-	//XMVECTOR halfMinSize = minSize / 2;
 	XMVECTOR childSize;
 	while (!stack.empty())
 	{
@@ -118,7 +117,7 @@ void GPUOctree::build(const ObjModel & _model, DirectX::XMVECTOR _position, cons
 		}
 	}
 
-	if (m_nodes.empty()) return;//false?
+	if (m_nodes.empty()) return;
 
 	//add grass
 	std::vector<int> containsGrass;
@@ -153,6 +152,8 @@ void GPUOctree::frustumCull(const DirectX::BoundingFrustum& _frustum, bool _noCu
 	tree.push(0);
 
 
+	for (auto& node : m_gpuNodes) node.m_visible = 0;
+
 	/*Depth first traversal of nodes*/
 	while (tree.size())
 	{
@@ -173,10 +174,6 @@ void GPUOctree::frustumCull(const DirectX::BoundingFrustum& _frustum, bool _noCu
 					if (Node::idxNotNull(childIdx)) tree.push(childIdx);
 				}
 			}
-		}
-		else
-		{
-			m_gpuNodes[currentIdx].m_visible = 0;
 		}
 	}
 }

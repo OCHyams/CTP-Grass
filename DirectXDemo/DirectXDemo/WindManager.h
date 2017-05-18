@@ -81,9 +81,11 @@ public:
 
 	/////////////////////////////////////////////////
 	/// Used by Field objects during rendering.
+	/// _grassOutputBuffer, _frustumCulledInstanceBuffer, _indirectArgs
+	/// are modified by this function.
 	/////////////////////////////////////////////////
-	void applyWindForces(	ID3D11UnorderedAccessView* _outGrass, ID3D11UnorderedAccessView* _frustumCulled, ID3D11UnorderedAccessView* _indirectArgs,
-							ID3D11ShaderResourceView* _inGrass, ID3D11ShaderResourceView* _inOctree, 
+	void applyWindForces(	ID3D11UnorderedAccessView* _grassOutputBuffer, ID3D11UnorderedAccessView* _frustumCulledInstanceBuffer, ID3D11UnorderedAccessView* _indirectArgs,
+							ID3D11ShaderResourceView* _grassInputBuffer, ID3D11ShaderResourceView* _octreeInputBuffer, 
 							ID3D11DeviceContext* _dc, int _numInstances);
 
 	const Buffer* getCuboidBuffer() { return &m_cuboidBuffer; } const
