@@ -27,16 +27,16 @@ class WindManager;
 class Field final
 {
 public:
+
 	/////////////////////////////////////////////////
 	/// Should draw the Octree?
 	/////////////////////////////////////////////////
 	bool m_drawGPUOctree = false;
-
 	/////////////////////////////////////////////////
 	/// Should stop frustum culling?
 	/////////////////////////////////////////////////
 	bool m_noCulling = false;
-	
+
 	Field();
 	~Field();
 
@@ -52,9 +52,12 @@ public:
 	/// Initialise the field
 	/////////////////////////////////////////////////
 	bool load(ID3D11Device*, ObjModel*, float density, DirectX::XMFLOAT3 _pos, const DirectX::XMFLOAT3& _minOctreeNodeSize, WindManager* _windManager);
-
-	void updateLODAndWidth(CBField_RarelyChanges& _newBuffer);
-	const CBField_RarelyChanges& getCurrentLODAndWidth() const { return m_CBField_RarelyChanges; };
+	/////////////////////////////////////////////////
+	/// Update transform and return it 
+	/////////////////////////////////////////////////
+	const DirectX::XMFLOAT4X4* updateTransform(const DirectX::XMFLOAT4X4& _transform);
+	void updateLODAndWidth(const CBField_RarelyChanges& _newBuffer);
+	const CBField_RarelyChanges* getCurrentLODAndWidth() const { return &m_CBField_RarelyChanges; };
 
 	void unload();
 
@@ -64,18 +67,14 @@ public:
 	unsigned int getMaxNumBlades() { return m_maxInstanceCount; }
 	unsigned int getCurNumBlades() { return m_curInstanceCount; }
 
-	float							m_length;
-	float							m_halfGrassWidth;
-
 private:
 	/////////////////////////////////////////////////
-	/// New octree
+	/// Octree
 	/////////////////////////////////////////////////
 	GPUOctreeDebugger	m_gpuOctreeDebugger;
 	GPUOctree			m_gpuOctree;	
 	Buffer				m_pseudoAppend;
 	Buffer				m_indirectArgs;
-
 	/////////////////////////////////////////////////
 	/// Shared data
 	/////////////////////////////////////////////////
@@ -101,14 +100,9 @@ private:
 	unsigned int			m_maxInstanceCount;
 	unsigned int			m_curInstanceCount;
 	/////////////////////////////////////////////////
-	/// 
-	/////////////////////////////////////////////////
-	DirectX::XMFLOAT3		m_cameraPos;
-	/////////////////////////////////////////////////
 	///	Field data
 	/////////////////////////////////////////////////
-	DirectX::XMFLOAT3		m_pos;//@should get wvp to parent the nodes & grass so objcs can move!
-
+	DirectX::XMFLOAT4X4		m_transformationMatrix;
 	void updateConstBuffers(const DrawData&);
 
 	bool loadBuffers(ID3D11Device*);

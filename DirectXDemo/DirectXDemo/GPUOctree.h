@@ -98,7 +98,7 @@ public:
 
 	Node getNode(int _idx) const { return m_nodes[_idx]; }
 	GPUNode getGPUNode(int _idx) const { return m_gpuNodes[_idx]; }
-	const Buffer& getTreeBuffer() const { return m_gpuBuffer; }
+	const Buffer* getTreeBuffer() const { return &m_gpuBuffer; }
 	int getNumNodes() const { return m_nodes.size(); }
 
 private:

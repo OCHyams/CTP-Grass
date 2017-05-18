@@ -20,8 +20,10 @@ struct CBField_RarelyChanges
 __declspec(align(16))
 struct CBField_ChangesPerFrame
 {
-	DirectX::XMFLOAT4X4 wvp;
-	float	time;
+	DirectX::XMFLOAT4X4 world;
+	DirectX::XMFLOAT4X4 viewProj;
+	DirectX::XMFLOAT4X4 worldViewProj;
+	float				time;
 };
 
 __declspec(align(16))

@@ -236,7 +236,7 @@ void GPUOctreeDebugger::draw(ID3D11DeviceContext* _dc, const DirectX::XMFLOAT4X4
 			XMMATRIX wvp = XMMatrixScalingFromVector(LF3(&current.m_AABB.Extents) * 2);
 			wvp = XMMatrixMultiply(wvp, XMMatrixTranslationFromVector(LF3(&current.m_AABB.Center)));
 			wvp = XMMatrixMultiply(wvp, LF44(&_viewproj));
-			XMStoreFloat4x4(&cbuff.wvp, TRANSPOSE(wvp));
+			XMStoreFloat4x4(&cbuff.viewProj, TRANSPOSE(wvp));
 
 			_dc->UpdateSubresource(s_m_CB_wvp, 0, 0, &cbuff, 0, 0);
 			_dc->DrawIndexed(36, 0, 0);

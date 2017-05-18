@@ -1,7 +1,9 @@
 /* This stuff is guarenteed to change every frame */
 cbuffer CBChangesPerFrame : register(b0)
 {
-	matrix	view_proj;
+	matrix	worldTransform;
+	matrix	viewProjTransform;
+	matrix	worldViewProjTransform;
 	float	time;
 };
 
@@ -40,13 +42,12 @@ struct VS_INPUT
 	float	flexibility		: FLEX;					/* 0-1 flexibility coefficent */
 	/* PER-INSTANCE */
 	float4	rotation		: INSTANCE_ROTATION;	/* Quaternion rotation */
-	float3	worldPosition	: INSTANCE_POSITION;	/* World-space base position */ 
+	float3	basePos			: INSTANCE_POSITION;	/* Local-space base position */
 	float3	wind			: INSTANCE_WIND;		/* Wind vector */
 };
 
 struct HS_DS_INPUT
 {
-	float4	cpoint			: POSITION;				/* World-space bezier control point */
 	float4	bitangent		: BITANGENT;			/* World-space bitangent */
 	float4	quadVert0		: QUAD_VERTEX0;			/* Screen-space quad vertex position */
 	float4	quadVert1		: QUAD_VERTEX1;			/* Screen-space quad vertex position */
@@ -124,34 +125,36 @@ HS_DS_INPUT VS_Main(VS_INPUT vertex)
 	HS_DS_INPUT output;
 
 	/* Apply instance rotation to the vertex */
-	output.cpoint = float4(quatRotateVector(vertex.rotation, vertex.position), 1.0f);
+	float4 controlPoint = float4(quatRotateVector(vertex.rotation, vertex.position), 1.0f);
 
 	/* Wind displacement */ 
-	float4 windDisplacement = (windForce(vertex.worldPosition, vertex.wind) * vertex.flexibility);
-	output.cpoint += windDisplacement;
+	float4 windDisplacement = (windForce(vertex.basePos, vertex.wind) * vertex.flexibility);
+	controlPoint += windDisplacement;
 
 	/* Bitangents */
+	/* Grass instance rotation */
 	float3 bitangent = normalize(quatRotateVector(vertex.rotation, vertex.bitangent));
+	/* Transformation matrix rotation */
+	bitangent = mul(bitangent, (float3x3)worldTransform);
 	output.bitangent = float4(bitangent, 0);
 
 	/* Quad verts */
-	float4 world = float4(vertex.worldPosition, 0.0f);
+	float4 basePos = float4(vertex.basePos, 0.0f);
 	float4 quadBaseVec = output.bitangent * (1 - (pow(vertex.flexibility, 2))) * halfGrassWidth;
-	output.quadVert0 = world + output.cpoint + quadBaseVec;
-	output.quadVert1 = world + output.cpoint - quadBaseVec;
-
+	output.quadVert0 = basePos + controlPoint + quadBaseVec;
+	output.quadVert1 = basePos + controlPoint - quadBaseVec;
+	
 	/* View-Proj transformation */
-	output.cpoint = mul(output.cpoint, view_proj);
-	output.quadVert0 = mul(output.quadVert0, view_proj);
-	output.quadVert1 = mul(output.quadVert1, view_proj);
+	output.quadVert0 = mul(output.quadVert0, worldViewProjTransform);
+	output.quadVert1 = mul(output.quadVert1, worldViewProjTransform);
 		
 	/* Tess factor - NOTE: This could be calculated once in the compute shader stage and passed as an 
 	instance struct member. Comes down to speed vs memory */
-	float distance = length(camera.xyz - vertex.worldPosition);
+	float distance = length(camera.xyz - vertex.basePos);
 	distance = clamp((distance- nearTess)/(farTess - nearTess), 0, 1);
 	output.tessDensity = maxTessDensity - (distance * (maxTessDensity - minTessDensity));
 
-	output.basePos = vertex.worldPosition;
+	output.basePos = vertex.basePos;
 
 	return output;
 }
@@ -211,7 +214,7 @@ GS_INPUT DS_Main(HS_CONSTANT_OUTPUT input, OutputPatch<HS_DS_INPUT, 4> op, float
 void GS_Main(line GS_INPUT input[2], inout TriangleStream<PS_INPUT> output)
 {	
 	/* Generate normal vector for this quad 
-		y = quad.verts[1] -  quad.verts[2]; 
+		y = quad.verts[0] -  quad.verts[2]; 
 		x = bitangent;
 		z = cross(y, x); */
 	float3 normal = cross(normalize(input[1].quadVert1 - input[0].quadVert1), normalize(input[0].bitangent.xyz));
@@ -223,30 +226,22 @@ void GS_Main(line GS_INPUT input[2], inout TriangleStream<PS_INPUT> output)
 		PS_INPUT element;
 
 		element.basePos = input[i].basePos;
-
 		/* Generate texture coords*/
 		element.texcoord = float2(0, 1-input[i].tVal);
-		
 		/* Element position */
 		element.position = input[i].quadVert0;
-
 		/* Lighting stuff */
 		element.viewVec = normalize(camera.xyz - element.position.xyz);
-		
 		element.normal = normal;
-
 		/* Output the vertex */
 		output.Append(element);
 
 		/* Texture coords for other side */
 		element.texcoord.x = 1;
-		
 		/* Element position */
 		element.position = input[i].quadVert1;
-
 		/* Lighting stuff */
 		element.viewVec = normalize(camera.xyz - element.position.xyz);
-
 		/* Output the vertex */
 		output.Append(element);
 	}
@@ -270,7 +265,7 @@ SamplerState SAMPLER_STATE;
 float4 PS_Main(PS_INPUT input) : SV_TARGET
 {
 	/* Apply somewhat home-brew Phong implementation /w an attempt at two sided lighting */
-	/* This doesn't actually work properly but looks ok for now, first improvement: fix this! */
+	/* Improving this would be one of the first changes... */
 	float  lightDotNormal = dot(lightDir.xyz, input.normal);
 	float3 relfect;
 	float3 view;

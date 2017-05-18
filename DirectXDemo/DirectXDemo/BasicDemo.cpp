@@ -82,10 +82,14 @@ bool DX11GrassDemo::load()
 	RETURN_IF_FAILED(Field::loadShared(m_d3dDevice));
 
 	/*Set up demo field*/
-	m_field.m_halfGrassWidth = 0.02f;
 	MESH meshToUse = MESH::GEN_HILL;
 	ObjModel* meshObj = &hill;
 	RETURN_IF_FAILED(m_field.load(m_d3dDevice, meshObj, 125, XMFLOAT3(0, 0, 0), { 6.f, 6.f, 6.f}, &m_windManager));
+	//Update LOD and width settings like this...
+	CBField_RarelyChanges fieldData = *m_field.getCurrentLODAndWidth();
+	fieldData.halfGrassWidth = 0.02f;
+	m_field.updateLODAndWidth(fieldData);
+
 	m_numBlades = m_field.getMaxNumBlades();
 
 	/* Free mem of intermidiate representation */

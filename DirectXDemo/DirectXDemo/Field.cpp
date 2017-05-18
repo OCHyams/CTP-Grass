@@ -29,6 +29,7 @@ ID3D11SamplerState*		Field::s_samplerState	= nullptr;
 
 Field::Field()
 {
+	DirectX::XMStoreFloat4x4(&m_transformationMatrix, DirectX::XMMatrixIdentity());
 }
 
 Field::~Field()
@@ -105,7 +106,6 @@ bool Field::loadShared(ID3D11Device* _device)
 	args.target = "ds_5_0";
 	s_shaders.m_ds = compileShaderFromFile<ID3D11DomainShader>(_device, args);
 	RETURN_IF_FAILED(s_shaders.m_ds);
-
 
 	
 	//VERTEX DATA
@@ -209,8 +209,6 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 {
 	m_windManager = _windManager;
 
-	m_pos = _pos;
-
 	using namespace DirectX;
 	HRESULT result;
 
@@ -223,7 +221,6 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 
 	XMFLOAT3 triVerts[3];
 	XMFLOAT3 triNorms[3];
-	XMVECTOR posVec = LF3(&m_pos);
 	
 	std::vector<field::Instance> field;
 
@@ -233,13 +230,6 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 		/*Get vert positions*/
 		memcpy(triVerts, vertElementPtr, sizeof(float) * 9);
 		vertElementPtr += 9;
-		/*Transform verts*///@For now just translate
-		for (unsigned int i = 0; i < 3; ++i)
-		{
-			//XMVECTOR transformedVert = XMVector3Transform(LF3(&triVerts[i]), _transform);
-			//XMStoreFloat3(&triVerts[i], transformedVert);
-			XMStoreFloat3(&triVerts[i], posVec + LF3(&triVerts[i]));
-		}
 
 		/*Get vert normals*/
 		if (normElementPtr)
@@ -341,9 +331,15 @@ bool Field::load(ID3D11Device* _device, ObjModel* _model, float _density, Direct
 	return loadBuffers(_device);
 }
 
-void Field::updateLODAndWidth(CBField_RarelyChanges & _newBuffer)
+const DirectX::XMFLOAT4X4* Field::updateTransform(const DirectX::XMFLOAT4X4& _transform)
 {
-	memcpy(&m_CBField_RarelyChanges_dirty, &_newBuffer, sizeof(CBField_RarelyChanges));
+	m_transformationMatrix = _transform;
+	return &m_transformationMatrix;
+}
+
+void Field::updateLODAndWidth(const CBField_RarelyChanges& _newBuffer)
+{
+	memcpy(&m_CBField_RarelyChanges, &_newBuffer, sizeof(CBField_RarelyChanges));
 	m_CBField_RarelyChanges_dirty = true;
 }
 
@@ -375,13 +371,13 @@ void Field::draw(const DrawData& _data)
 	if (m_drawGPUOctree) m_gpuOctreeDebugger.draw(_data.m_dc, _data.m_cam->getViewProj(), m_gpuOctree);
 
 	//refresh indirect args buffer
-	unsigned int indirectArgsReset[] = { 4, 0, 0, 0/*, m_maxInstanceCount -1 */};
+	unsigned int indirectArgsReset[] = { 4, 0, 0, 0 };
 	_data.m_dc->UpdateSubresource(m_indirectArgs.getBuffer(), NULL, NULL, indirectArgsReset, sizeof(unsigned int)*ARRAYSIZE(indirectArgsReset), 0);
 
 	/*Update wind resources*/
 	m_windManager->updateResources(_data.m_dc, m_maxInstanceCount, _data.m_time, _data.m_deltaTime );
 	//Dispatch the wind update
-	m_windManager->applyWindForces(m_instanceDoubleBuffer.back()->getUAV() , m_pseudoAppend.getUAV(), m_indirectArgs.getUAV(), m_instanceDoubleBuffer.front()->getSRV(), m_gpuOctree.getTreeBuffer().getSRV(),_data.m_dc, m_maxInstanceCount);
+	m_windManager->applyWindForces(m_instanceDoubleBuffer.back()->getUAV() , m_pseudoAppend.getUAV(), m_indirectArgs.getUAV(), m_instanceDoubleBuffer.front()->getSRV(), m_gpuOctree.getTreeBuffer()->getSRV(),_data.m_dc, m_maxInstanceCount);
 	//The resource is now already on the GPU
 	m_instanceDoubleBuffer.swap();
 	
@@ -427,7 +423,7 @@ void Field::draw(const DrawData& _data)
 	//texture
 	_data.m_dc->PSSetShaderResources(0, 1, &s_texture);
 
-	/*Draw call*/
+	/*Draw call with indirect arguments, the args have been set in a buffer by WindForce compute shader*/
 	_data.m_dc->DrawInstancedIndirect(m_indirectArgs.getBuffer(), 0);
 
 	/*Cleanup*/
@@ -453,9 +449,16 @@ void Field::updateConstBuffers(const DrawData& _data)
 		m_CBField_RarelyChanges_dirty = false;
 		m_CBField_RarelyChanges.subresourceUpdate(_data.m_dc);
 	}
-
-	XMMATRIX viewproj = XMMatrixTranspose(XMLoadFloat4x4(&_data.m_cam->getViewProj()));
-	XMStoreFloat4x4(&m_CBField_ChangesPerFrame.wvp, viewproj);
+	
+	XMMATRIX world = XMLoadFloat4x4(&m_transformationMatrix);
+	XMMATRIX viewproj = XMLoadFloat4x4(&_data.m_cam->getViewProj());
+	XMMATRIX worldViewProj = XMMatrixMultiply(world, viewproj);
+	world = XMMatrixTranspose(world);
+	viewproj = XMMatrixTranspose(viewproj);
+	worldViewProj = XMMatrixTranspose(worldViewProj);
+	XMStoreFloat4x4(&m_CBField_ChangesPerFrame.world, world);
+	XMStoreFloat4x4(&m_CBField_ChangesPerFrame.viewProj, viewproj);
+	XMStoreFloat4x4(&m_CBField_ChangesPerFrame.worldViewProj, worldViewProj);
 	m_CBField_ChangesPerFrame.time = (float)t->time;
 	m_CBField_ChangesPerFrame.mapUpdate(_data.m_dc, D3D11_MAP_WRITE_DISCARD);
 }
@@ -487,7 +490,7 @@ bool Field::loadBuffers(ID3D11Device* _device)
 
 	m_CBField_RarelyChanges.farTess = 6.0f;
 	m_CBField_RarelyChanges.nearTess = 0.4f;
-	m_CBField_RarelyChanges.halfGrassWidth = m_halfGrassWidth;
+	m_CBField_RarelyChanges.halfGrassWidth = 0.02f;
 	m_CBField_RarelyChanges.minTessDensity = 3.0f;
 	m_CBField_RarelyChanges.maxTessDensity = 9.0f;
 	result = result && m_CBField_RarelyChanges.init(_device, &buffDesc);
